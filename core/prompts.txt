@@ -8,13 +8,43 @@ Rules:
 - Follow the schema exactly
 - Use null if information is missing
 - Do NOT invent information
-- Skills must be short keywords (NOT sentences)
 - Dates must be in YYYY-MM-DD format
 - Keep text concise
+
+SKILLS EXTRACTION PROCEDURE:
+For each candidate skill mentioned in the CV:
+
+1. Check if it is a concrete technology, programming language, framework, library, cloud service, database, software tool, or platform.
+2. If YES → include it
+3. If it is a personal ability, soft skill, or generic competency → EXCLUDE it
+4. If uncertain → EXCLUDE it
+
+IMPORTANT:
+Soft skills must NEVER appear in the output even if listed in the CV Skills section.
+Do NOT copy the CV skills section verbatim.
+Filter it strictly.
+
+Examples to EXCLUDE:
+communication, teamwork, leadership, analytical, problem solving,
+organizational, managerial, proactive, detail-oriented, adaptable
+
+Examples to INCLUDE:
+Python, SQL, Azure, Power BI, Tableau, TensorFlow, Docker, Kubernetes
 
 Resume text:
 ----------------
 {content}
 ----------------
+
+FINAL VALIDATION STEP (MANDATORY):
+
+Before returning the JSON:
+
+- Review the skills list
+- Remove any item that is NOT a concrete technical technology/tool/language
+- Ensure NO soft skills remain
+- If any soft skill exists, delete it
+
+Return the corrected JSON only.
 
 {format_instructions}

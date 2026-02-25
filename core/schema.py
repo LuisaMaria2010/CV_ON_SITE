@@ -88,8 +88,9 @@ class LLMExtractionRaw(BaseModel):
     skills: List[str] = Field(
         default_factory=list,
         description=(
-            "List of technical or professional skills. "
-            "Use short keywords only. Example: ['Python', 'Azure', 'SQL']"
+        "STRICTLY technical hard skills only. "
+        "Must be technologies, programming languages, frameworks, cloud services, databases or software tools. "
+        "Soft skills are forbidden and must not appear."
         )
     )
 
@@ -172,7 +173,7 @@ class CVExtraction(BaseModel):
 
     skills: List[str] = Field(
         default_factory=list,
-        description="Normalized and deduplicated list of skills"
+        description="Normalized and deduplicated list of tech skills"
     )
 
     employment_dates: List[WorkExperience] = Field(

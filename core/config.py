@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     # =====================================================
 
     azure_openai_endpoint: str = Field(
-        default="https://dev-foundry-ai-mc.openai.azure.com/",
+        default="https://foundry-ai-mc-dev.cognitiveservices.azure.com/",
         description=(
             "Endpoint Azure LLM. "
             "Può essere Azure OpenAI (*.openai.azure.com) "
@@ -37,10 +37,10 @@ class Settings(BaseSettings):
     )
 
     # deployment name (Azure OpenAI) OR model name (Foundry)
-    azure_openai_model: str = "flashcv-gpt"
+    azure_openai_model: str = "gpt-4.1-mini"
 
     # richiesta solo per Azure OpenAI
-    azure_openai_api_version: str = "2024-02-15-preview"
+    azure_openai_api_version: str = "2025-01-01-preview"
 
     azure_openai_temperature: float = 0.0
     azure_openai_max_tokens: int = 1200

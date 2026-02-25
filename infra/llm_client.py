@@ -36,7 +36,11 @@ def _is_azure_openai(endpoint: str) -> bool:
     """
     if not endpoint:
         return False
-    return "openai.azure.com" in endpoint.lower()
+    endpoint = endpoint.lower()
+    return (
+        "openai.azure.com" in endpoint
+        or "cognitiveservices.azure.com" in endpoint
+    )
 
 
 def _normalize_base_url(endpoint: str) -> str:

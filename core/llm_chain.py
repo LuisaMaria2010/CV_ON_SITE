@@ -113,6 +113,14 @@ class CVExtractionChain:
             properties={"text_chars": len(truncated)},
         )
 
+        formatted_prompt = self.prompt.format(
+        content=truncated
+    )
+
+        logger.info("\n===== FINAL PROMPT SENT TO LLM =====\n")
+        logger.info(formatted_prompt)
+        logger.info("\n===================================\n")
+
         try:
             with track_duration("llm_processing_ms", request_id=request_id):
 
