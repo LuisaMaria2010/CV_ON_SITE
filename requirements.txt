@@ -1,0 +1,26 @@
+# Azure Functions runtime
+azure-functions
+
+# Core
+pydantic>=2.6,<3
+
+# LangChain + OpenAI (Azure)
+langchain>=0.2,<0.3
+langchain-openai>=0.1,<0.2
+
+# Azure SDK
+azure-identity>=1.16,<2
+azure-storage-blob>=12.19,<13
+azure-storage-queue>=12.11,<13
+# CV parsing
+pymupdf>=1.23,<2
+python-docx>=1.1,<2
+
+# Testing
+pytest>=7.0,<8
+pytest-asyncio>=0.20,<1
+
+pydantic-settings
+aiomysql>=0.1,<1
+pydantic[email]
+azure-search-documents

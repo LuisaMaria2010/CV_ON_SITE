@@ -1,0 +1,43 @@
+"""
+Queue trigger per indicizzazione Azure Search.
+
+Responsabilità:
+- leggere candidato dal payload
+- aggiornare indice search
+"""
+
+import json
+import logging
+import azure.functions as func
+
+from core.schema import CVExtraction
+from infra.search_service import SearchService
+
+from app_instance import app
+
+logger = logging.getLogger(__name__)
+
+def get_search():
+    """
+    Lazy init per testabilità.
+    Evita side-effect all'import.
+    """
+    return SearchService()
+
+@app.queue_trigger(
+    arg_name="msg",
+    queue_name="cv-index",
+    connection="AzureWebJobsStorage",
+)
+async def index_candidate(msg: func.QueueMessage):
+
+    payload = json.loads(msg.get_body().decode())
+
+    match_key = payload["match_key"]
+    data = payload["data"]
+
+    cv = CVExtraction(**data)
+    search = get_search()
+    await search.upsert_candidate(match_key, cv)
+
+    logger.info("Indexed candidate %s", match_key)
