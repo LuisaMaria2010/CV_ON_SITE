@@ -7,7 +7,7 @@ Wrapper minimale e async per Azure Blob Storage pensato per Azure Functions serv
 Design principles:
 - Solo operazioni bytes (NO filesystem locale)
 - Async I/O per evitare blocchi del worker
-- Managed Identity (DefaultAzureCredential)
+- Connection string (per Function Apps) o Managed Identity
 - Retry automatico con exponential backoff
 - API minimale (upload/download/exists/delete)
 
@@ -20,9 +20,9 @@ Utilizzo tipico nel progetto FlashCV:
 
 import asyncio
 import logging
+import os
 from typing import Optional, Callable, Awaitable, Any
 
-from azure.identity.aio import DefaultAzureCredential
 from azure.storage.blob.aio import BlobServiceClient
 from azure.core.exceptions import (
     ResourceNotFoundError,
@@ -56,11 +56,27 @@ class StorageService:
     BASE_DELAY = 0.4  # seconds
 
     def __init__(self):
-        self.credential = DefaultAzureCredential()
-        self.service = BlobServiceClient(
-            account_url=settings.storage_account_url,
-            credential=self.credential,
-        )
+        # Try connection string first (Function Apps), then account URL
+        connection_string = os.getenv("AzureWebJobsStorage") 
+        
+        if connection_string:
+            self.service = BlobServiceClient.from_connection_string(
+                connection_string
+            )
+        else:
+            # Fallback to account URL (requires Managed Identity)
+            try:
+                from azure.identity.aio import DefaultAzureCredential
+                self.service = BlobServiceClient(
+                    account_url=settings.storage_account_url,
+                    credential=DefaultAzureCredential(),
+                )
+            except ImportError:
+                raise ValueError(
+                    "No connection string found and DefaultAzureCredential not available. "
+                    "Set AzureWebJobsStorage environment variable."
+                )
+        
         self.default_container = settings.storage_container_incoming
 
     # =========================================================

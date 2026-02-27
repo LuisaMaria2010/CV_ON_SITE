@@ -40,7 +40,7 @@ from persist.db import acquire_conn
 
 from infra.queue_service import QueueService
 
-from app_instance import app
+from function_app import app
 
 index_queue = QueueService()
 

@@ -24,7 +24,7 @@ from extraction.cache import TextCache
 from db_data.pipeline import CVPipeline
 
 from utils.http_errors import http_error_handler
-from app_instance import app
+from function_app import app
 
 logger = logging.getLogger(__name__)
 

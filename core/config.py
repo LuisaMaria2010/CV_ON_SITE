@@ -75,14 +75,14 @@ class Settings(BaseSettings):
     prompt_file: str = "prompts.txt"
 
     # =====================================================
-    # MySQL
+    # MySQL (COMMENTED OUT - UNCOMMENT WHEN NEEDED)
     # =====================================================
 
-    mysql_host: str = "localhost"
-    mysql_port: int = 3306
-    mysql_user: str = "test"
-    mysql_password: str = "test"
-    mysql_database: str = "test"
+    # mysql_host: str = "localhost"
+    # mysql_port: int = 3306
+    # mysql_user: str = "test"
+    # mysql_password: str = "test"
+    # mysql_database: str = "test"
 
     # =====================================================
     # Helpers
@@ -114,24 +114,24 @@ class Settings(BaseSettings):
         return endpoint
 
     # =====================================================
-    # VALIDAZIONE SOLO IN PROD
+    # VALIDAZIONE SOLO IN PROD (COMMENTED OUT)
     # =====================================================
 
-    @model_validator(mode="after")
-    def validate_required_in_prod(self):
+    # @model_validator(mode="after")
+    # def validate_required_in_prod(self):
 
-        if self.environment.lower() in {"prod", "production"}:
+    #     if self.environment.lower() in {"prod", "production"}:
 
-            if "test.openai.azure.com" in self.azure_openai_endpoint:
-                raise ValueError("azure_openai_endpoint must be set in production")
+    #         if "test.openai.azure.com" in self.azure_openai_endpoint:
+    #             raise ValueError("azure_openai_endpoint must be set in production")
 
-            if self.storage_account_url.startswith("https://test"):
-                raise ValueError("storage_account_url must be set in production")
+    #         if self.storage_account_url.startswith("https://test"):
+    #             raise ValueError("storage_account_url must be set in production")
 
-            if not self.azure_openai_model:
-                raise ValueError("azure_openai_model must be set in production")
+    #         if not self.azure_openai_model:
+    #             raise ValueError("azure_openai_model must be set in production")
 
-        return self
+    #     return self
 
 
 # singleton

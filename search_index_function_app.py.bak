@@ -13,7 +13,7 @@ import azure.functions as func
 from core.schema import CVExtraction
 from infra.search_service import SearchService
 
-from app_instance import app
+from function_app import app
 
 logger = logging.getLogger(__name__)
 

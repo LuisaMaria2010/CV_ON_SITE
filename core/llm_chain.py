@@ -39,7 +39,7 @@ def _load_prompt() -> str:
         return f.read()
 
 
-PROMPT_TEXT = _load_prompt()
+# PROMPT_TEXT = _load_prompt()  # COMMENTED OUT - LAZY LOADING
 
 
 # =========================================================
@@ -67,7 +67,7 @@ class CVExtractionChain:
         )
 
         self.prompt = PromptTemplate(
-            template=PROMPT_TEXT,
+            template=_load_prompt(),  # Lazy load prompt
             input_variables=["content"],
             partial_variables={
                 "format_instructions": self.parser.get_format_instructions()

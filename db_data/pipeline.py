@@ -36,7 +36,14 @@ class CVPipeline:
     """
     def __init__(self, cache: TextCache, chain: CVExtractionChain | None = None):
         self.cache = cache
-        self.chain = chain or CVExtractionChain()
+        self._chain = chain  # Private field for lazy init
+        
+    @property
+    def chain(self):
+        """Lazy initialization of CVExtractionChain to avoid early LLM connection."""
+        if self._chain is None:
+            self._chain = CVExtractionChain()
+        return self._chain
 
     # =========================================================
 
