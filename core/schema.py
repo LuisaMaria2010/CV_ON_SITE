@@ -94,6 +94,19 @@ class LLMExtractionRaw(BaseModel):
         )
     )
 
+    education_titles: List[str] = Field(
+        default_factory=list,
+        description=(
+            "List of academic titles explicitly mentioned in the CV, such as bachelor's degree, master's degree, "
+            "PhD, or equivalent titles"
+        )
+    )
+
+    certifications: List[str] = Field(
+        default_factory=list,
+        description="List of professional certifications explicitly mentioned in the CV"
+    )
+
     employment_dates: List[WorkExperienceRaw] = Field(
         default_factory=list,
         description="List of employment periods detected in the CV with start and end dates"
@@ -174,6 +187,16 @@ class CVExtraction(BaseModel):
     skills: List[str] = Field(
         default_factory=list,
         description="Normalized and deduplicated list of tech skills"
+    )
+
+    education_titles: List[str] = Field(
+        default_factory=list,
+        description="List of academic titles extracted from the CV"
+    )
+
+    certifications: List[str] = Field(
+        default_factory=list,
+        description="List of professional certifications extracted from the CV"
     )
 
     employment_dates: List[WorkExperience] = Field(

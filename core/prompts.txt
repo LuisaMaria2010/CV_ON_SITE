@@ -11,6 +11,16 @@ Rules:
 - Dates must be in YYYY-MM-DD format
 - Keep text concise
 
+EDUCATION AND CERTIFICATIONS EXTRACTION:
+- Extract academic titles explicitly present in the CV
+- Include titles such as bachelor's degree, master's degree, PhD, laurea triennale, laurea magistrale, dottorato di ricerca, or equivalent
+- Store them in education_titles as concise strings that include both level and field whenever available
+- Preferred examples: "Bachelor Degree in Computer Science", "Master Degree in Artificial Intelligence", "Ph.D. in Physics"
+- Avoid generic entries like only "Bachelor Degree" or only "Master Degree" if the field of study is present in the CV
+- Extract professional certifications explicitly mentioned in the CV
+- Store them in certifications as concise strings
+- Do NOT infer missing degrees or certifications
+
 SKILLS EXTRACTION PROCEDURE:
 For each candidate skill mentioned in the CV:
 

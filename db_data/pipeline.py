@@ -91,7 +91,9 @@ class CVPipeline:
         # JSON CACHE (LLM)
         # -------------------------------------------------
 
-        cached_json = await self.cache.get_json(file_hash)
+        json_cache_key = f"{file_hash}-{self.chain.cache_signature}"
+
+        cached_json = await self.cache.get_json(json_cache_key)
 
         if cached_json is not None:
             track_event("pipeline_llm_cache_hit", request_id=request_id)
@@ -103,7 +105,7 @@ class CVPipeline:
 
             raw = await self.chain.extract(text)
 
-            await self.cache.save_json(file_hash, raw.model_dump())
+            await self.cache.save_json(json_cache_key, raw.model_dump())
 
         # -------------------------------------------------
         # DOMAIN MAPPING

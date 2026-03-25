@@ -10,6 +10,7 @@ Questo modulo definisce la pipeline per:
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import logging
 from pathlib import Path
 
@@ -75,6 +76,10 @@ class CVExtractionChain:
         )
 
         self.chain = self.prompt | self.llm | self.parser
+
+        # Signature used to version cached LLM JSON outputs when prompt/schema changes.
+        cache_source = _load_prompt() + self.parser.get_format_instructions()
+        self.cache_signature = hashlib.sha256(cache_source.encode("utf-8")).hexdigest()[:12]
 
     # =====================================================
 

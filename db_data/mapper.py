@@ -76,6 +76,21 @@ def _clean_skills(skills: Iterable[str]) -> list[str]:
     return [s.strip() for s in skills if s and s.strip()]
 
 
+def _clean_list(values: Iterable[str]) -> list[str]:
+    """
+    Pulisce una lista generica di stringhe:
+    - rimuove spazi
+    - elimina elementi vuoti
+
+    Args:
+        values (Iterable[str]): Lista di stringhe da pulire.
+
+    Returns:
+        list[str]: Lista pulita.
+    """
+    return [value.strip() for value in values if value and value.strip()]
+
+
 # =========================================================
 # Public API
 # =========================================================
@@ -114,5 +129,7 @@ def to_domain(raw: LLMExtractionRaw) -> CVExtraction:
         language=_clean(raw.language),
         birth_date=_parse_date(raw.birth_date),
         skills=_clean_skills(raw.skills),
+        education_titles=_clean_list(raw.education_titles),
+        certifications=_clean_list(raw.certifications),
         employment_dates=work_experiences,
     )
