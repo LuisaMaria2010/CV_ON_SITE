@@ -68,8 +68,13 @@ async def extract(req: func.HttpRequest):
     
     # Pipeline dominio (parsing + LLM)
     extraction = await pipeline.process(file_bytes)
+
+    # Rimuoviamo temporaneamente i dati sensibili dall'output pubblico
+    response_payload = extraction.model_dump()
+    for field in ("email", "phone", "age"):
+        response_payload.pop(field, None)
     
     # Ritorniamo dict puro (decoratore gestisce envelope)
-    return extraction.model_dump()
+    return response_payload
 
 
