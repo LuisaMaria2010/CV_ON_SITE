@@ -1,0 +1,1 @@
+"""Domain models for document ingestion."""

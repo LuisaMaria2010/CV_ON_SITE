@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pydantic import Field, model_validator
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -58,8 +58,25 @@ class Settings(BaseSettings):
 
     storage_account_url: str = "https://devsaaimc.blob.core.windows.net"
     storage_container_incoming: str = "incoming-cv"
+    storage_container_original_uploads: str = "incoming-cv-originals"
     storage_container_cache: str = "raw-text-cache"
+    storage_container_normalized_markdown: str = "normalized-cv-md"
     storage_queue_name: str = "cv-persist"
+    document_processing_queue_name: str = "document-processing"
+    document_indexing_queue_name: str = "document-indexing"
+    document_processing_dlq_name: str = "document-processing-deadletter"
+    document_indexing_dlq_name: str = "document-indexing-deadletter"
+    document_registry_connection_name: str = "AzureWebJobsStorage"
+    document_registry_table_name: str = "DocumentRegistry"
+
+    # =====================================================
+    # Azure AI Search
+    # =====================================================
+
+    search_endpoint: str = "https://as-ai-sitemc-dev.search.windows.net"
+    search_index_name: str = "cv-candidates"
+    document_search_index_name: str = "cv-doc-chunks"
+    search_vector_dimensions: int = 1536
 
     # =====================================================
     # Limits

@@ -26,6 +26,7 @@ from typing import Optional, Callable, Awaitable, Any
 from azure.storage.blob.aio import BlobServiceClient
 from azure.core.exceptions import (
     ResourceNotFoundError,
+    ResourceExistsError,
     ServiceRequestError,
     HttpResponseError,
 )
@@ -156,6 +157,15 @@ class StorageService:
         """
         container = container or self.default_container
         name = self._name(blob_name, folder)
+
+        async def _ensure_container():
+            container_client = self.service.get_container_client(container)
+            try:
+                await container_client.create_container()
+            except ResourceExistsError:
+                pass
+
+        await self._retry(_ensure_container)
 
         async def _op():
             client = self.service.get_blob_client(container, name)

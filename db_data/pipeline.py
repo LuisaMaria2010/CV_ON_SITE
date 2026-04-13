@@ -8,12 +8,12 @@ Gestisce cache, chiamate LLM, mapping e arricchimento in modo trasparente.
 """
 
 from extraction.hashing import sha256_bytes
-from extraction.extract import extract_text
 from extraction.cache import TextCache
 
 from core.llm_chain import CVExtractionChain
 from core.schema import LLMExtractionRaw
 from core.errors import TextExtractionError
+from services.document_processor import DocumentProcessor
 
 from db_data.mapper import to_domain
 from db_data.postprocess import enrich
@@ -34,9 +34,15 @@ class CVPipeline:
     - mapping su modello dominio
     - arricchimento finale
     """
-    def __init__(self, cache: TextCache, chain: CVExtractionChain | None = None):
+    def __init__(
+        self,
+        cache: TextCache,
+        chain: CVExtractionChain | None = None,
+        document_processor: DocumentProcessor | None = None,
+    ):
         self.cache = cache
         self._chain = chain  # Private field for lazy init
+        self.document_processor = document_processor or DocumentProcessor()
         
     @property
     def chain(self):
@@ -78,7 +84,8 @@ class CVPipeline:
         if text is None:
             track_event("pipeline_text_cache_miss", request_id=request_id)
 
-            text = extract_text(file_bytes, mime)
+            processing_result = self.document_processor.process(file_bytes, mime_type=mime)
+            text = processing_result["extracted_text"]
 
             if not text:
                 raise TextExtractionError("Empty extracted text")
