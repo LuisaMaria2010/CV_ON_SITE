@@ -12,6 +12,10 @@ from core.config import settings
 from core.errors import InvalidInputError
 from infra.document_registry import DocumentRegistry
 from services.document_processor import DocumentProcessor
+from domain.normalizer import TextNormalizer
+from infra.search_service import SearchService
+import asyncio
+from services.document_indexer import DocumentIndexer
 
 bp = func.Blueprint()
 logger = logging.getLogger(__name__)
@@ -20,14 +24,18 @@ document_processor = DocumentProcessor()
 
 
 def _download_blob_sync(container_name: str, blob_name: str) -> bytes:
-    conn = os.environ["AzureWebJobsStorage"]
+    conn = settings.storage_account_connection_string or settings.storage_connection_string
+    if not conn:
+        raise InvalidInputError("Missing storage connection string (AzureWebJobsStorage)")
     client = BlobServiceClient.from_connection_string(conn)
     blob_client = client.get_blob_client(container=container_name, blob=blob_name)
     return blob_client.download_blob().readall()
 
 
 def _upload_markdown_sync(container_name: str, blob_name: str, markdown: str, metadata: dict[str, str]) -> None:
-    conn = os.environ["AzureWebJobsStorage"]
+    conn = settings.storage_account_connection_string or settings.storage_connection_string
+    if not conn:
+        raise InvalidInputError("Missing storage connection string (AzureWebJobsStorage)")
     client = BlobServiceClient.from_connection_string(conn)
     container_client = client.get_container_client(container_name)
     try:
@@ -111,12 +119,39 @@ def process_incoming_cv(msg: func.QueueMessage):
         )
 
         file_bytes = _download_blob_sync(container_name, blob_name)
-        processing_result = document_processor.process(file_bytes, mime_type=mime_type)
+        processing_result = document_processor.process(
+            file_bytes,
+            mime_type=mime_type,
+            filename=filename,
+            source_path=source_path,
+        )
         extracted_text = processing_result["extracted_text"]
         markdown = processing_result["markdown"]
         content_hash = processing_result["content_hash"]
+        enriched_meta: dict = processing_result.get("metadata") or {}
 
-        should_process, next_version = document_registry.should_process(source_path, content_hash)
+        # compute normalized document id from filename
+        document_id = TextNormalizer.normalize_document_id(filename)
+
+        # LLM enrichment: populate skills, certifications, experience, etc. in front matter
+        try:
+            from core.llm_chain import CVExtractionChain
+            from db_data.mapper import to_domain
+            from db_data.postprocess import enrich as _enrich_cv
+            _chain = CVExtractionChain()
+            _raw = asyncio.run(_chain.extract(extracted_text))
+            _cv_extraction = _enrich_cv(to_domain(_raw))
+            markdown, enriched_meta = document_processor.apply_cv_extraction(
+                markdown, processing_result.get("metadata") or {}, _cv_extraction
+            )
+            logger.info("LLM enrichment applied document_id=%s", document_id)
+        except Exception:
+            logger.exception(
+                "LLM enrichment failed, proceeding with partial metadata document_id=%s", document_id
+            )
+        should_process, next_version = document_registry.should_process(
+            source_path, content_hash, document_id=document_id
+        )
         if not should_process:
             logger.info(
                 "Document skipped source_path=%s version=%s correlation_id=%s",
@@ -125,12 +160,29 @@ def process_incoming_cv(msg: func.QueueMessage):
                 correlation_id,
             )
             return
+        # Register using normalized document id
+        registry_record = document_registry.register(document_id, source_path, content_hash)
 
-        registry_record = document_registry.register(filename, source_path, content_hash)
+        # If we are incrementing version for an existing document, delete old chunks
+        try:
+            if next_version is not None:
+                try:
+                    search = SearchService()
+                    asyncio.run(search.delete_chunks(registry_record.get("document_id") or document_id))
+                except Exception:
+                    logger.exception("Failed to delete old chunks for document_id=%s", registry_record.get("document_id") or document_id)
+        except Exception:
+            logger.exception("Error while attempting pre-index cleanup")
+
+        # Ensure metadata includes registry version and use processor metadata where available
+        proc_meta = processing_result.get("metadata") or {}
+        proc_meta["version"] = int(registry_record.get("version") or 1)
+
         markdown_blob_name = _markdown_blob_name(
-            registry_record.get("document_id") or filename,
+            registry_record.get("document_id") or document_id or filename,
             int(registry_record.get("version") or 1),
         )
+
         _upload_markdown_sync(
             settings.storage_container_normalized_markdown,
             markdown_blob_name,
@@ -152,8 +204,31 @@ def process_incoming_cv(msg: func.QueueMessage):
             correlation_id,
         )
 
+        # Index chunks (conditional) before marking as processed
+        try:
+            from core.schema import NormalizedCVMetadata
+            indexer = DocumentIndexer()
+            version = int(registry_record.get("version") or 1)
+            try:
+                chunk_meta = NormalizedCVMetadata(
+                    **{
+                        **enriched_meta,
+                        "document_id": registry_record.get("document_id") or document_id,
+                        "version": version,
+                        "source_paths": [source_path],
+                        "hash": content_hash,
+                        "processed_at": enriched_meta.get("processed_at") or proc_meta.get("processed_at"),
+                    }
+                )
+                docs = indexer.index(markdown, chunk_meta)
+                logger.info("Indexed %s chunks for document_id=%s version=%s", len(docs), registry_record.get("document_id"), version)
+            except Exception:
+                logger.exception("Indexing failed for document_id=%s version=%s", registry_record.get("document_id"), version)
+        except Exception:
+            logger.exception("Failed to initialize DocumentIndexer")
+
         document_registry.mark_status(
-            filename,
+            registry_record.get("document_id") or document_id or filename,
             source_path,
             DocumentRegistry.STATUS_PROCESSED,
         )
@@ -166,7 +241,7 @@ def process_incoming_cv(msg: func.QueueMessage):
         )
     except Exception:
         document_registry.mark_status(
-            filename,
+            registry_record.get("document_id") if 'registry_record' in locals() else filename,
             source_path,
             DocumentRegistry.STATUS_FAILED,
         )

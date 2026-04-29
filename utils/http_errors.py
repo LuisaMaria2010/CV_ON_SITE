@@ -130,9 +130,11 @@ def map_exception_to_response(
 
     logger.exception("[%s] Unexpected error", request_id)
 
+    # During local debugging return the exception message to aid diagnosis.
+    # NOTE: this may expose internal details; revert before production.
     return json_response(
         data=None,
-        error="Internal server error",
+        error=str(exc),
         request_id=request_id,
         status_code=500,
     )

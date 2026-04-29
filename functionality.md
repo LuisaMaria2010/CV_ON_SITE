@@ -23,6 +23,7 @@ Il sistema è progettato per:
 
 ```
 Client → HTTP Function (extract)
+  → Blob Storage (incoming-cv-originals)
       → Pipeline CV
       → Cache Blob
       → Azure OpenAI (LLM)
@@ -42,6 +43,7 @@ Client → HTTP Function (extract)
 
 * riceve CV via POST
 * valida dimensione e input
+* salva sempre il file originale su `incoming-cv-originals`
 * chiama pipeline di estrazione
 * restituisce JSON standard
 
@@ -104,7 +106,8 @@ Pulizia:
 Blob containers:
 
 ```
-incoming-cv       → file originali
+incoming-cv-originals → file originali caricati da frontend/API
+incoming-cv          → documenti interni pronti per ingestion trigger/backfill
 raw-text-cache    → testo estratto + JSON LLM
 ```
 
@@ -282,10 +285,11 @@ extract → persist → index
 
 ## Blob Storage
 
-| Container      | Uso               |
-| -------------- | ----------------- |
-| incoming-cv    | upload temporaneo |
-| raw-text-cache | testo e JSON LLM  |
+| Container             | Uso                                               |
+| --------------------- | ------------------------------------------------- |
+| incoming-cv-originals | CV originali caricati da frontend/API             |
+| incoming-cv           | documenti interni per trigger/backfill ingestion  |
+| raw-text-cache        | testo e JSON LLM                                  |
 
 Accesso:
 

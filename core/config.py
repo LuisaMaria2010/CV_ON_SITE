@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from pydantic import Field
+import os
+import json
+from pathlib import Path
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,6 +18,20 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
+        # pydantic-settings env alias mapping for field names
+        env_names={
+            "azure_openai_key": ["AZURE_OPENAI_KEY"],
+            "azure_search_api_key": ["AZURE_SEARCH_API_KEY"],
+            "azure_subscription_id": ["AZURE_SUBSCRIPTION_ID"],
+            "azure_tenant_id": ["AZURE_TENANT_ID"],
+            "storage_account_connection_string": [
+                "AzureWebJobsStorage",
+                "STORAGE_ACCOUNT_CONNECTION_STRING",
+                "STORAGE_CONNECTION_STRING",
+            ],
+            "storage_account_url": ["STORAGE_ACCOUNT_URL"],
+            "search_endpoint": ["AZURE_SEARCH_SERVICE_ENDPOINT"],
+        },
     )
 
     # =====================================================
@@ -39,6 +56,9 @@ class Settings(BaseSettings):
     # deployment name (Azure OpenAI) OR model name (Foundry)
     azure_openai_model: str = "gpt-4.1-mini"
 
+    # embedding deployment/model name
+    azure_openai_embedding_model: str = "text-embedding-3-small"
+
     # richiesta solo per Azure OpenAI
     azure_openai_api_version: str = "2025-01-01-preview"
 
@@ -52,11 +72,20 @@ class Settings(BaseSettings):
     # foundry = forza Foundry inference
     azure_llm_backend: str = "auto"
 
+    # Optional explicit keys / identifiers (can be provided via env)
+    azure_openai_key: str | None = Field(default=None)
+    azure_search_api_key: str | None = Field(default=None)
+    azure_subscription_id: str | None = Field(default=None)
+    azure_tenant_id: str | None = Field(default=None)
+    storage_account_connection_string: str | None = Field(default=None)
+
     # =====================================================
     # Storage
     # =====================================================
 
     storage_account_url: str = "https://devsaaimc.blob.core.windows.net"
+    # allow override from AZURE storage env name
+    storage_account_url: str = Field(default="https://devsaaimc.blob.core.windows.net")
     storage_container_incoming: str = "incoming-cv"
     storage_container_original_uploads: str = "incoming-cv-originals"
     storage_container_cache: str = "raw-text-cache"
@@ -73,10 +102,26 @@ class Settings(BaseSettings):
     # Azure AI Search
     # =====================================================
 
-    search_endpoint: str = "https://as-ai-sitemc-dev.search.windows.net"
+    search_endpoint: str = Field(default="https://as-ai-sitemc-dev.search.windows.net")
     search_index_name: str = "cv-candidates"
     document_search_index_name: str = "cv-doc-chunks"
     search_vector_dimensions: int = 1536
+    # Chunking defaults for indexing
+    azure_search_chunk_size: int = 2000
+    azure_search_chunk_overlap: int = 200
+
+    # Subco-specific indexes (Phase E)
+    search_subco_risorse_index: str = "cv-risorse-chunks"
+    search_subco_candidati_index: str = "cv-candidati-chunks"
+
+    # Reranker weights (Phase E)
+    search_reranker_lex_weight: float = 0.40
+    search_reranker_vec_weight: float = 0.60
+    search_reranker_skill_boost: float = 0.10
+    search_reranker_role_boost: float = 0.05
+    search_reranker_location_boost: float = 0.05
+    search_reranker_recency_boost: float = 0.02
+    search_fallback_threshold: float = 0.20
 
     # =====================================================
     # Limits
@@ -130,6 +175,39 @@ class Settings(BaseSettings):
 
         return endpoint
 
+    @property
+    def storage_connection_string(self) -> str | None:
+        """
+        Restituisce la connection string dello storage.
+
+        Ordine di priorità:
+        1. valore esplicito `storage_account_connection_string` (env `AzureWebJobsStorage`)
+        2. variabile d'ambiente `AzureWebJobsStorage` letta direttamente
+        3. None
+        """
+        if self.storage_account_connection_string:
+            return self.storage_account_connection_string
+
+        # fallback diretto alle env (in alcuni contesti local.settings.json non è caricata automaticamente)
+        for k in ("AzureWebJobsStorage", "STORAGE_ACCOUNT_CONNECTION_STRING", "STORAGE_CONNECTION_STRING"):
+            v = os.environ.get(k)
+            if v:
+                return v
+
+        # fallback: try to read local.settings.json (useful for local dev runs)
+        try:
+            cfg_path = Path(__file__).parent.parent / "local.settings.json"
+            if cfg_path.exists():
+                data = json.loads(cfg_path.read_text(encoding="utf-8"))
+                vals = data.get("Values", {}) or {}
+                v = vals.get("AzureWebJobsStorage") or vals.get("AZUREWEBJOBSSTORAGE")
+                if v:
+                    return v
+        except Exception:
+            pass
+
+        return None
+
     # =====================================================
     # VALIDAZIONE SOLO IN PROD (COMMENTED OUT)
     # =====================================================
@@ -153,3 +231,60 @@ class Settings(BaseSettings):
 
 # singleton
 settings = Settings()
+
+# Ensure `storage_account_connection_string` field is populated when possible
+if not settings.storage_account_connection_string:
+    _fallback = settings.storage_connection_string
+    if _fallback:
+        try:
+            settings.storage_account_connection_string = _fallback
+        except Exception:
+            # best-effort: non-blocking if Settings is immutable in some contexts
+            pass
+
+
+# --------------------------------------------------
+# Env alias mapping (compatibilità con precedenti nomi env)
+# --------------------------------------------------
+def _apply_env_aliases(s: Settings) -> None:
+    """
+    Populate settings fields from common environment variable aliases
+    to preserve backward compatibility with existing local.settings.json
+    and legacy env names (e.g. AzureWebJobsStorage).
+    """
+    aliases = {
+        "azure_openai_key": ["AZURE_OPENAI_KEY"],
+        "azure_search_api_key": ["AZURE_SEARCH_API_KEY"],
+        "azure_subscription_id": ["AZURE_SUBSCRIPTION_ID"],
+        "azure_tenant_id": ["AZURE_TENANT_ID"],
+        "storage_account_connection_string": [
+            "AzureWebJobsStorage",
+            "STORAGE_ACCOUNT_CONNECTION_STRING",
+            "STORAGE_CONNECTION_STRING",
+        ],
+        "storage_account_url": ["STORAGE_ACCOUNT_URL"],
+        "search_endpoint": ["AZURE_SEARCH_SERVICE_ENDPOINT"],
+    }
+
+    for field, env_names in aliases.items():
+        try:
+            current = getattr(s, field)
+        except Exception:
+            current = None
+
+        if current:
+            continue
+
+        for name in env_names:
+            v = os.environ.get(name)
+            if v:
+                try:
+                    setattr(s, field, v)
+                except Exception:
+                    # ignore if Settings is frozen/immutable in some contexts
+                    pass
+                break
+
+
+# Apply aliases after instantiation
+_apply_env_aliases(settings)

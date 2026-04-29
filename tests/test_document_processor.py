@@ -34,9 +34,19 @@ def test_document_processor_produces_deterministic_markdown() -> None:
     first = processor.process(pdf_bytes, mime_type="application/pdf")
     second = processor.process(pdf_bytes, mime_type="application/pdf")
 
-    assert first["markdown"] == second["markdown"]
-    assert first["extracted_text"] == second["extracted_text"]
+    # content_hash and extracted text must be identical across calls
     assert first["content_hash"] == second["content_hash"]
+    assert first["extracted_text"] == second["extracted_text"]
+
+    # Strip front matter (--- ... ---\n) before comparing body — processed_at differs per call
+    def _body(md: str) -> str:
+        if md.startswith("---\n"):
+            end = md.find("\n---\n", 4)
+            if end >= 0:
+                return md[end + 5:]
+        return md
+
+    assert _body(first["markdown"]) == _body(second["markdown"])
     assert "# Profilo Professionale" in first["markdown"]
     assert "Profilo Professionale" in first["extracted_text"]
     assert "- Azure Functions" in first["markdown"]

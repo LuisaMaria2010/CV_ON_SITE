@@ -113,3 +113,20 @@ def get_llm(
             max_tokens=max_tokens,
             timeout=settings.llm_timeout_seconds,
         )
+
+
+def get_embedding_client():
+    """
+    Restituisce client AzureOpenAIEmbeddings usando le stesse credenziali del LLM.
+
+    Returns:
+        AzureOpenAIEmbeddings pronto all'uso per generare vettori 1536-dim.
+    """
+    from langchain_openai import AzureOpenAIEmbeddings
+
+    return AzureOpenAIEmbeddings(
+        azure_endpoint=settings.azure_openai_endpoint,
+        azure_deployment=settings.azure_openai_embedding_model,
+        api_version=settings.azure_openai_api_version,
+        azure_ad_token_provider=_token_provider,
+    )

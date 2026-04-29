@@ -18,6 +18,7 @@ from core.schema import (
     LLMExtractionRaw,
     CVExtraction,
     WorkExperience,
+    SkillEntry,
 )
 
 
@@ -60,20 +61,33 @@ def _parse_date(value: Optional[str]) -> Optional[date]:
         return None
 
 
-def _clean_skills(skills: Iterable[str]) -> list[str]:
+def _clean_skills(skills) -> list[SkillEntry]:
     """
-    Pulisce una lista di skill:
-    - rimuove spazi
-    - elimina elementi vuoti
-    (NO deduplica: demandata al business layer)
+    Pulisce una lista di SkillEntry:
+    - rimuove elementi con nome vuoto
+    - normalizza il nome in minuscolo
+    - preserva il livello as-is
 
     Args:
-        skills (Iterable[str]): Lista di skill da pulire.
+        skills: Lista di SkillEntry (o dicts compatibili).
 
     Returns:
-        list[str]: Lista pulita di skill.
+        list[SkillEntry]: Lista pulita.
     """
-    return [s.strip() for s in skills if s and s.strip()]
+    result = []
+    for s in skills:
+        if isinstance(s, SkillEntry):
+            name = (s.name or "").strip().lower()
+            level = (s.level or "").strip() or None
+        elif isinstance(s, dict):
+            name = (s.get("name") or "").strip().lower()
+            level = (s.get("level") or "").strip() or None
+        else:
+            name = str(s).strip().lower()
+            level = None
+        if name:
+            result.append(SkillEntry(name=name, level=level))
+    return result
 
 
 def _clean_list(values: Iterable[str]) -> list[str]:

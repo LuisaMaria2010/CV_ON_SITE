@@ -25,9 +25,17 @@ SKILLS EXTRACTION PROCEDURE:
 For each candidate skill mentioned in the CV:
 
 1. Check if it is a concrete technology, programming language, framework, library, cloud service, database, software tool, or platform.
-2. If YES → include it
+2. If YES → include it as an object with:
+   - "name": the normalized skill name (lowercase, e.g. "reactjs", "python", "azure devops")
+   - "level": the proficiency level AS WRITTEN in the CV (e.g. "Buona conoscenza", "Expert", "Conoscenza base", "Intermediate"); use null if not specified
 3. If it is a personal ability, soft skill, or generic competency → EXCLUDE it
 4. If uncertain → EXCLUDE it
+
+IMPORTANT about skills layout in CVs:
+CVs sometimes list skills in a two-column table: left column = skill name, right column = proficiency level.
+When the PDF text presents skill names and proficiency levels in separate blocks (due to column extraction),
+you MUST pair them correctly: skill name from the left column with the proficiency level from the right column,
+in the SAME ORDER they appear.
 
 IMPORTANT:
 Soft skills must NEVER appear in the output even if listed in the CV Skills section.
@@ -38,8 +46,10 @@ Examples to EXCLUDE:
 communication, teamwork, leadership, analytical, problem solving,
 organizational, managerial, proactive, detail-oriented, adaptable
 
-Examples to INCLUDE:
-Python, SQL, Azure, Power BI, Tableau, TensorFlow, Docker, Kubernetes
+Examples to INCLUDE (as objects):
+{{"name": "python", "level": null}}
+{{"name": "azure devops", "level": "Expert"}}
+{{"name": "reactjs", "level": "Buona conoscenza"}}
 
 Resume text:
 ----------------
@@ -51,9 +61,10 @@ FINAL VALIDATION STEP (MANDATORY):
 Before returning the JSON:
 
 - Review the skills list
-- Remove any item that is NOT a concrete technical technology/tool/language
+- Remove any item where "name" is NOT a concrete technical technology/tool/language
 - Ensure NO soft skills remain
 - If any soft skill exists, delete it
+- Each skill MUST be an object {{"name": "...", "level": "..." or null}}
 
 Return the corrected JSON only.
 

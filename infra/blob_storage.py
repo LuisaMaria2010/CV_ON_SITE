@@ -58,12 +58,10 @@ class StorageService:
 
     def __init__(self):
         # Try connection string first (Function Apps), then account URL
-        connection_string = os.getenv("AzureWebJobsStorage") 
-        
+        connection_string = settings.storage_account_connection_string or settings.storage_connection_string
+
         if connection_string:
-            self.service = BlobServiceClient.from_connection_string(
-                connection_string
-            )
+            self.service = BlobServiceClient.from_connection_string(connection_string)
         else:
             # Fallback to account URL (requires Managed Identity)
             try:

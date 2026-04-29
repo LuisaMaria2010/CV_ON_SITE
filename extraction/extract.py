@@ -72,20 +72,64 @@ def _is_docx(mime: str | None) -> bool:
 
 
 def _elements_from_pdf(data: bytes) -> list[DocumentElement]:
-    raw_blocks: list[dict] = []
     font_sizes: list[float] = []
+    table_elements: list[DocumentElement] = []
+    per_line_items: list[dict] = []
 
     with fitz.open(stream=data, filetype="pdf") as doc:
         for page_number, page in enumerate(doc, start=1):
+
+            # ── Step 1: native table detection via find_tables() ──────────────
+            table_bboxes: list[tuple] = []
+            try:
+                tabs = page.find_tables()
+                for tab in tabs.tables:
+                    bx0, by0, bx1, by1 = tab.bbox
+                    table_bboxes.append((bx0, by0, bx1, by1))
+                    rows: list[list[str]] = []
+                    for row in tab.extract():
+                        clean_row = [(cell or "").strip() for cell in row]
+                        if any(clean_row):
+                            rows.append(clean_row)
+                    if len(rows) >= 2 and len(rows[0]) >= 2:
+                        table_elements.append(
+                            DocumentElement(
+                                element_type="table",
+                                rows=rows,
+                                page_number=page_number,
+                                vertical_position=float(by0),
+                                horizontal_position=float(bx0),
+                            )
+                        )
+            except Exception:
+                logger.debug("find_tables failed on page %d", page_number)
+
+            # ── Step 2: collect per-line items with individual line bbox ──────
+            # Using per-line y-coordinates allows column-aware reading order:
+            # lines from left and right columns that share the same y-level
+            # are later merged into a single "skill  level" row.
             page_dict = page.get_text("dict")
             for block in page_dict.get("blocks", []):
                 if block.get("type") != 0:
                     continue
 
-                lines_data: list[dict] = []
+                bx0, by0, bx1, by1 = block.get("bbox", [0, 0, 0, 0])
+
+                # Skip blocks covered by a detected table
+                skip = False
+                for tx0, ty0, tx1, ty1 in table_bboxes:
+                    ox = max(0.0, min(bx1, tx1) - max(bx0, tx0))
+                    oy = max(0.0, min(by1, ty1) - max(by0, ty0))
+                    if ox * oy / max(1.0, (bx1 - bx0) * (by1 - by0)) > 0.5:
+                        skip = True
+                        break
+                if skip:
+                    continue
+
                 for line in block.get("lines", []):
                     span_texts: list[str] = []
                     span_sizes: list[float] = []
+                    line_bbox = line.get("bbox", [bx0, by0, bx1, by1])
                     for span in line.get("spans", []):
                         text = (span.get("text") or "").strip()
                         if not text:
@@ -97,28 +141,74 @@ def _elements_from_pdf(data: bytes) -> list[DocumentElement]:
                             font_sizes.append(size)
 
                     if span_texts:
-                        lines_data.append(
+                        per_line_items.append(
                             {
+                                "page_number": page_number,
+                                "y0": float(line_bbox[1]),
+                                "x0": float(line_bbox[0]),
                                 "text": " ".join(span_texts).strip(),
                                 "size": sum(span_sizes) / len(span_sizes) if span_sizes else 0.0,
                             }
                         )
 
-                if not lines_data:
-                    continue
-
-                raw_blocks.append(
-                    {
-                        "page_number": page_number,
-                        "vertical_position": float(block.get("bbox", [0, 0, 0, 0])[1]),
-                        "horizontal_position": float(block.get("bbox", [0, 0, 0, 0])[0]),
-                        "lines": lines_data,
-                    }
-                )
-
     base_size = median(font_sizes) if font_sizes else 11.0
-    elements: list[DocumentElement] = []
-    for block in sorted(raw_blocks, key=lambda item: (item["page_number"], item["vertical_position"], item["horizontal_position"])):
+
+    # ── Step 3: sort per-line items by (page, y, x) ───────────────────────────
+    per_line_items.sort(key=lambda l: (l["page_number"], l["y0"], l["x0"]))
+
+    # ── Step 4: group same-y lines into visual rows and merge column cells ────
+    # Lines within Y_TOL pts on the same page are considered the same visual row.
+    # Multiple cells in a row (from different x-columns) are joined with "  " so
+    # that _maybe_parse_table can later detect the table structure.
+    Y_TOL = 3.0
+    merged_lines: list[dict] = []
+    if per_line_items:
+        current_row: list[dict] = [per_line_items[0]]
+        for item in per_line_items[1:]:
+            prev = current_row[0]
+            if item["page_number"] == prev["page_number"] and abs(item["y0"] - prev["y0"]) <= Y_TOL:
+                current_row.append(item)
+            else:
+                merged_lines.append(_merge_row_cells(current_row))
+                current_row = [item]
+        merged_lines.append(_merge_row_cells(current_row))
+
+    # ── Step 5: re-group merged lines into blocks ─────────────────────────────
+    # Consecutive merged lines that are close in y (≤ 2.5× size gap) and share the
+    # same column structure belong to the same block.
+    raw_blocks: list[dict] = []
+    if merged_lines:
+        current_block: list[dict] = [merged_lines[0]]
+        for ml in merged_lines[1:]:
+            prev = current_block[-1]
+            y_gap = ml["y0"] - prev["y0"]
+            max_size = max(ml["size"], prev["size"], 1.0)
+            same_page = ml["page_number"] == prev["page_number"]
+            prev_two_col = "  " in prev["text"]
+            curr_two_col = "  " in ml["text"]
+            # Split block if: different page, large Y-gap, column structure change,
+            # or a significant font-size jump (heading-sized line isolated from body)
+            heading_threshold = base_size * 1.15
+            size_jump = (
+                (ml["size"] >= heading_threshold) != (prev["size"] >= heading_threshold)
+            )
+            split = (
+                not same_page
+                or y_gap > max_size * 2.5
+                or prev_two_col != curr_two_col
+                or size_jump
+            )
+            if split:
+                raw_blocks.append(_finalize_raw_block(current_block))
+                current_block = [ml]
+            else:
+                current_block.append(ml)
+        raw_blocks.append(_finalize_raw_block(current_block))
+
+    # ── Step 6: convert raw_blocks → DocumentElements ────────────────────────
+    elements: list[DocumentElement] = list(table_elements)
+
+    for block in raw_blocks:
         lines = [line["text"] for line in block["lines"] if line["text"]]
         if not lines:
             continue
@@ -183,7 +273,39 @@ def _elements_from_pdf(data: bytes) -> list[DocumentElement]:
                 )
             )
 
+    # Elements are already in reading order (sorted by y during per-line step)
     return _coalesce_paragraphs(elements)
+
+
+def _merge_row_cells(row: list[dict]) -> dict:
+    """Merge multiple per-line items that share the same y-level into one merged line.
+
+    Items from different x-columns are joined with '  ' (double space) so that
+    _maybe_parse_table can later split them into table cells.
+    """
+    if len(row) == 1:
+        return row[0]
+    sorted_cells = sorted(row, key=lambda c: c["x0"])
+    parts = [c["text"] for c in sorted_cells if c["text"]]
+    merged_text = "  ".join(parts)
+    avg_size = sum(c["size"] for c in row) / max(1, len(row))
+    return {
+        "page_number": row[0]["page_number"],
+        "y0": row[0]["y0"],
+        "x0": row[0]["x0"],
+        "text": merged_text,
+        "size": avg_size,
+    }
+
+
+def _finalize_raw_block(lines: list[dict]) -> dict:
+    """Convert a list of merged line items into a raw_block dict."""
+    return {
+        "page_number": lines[0]["page_number"],
+        "vertical_position": lines[0]["y0"],
+        "horizontal_position": lines[0]["x0"],
+        "lines": [{"text": l["text"], "size": l["size"]} for l in lines],
+    }
 
 
 def _elements_from_docx(data: bytes) -> list[DocumentElement]:

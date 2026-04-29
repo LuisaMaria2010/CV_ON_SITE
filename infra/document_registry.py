@@ -68,6 +68,30 @@ class DocumentRegistry:
             return None
         return dict(entities[0])
 
+    def find_by_hash(self, content_hash: str) -> dict[str, Any] | None:
+        """Return an entity that has the given hash (if any)."""
+        if not content_hash:
+            return None
+        escaped = content_hash.replace("'", "''")
+        query_filter = f"hash eq '{escaped}'"
+        entities = list(self.table_client.query_entities(query_filter=query_filter))
+        if not entities:
+            return None
+        return dict(entities[0])
+
+    def find_by_document_id(self, document_id: str) -> dict[str, Any] | None:
+        """Return an entity matching the normalized document_id (RowKey) if present."""
+        if not document_id:
+            return None
+        normalized_document_id = self._normalize_document_id(document_id)
+        # Query by RowKey equality across partitions
+        escaped = normalized_document_id.replace("'", "''")
+        query_filter = f"RowKey eq '{escaped}'"
+        entities = list(self.table_client.query_entities(query_filter=query_filter))
+        if not entities:
+            return None
+        return dict(entities[0])
+
     def register(self, document_id: str, source_path: str, content_hash: str) -> dict[str, Any]:
         normalized_document_id = self._normalize_document_id(document_id)
         partition_key = self._partition_key_from_source_path(source_path)
@@ -123,14 +147,43 @@ class DocumentRegistry:
             )
             return False
 
-    def should_process(self, source_path: str, content_hash: str) -> tuple[bool, int | None]:
-        existing = self.lookup(source_path)
-        if not existing:
-            return True, None
-
-        existing_hash = existing.get("hash")
-        existing_version = existing.get("version", 1)
-        if existing_hash == content_hash:
+    def should_process(self, source_path: str, content_hash: str, document_id: str | None = None) -> tuple[bool, int | None]:
+        # 1) If any record already has the same hash, reuse it (no-op)
+        by_hash = self.find_by_hash(content_hash)
+        if by_hash:
+            # ensure the source_path is recorded as an alias
+            try:
+                srcs = set((by_hash.get("source_paths") or by_hash.get("source_path") or "").split(";"))
+                srcs.add((source_path or "") )
+                by_hash["source_paths"] = ";".join(x for x in srcs if x)
+                # merge back the source_paths and processed_at
+                by_hash["processed_at"] = datetime.now(timezone.utc).isoformat()
+                self.table_client.upsert_entity(entity=by_hash, mode="merge")
+            except Exception:
+                logger.exception("Unable to add source_path alias for existing hash")
+            existing_version = by_hash.get("version", 1)
             return False, existing_version
 
-        return True, existing_version + 1
+        # 2) If no hash match, check if we have an entity for this exact source_path
+        existing = self.lookup(source_path)
+        if existing:
+            existing_hash = existing.get("hash")
+            existing_version = existing.get("version", 1)
+            if existing_hash == content_hash:
+                return False, existing_version
+            # hash changed for same source_path -> version up
+            return True, existing_version + 1
+
+        # 3) Not found by source_path: if caller provided a document_id, check RowKey
+        if document_id:
+            by_docid = self.find_by_document_id(document_id)
+            if by_docid:
+                existing_hash = by_docid.get("hash")
+                existing_version = by_docid.get("version", 1)
+                if existing_hash == content_hash:
+                    # shouldn't happen since hash check ran earlier, but be safe
+                    return False, existing_version
+                return True, existing_version + 1
+
+        # 4) Otherwise, treat as new
+        return True, None
