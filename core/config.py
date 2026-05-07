@@ -57,14 +57,16 @@ class Settings(BaseSettings):
     azure_openai_model: str = "gpt-4.1-mini"
 
     # embedding deployment/model name
-    azure_openai_embedding_model: str = "text-embedding-3-small"
+    azure_openai_embedding_model: str = "text-embedding-3-large"
+    # optional dedicated endpoint for embedding (Foundry may use services.ai.azure.com)
+    azure_openai_embedding_endpoint: str | None = None
 
     # richiesta solo per Azure OpenAI
     azure_openai_api_version: str = "2025-01-01-preview"
 
     azure_openai_temperature: float = 0.0
     azure_openai_max_tokens: int = 1200
-    llm_timeout_seconds: int = 60
+    llm_timeout_seconds: int = 120
 
     # opzionale override manuale tipo backend
     # auto = dedotto da endpoint
@@ -103,7 +105,7 @@ class Settings(BaseSettings):
     # =====================================================
 
     search_endpoint: str = Field(default="https://as-ai-sitemc-dev.search.windows.net")
-    search_index_name: str = "cv-candidates"
+    search_index_name: str = "cv-doc-chunks"
     document_search_index_name: str = "cv-doc-chunks"
     search_vector_dimensions: int = 1536
     # Chunking defaults for indexing
@@ -111,8 +113,8 @@ class Settings(BaseSettings):
     azure_search_chunk_overlap: int = 200
 
     # Subco-specific indexes (Phase E)
-    search_subco_risorse_index: str = "cv-risorse-chunks"
-    search_subco_candidati_index: str = "cv-candidati-chunks"
+    search_subco_risorse_index: str = "cv-doc-chunks"
+    search_subco_candidati_index: str = "cv-doc-chunks"
 
     # Reranker weights (Phase E)
     search_reranker_lex_weight: float = 0.40

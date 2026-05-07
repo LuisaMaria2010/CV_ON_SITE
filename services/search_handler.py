@@ -208,8 +208,4 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
 # =========================================================
 
 def resolve_index(subco: str | None) -> str:
-    if subco == "risorse":
-        return settings.search_subco_risorse_index
-    if subco == "candidati":
-        return settings.search_subco_candidati_index
     return settings.document_search_index_name
