@@ -13,21 +13,35 @@ Responsabilità:
 Nota: nessuna logica CV qui, solo configurazione LLM.
 """
 
-from azure.identity import DefaultAzureCredential
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from core.config import settings
 
-_credential = DefaultAzureCredential()
+_credential = None  # lazy-init: usato solo se manca AZURE_OPENAI_KEY
 
 
 def _token_provider() -> str:
     """
-    Restituisce token Azure AD valido.
+    Restituisce token Azure AD valido (fallback se non c'è API key).
     """
+    global _credential
+    if _credential is None:
+        from azure.identity import DefaultAzureCredential
+        _credential = DefaultAzureCredential()
     token = _credential.get_token(
         "https://cognitiveservices.azure.com/.default"
     )
     return token.token
+
+
+def _auth_kwargs() -> dict:
+    """
+    Restituisce kwargs di autenticazione per i client OpenAI.
+    Preferisce API key statica; usa token AD solo come fallback.
+    """
+    key = settings.azure_openai_key
+    if key:
+        return {"api_key": key}
+    return {"azure_ad_token_provider": _token_provider}
 
 
 def _is_azure_openai(endpoint: str) -> bool:
@@ -94,10 +108,10 @@ def get_llm(
             azure_endpoint=endpoint,
             azure_deployment=settings.azure_openai_model,
             api_version=settings.azure_openai_api_version,
-            azure_ad_token_provider=_token_provider,
             temperature=temperature,
             max_tokens=max_tokens,
             timeout=settings.llm_timeout_seconds,
+            **_auth_kwargs(),
         )
 
     # -------------------------------------------------
@@ -105,13 +119,17 @@ def get_llm(
     # -------------------------------------------------
     else:
 
+        auth = _auth_kwargs()
+        # ChatOpenAI non supporta azure_ad_token_provider: usa il token direttamente
+        if "azure_ad_token_provider" in auth:
+            auth = {"api_key": auth["azure_ad_token_provider"]()}
         return ChatOpenAI(
             base_url=_normalize_base_url(endpoint),
             model=settings.azure_openai_model,
-            api_key=_token_provider(),
             temperature=temperature,
             max_tokens=max_tokens,
             timeout=settings.llm_timeout_seconds,
+            **auth,
         )
 
 
@@ -124,9 +142,12 @@ def get_embedding_client():
     """
     from langchain_openai import AzureOpenAIEmbeddings
 
+    # Use dedicated embedding endpoint if configured (Foundry may expose a different URL)
+    embed_endpoint = getattr(settings, "azure_openai_embedding_endpoint", None) or settings.azure_openai_endpoint
     return AzureOpenAIEmbeddings(
-        azure_endpoint=settings.azure_openai_endpoint,
+        azure_endpoint=embed_endpoint,
         azure_deployment=settings.azure_openai_embedding_model,
         api_version=settings.azure_openai_api_version,
-        azure_ad_token_provider=_token_provider,
+        dimensions=settings.search_vector_dimensions,
+        **_auth_kwargs(),
     )

@@ -44,6 +44,64 @@ Per lanciare i test in ambiente di sviluppo:
 $env:PYTHONPATH='.'; .venv\Scripts\python -m pytest -q
 ```
 
+## Foundry agents
+
+Per creare i tre agenti Foundry per MC Flash:
+
+- `mc-query-classifier-agent`: classifica la query utente in un JSON strutturato e chiama il wrapper API del searcher per ottenere le risposte.
+- `mc-profile-search-agent`: usa la vostra `POST /api/search` tramite tool OpenAPI e applica la logica di rilassamento coerente con l'email di Kim.
+- `mc-search-evaluator-agent`: valuta la qualita' del `search_response` e restituisce un verdetto strutturato riutilizzabile dal classifier/orchestratore.
+
+Variabili richieste:
+
+- `AZURE_AI_PROJECT_ENDPOINT`: endpoint progetto Foundry, formato `https://<account>.services.ai.azure.com/api/projects/<project>`
+- `AZURE_AI_MODEL_DEPLOYMENT_NAME`: deployment model del progetto Foundry
+- `FOUNDRY_SEARCH_API_URL`: URL completo della vostra `POST /api/search`; puo' includere `?code=<function-key>`
+- `FOUNDRY_SEARCHER_WRAPPER_URL`: URL completo della `POST /api/searcher-wrapper`; puo' includere `?code=<function-key>`
+- `FOUNDRY_EVALUATOR_WRAPPER_URL`: URL completo della `POST /api/match-evaluator-wrapper`; puo' includere `?code=<function-key>`
+
+Comando:
+
+```powershell
+.venv\Scripts\python scripts\create_foundry_agents.py --dry-run
+.venv\Scripts\python scripts\create_foundry_agents.py
+```
+
+Note operative:
+
+- Lo script gira in `--dry-run` anche nel venv corrente. Per creare davvero gli agenti serve un helper venv separato, perche' `azure-ai-projects` richiede `openai>=2.8` mentre questa Function app usa `langchain-openai` con `openai<2`.
+- Helper venv consigliato:
+
+```powershell
+py -3.11 -m venv .foundry-agent-venv
+.foundry-agent-venv\Scripts\python -m pip install --upgrade pip
+.foundry-agent-venv\Scripts\python -m pip install --pre azure-ai-projects azure-identity
+.foundry-agent-venv\Scripts\python scripts\create_foundry_agents.py
+```
+
+- Se `FOUNDRY_SEARCH_API_URL` include la function key, lo script la inserisce nello schema OpenAPI del tool.
+- Se `FOUNDRY_SEARCHER_WRAPPER_URL` include la function key, lo script la inserisce nello schema OpenAPI del classifier.
+- Ogni esecuzione crea una nuova versione degli agenti con lo stesso nome logico.
+
+### Permessi Foundry -> Function App
+
+Per concedere l'accesso operativo a Foundry verso la Function App (key-based), usa lo script:
+
+```powershell
+scripts\grant_foundry_function_permissions.ps1 \
+	-SubscriptionId <subscription-id> \
+	-ResourceGroupName <resource-group> \
+	-FunctionAppName <function-app-name> \
+	-FoundryAccountName <foundry-account-name>
+```
+
+Lo script:
+- verifica l'identita' managed identity della risorsa Foundry
+- crea/ruota una function key dedicata (`foundry-wrapper-key`) per `searcher-wrapper`
+- stampa la `FOUNDRY_SEARCHER_WRAPPER_URL` pronta da usare nello script di creazione agenti
+
+Nota: in questo setup i permessi runtime sono basati su function key. Se vuoi enforcement Microsoft Entra ID (EasyAuth), va configurato un passaggio aggiuntivo di auth `authsettingsV2` sulla Function App.
+
 ## Note
 
 - Le modifiche recenti hanno rimosso l'uso diretto di `Field(..., env=...)` per compatibilità con Pydantic v2 e adottato `env_names` + fallback esplicito.

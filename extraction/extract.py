@@ -81,7 +81,12 @@ def _elements_from_pdf(data: bytes) -> list[DocumentElement]:
 
             # ── Step 1: native table detection via find_tables() ──────────────
             table_bboxes: list[tuple] = []
+            page_dict: dict = {}
             try:
+                # get_text("dict") forces creation of the internal TextPage object
+                # that find_tables() needs.  Without this, PyMuPDF emits a C-level
+                # "not a textpage of this page" message to stderr on some PDFs.
+                page_dict = page.get_text("dict")
                 tabs = page.find_tables()
                 for tab in tabs.tables:
                     bx0, by0, bx1, by1 = tab.bbox
@@ -103,12 +108,14 @@ def _elements_from_pdf(data: bytes) -> list[DocumentElement]:
                         )
             except Exception:
                 logger.debug("find_tables failed on page %d", page_number)
+                if not page_dict:
+                    page_dict = page.get_text("dict")
 
             # ── Step 2: collect per-line items with individual line bbox ──────
             # Using per-line y-coordinates allows column-aware reading order:
             # lines from left and right columns that share the same y-level
             # are later merged into a single "skill  level" row.
-            page_dict = page.get_text("dict")
+            # page_dict was already fetched in Step 1; reuse it here.
             for block in page_dict.get("blocks", []):
                 if block.get("type") != 0:
                     continue
@@ -127,29 +134,43 @@ def _elements_from_pdf(data: bytes) -> list[DocumentElement]:
                     continue
 
                 for line in block.get("lines", []):
-                    span_texts: list[str] = []
+                    # (x0, x1, text) — track x-coords to detect adjacent spans
+                    span_parts: list[tuple[float, float, str]] = []
                     span_sizes: list[float] = []
                     line_bbox = line.get("bbox", [bx0, by0, bx1, by1])
                     for span in line.get("spans", []):
-                        text = (span.get("text") or "").strip()
-                        if not text:
+                        raw = span.get("text") or ""
+                        if not raw.strip():
                             continue
-                        span_texts.append(text)
+                        sbbox = span.get("bbox", [0, 0, 0, 0])
+                        span_parts.append((float(sbbox[0]), float(sbbox[2]), raw))
                         size = float(span.get("size") or 0)
                         if size > 0:
                             span_sizes.append(size)
                             font_sizes.append(size)
 
-                    if span_texts:
-                        per_line_items.append(
-                            {
-                                "page_number": page_number,
-                                "y0": float(line_bbox[1]),
-                                "x0": float(line_bbox[0]),
-                                "text": " ".join(span_texts).strip(),
-                                "size": sum(span_sizes) / len(span_sizes) if span_sizes else 0.0,
-                            }
-                        )
+                    if span_parts:
+                        # Join consecutive spans: if x-gap < SPAN_GAP_PT the spans
+                        # are visually adjacent (same word split across style runs,
+                        # e.g. a coloured first letter) → merge WITHOUT space.
+                        # A wider gap means an actual inter-word space → keep space.
+                        SPAN_GAP_PT = 1.5
+                        joined = span_parts[0][2].rstrip()
+                        for i in range(1, len(span_parts)):
+                            gap = span_parts[i][0] - span_parts[i - 1][1]
+                            sep = "" if gap < SPAN_GAP_PT else " "
+                            joined += sep + span_parts[i][2].lstrip()
+                        line_text = joined.strip()
+                        if line_text:
+                            per_line_items.append(
+                                {
+                                    "page_number": page_number,
+                                    "y0": float(line_bbox[1]),
+                                    "x0": float(line_bbox[0]),
+                                    "text": line_text,
+                                    "size": sum(span_sizes) / len(span_sizes) if span_sizes else 0.0,
+                                }
+                            )
 
     base_size = median(font_sizes) if font_sizes else 11.0
 
@@ -379,9 +400,27 @@ def _elements_from_txt(data: bytes) -> list[DocumentElement]:
 
 _whitespace_re = re.compile(r"[ \t]+")
 _multiline_re = re.compile(r"\n{3,}")
+# Matches abbreviations like "S . R . L" where single uppercase letters are
+# separated by spaces and dots (e.g. Italian "S.r.l.").  The negative lookahead
+# avoids merging initials followed by a full word ("V . Monti").
+_spaced_abbrev_re = re.compile(r"([A-Z]) \. ([A-Z])(?![a-zA-Z])")
 _unordered_list_re = re.compile(r"^\s*(?P<marker>[•\-\*])\s+(?P<body>.+)$")
 _ordered_list_re = re.compile(r"^\s*(?P<index>\d+)[\.)]\s+(?P<body>.+)$")
 _heading_numbering_re = re.compile(r"^\d+(?:\.\d+){0,4}\s+")
+
+
+def _fix_spaced_abbreviations(text: str) -> str:
+    """Collapse spurious spaces in abbreviations: 'S . R . L' → 'S.R.L'.
+
+    Applies the pattern repeatedly until stable (handles chains like S . R . L . I).
+    Only collapses when the second letter is NOT followed by more letters, so
+    initials before full words ('V . Monti') are left unchanged.
+    """
+    prev = None
+    while prev != text:
+        prev = text
+        text = _spaced_abbrev_re.sub(r"\1.\2", text)
+    return text
 
 
 def _clean_text(text: str) -> str:
@@ -396,6 +435,9 @@ def _clean_text(text: str) -> str:
 
     # rimuove null chars (comuni nei PDF)
     text = text.replace("\x00", "")
+
+    # abbreviazioni con spazi attorno ai punti: "S . R . L" → "S.R.L"
+    text = _fix_spaced_abbreviations(text)
 
     # spazi multipli
     text = _whitespace_re.sub(" ", text)

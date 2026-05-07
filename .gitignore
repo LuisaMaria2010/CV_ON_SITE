@@ -91,3 +91,17 @@ Thumbs.db
 *.log
 
 .python_packages
+
+# Secrets & credentials
+pub.json
+scripts/pub.json
+local.settings.json
+.env
+
+# Virtual environments
+.venv/
+.venv_agents/
+.foundry-agent-venv/
+
+# Deploy artifacts
+deploy.zip

@@ -1,0 +1,213 @@
+[
+  {
+    "config": {
+      "bindings": [
+        {
+          "authLevel": "FUNCTION",
+          "direction": "IN",
+          "methods": [
+            "POST"
+          ],
+          "name": "req",
+          "route": "backfill/incoming-cv",
+          "type": "httpTrigger"
+        },
+        {
+          "direction": "OUT",
+          "name": "$return",
+          "type": "http"
+        }
+      ],
+      "entryPoint": "backfill_incoming_cv",
+      "functionDirectory": "/home/site/wwwroot",
+      "language": "python",
+      "name": "backfill_incoming_cv",
+      "scriptFile": "function_app.py"
+    },
+    "configHref": null,
+    "files": null,
+    "functionAppId": null,
+    "href": "https://dev-function-ai-mc.azurewebsites.net/admin/functions/backfill_incoming_cv",
+    "id": "/subscriptions/d01e831c-b045-4aad-b3e2-69609002adb2/resourceGroups/rg_ai_SiteMC_Dev/providers/Microsoft.Web/sites/dev-function-ai-mc/functions/backfill_incoming_cv",
+    "invokeUrlTemplate": "https://dev-function-ai-mc.azurewebsites.net/api/backfill/incoming-cv",
+    "isDisabled": false,
+    "kind": null,
+    "language": "python",
+    "location": "West Europe",
+    "name": "dev-function-ai-mc/backfill_incoming_cv",
+    "resourceGroup": "rg_ai_SiteMC_Dev",
+    "scriptHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/home/site/wwwroot/function_app.py",
+    "scriptRootPathHref": null,
+    "secretsFileHref": null,
+    "testData": "",
+    "testDataHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/tmp/FunctionsData/backfill_incoming_cv.dat",
+    "type": "Microsoft.Web/sites/functions"
+  },
+  {
+    "config": {
+      "bindings": [
+        {
+          "connection": "AzureWebJobsStorage",
+          "direction": "OUT",
+          "name": "queueoutput",
+          "queueName": "%DOCUMENT_PROCESSING_QUEUE_NAME%",
+          "type": "queue"
+        },
+        {
+          "connection": "AzureWebJobsStorage",
+          "direction": "IN",
+          "name": "inputblob",
+          "path": "incoming-cv/{name}",
+          "type": "blobTrigger"
+        }
+      ],
+      "entryPoint": "enqueue_incoming_cv_blob",
+      "functionDirectory": "/home/site/wwwroot",
+      "language": "python",
+      "name": "enqueue_incoming_cv_blob",
+      "scriptFile": "function_app.py"
+    },
+    "configHref": null,
+    "files": null,
+    "functionAppId": null,
+    "href": "https://dev-function-ai-mc.azurewebsites.net/admin/functions/enqueue_incoming_cv_blob",
+    "id": "/subscriptions/d01e831c-b045-4aad-b3e2-69609002adb2/resourceGroups/rg_ai_SiteMC_Dev/providers/Microsoft.Web/sites/dev-function-ai-mc/functions/enqueue_incoming_cv_blob",
+    "invokeUrlTemplate": null,
+    "isDisabled": false,
+    "kind": null,
+    "language": "python",
+    "location": "West Europe",
+    "name": "dev-function-ai-mc/enqueue_incoming_cv_blob",
+    "resourceGroup": "rg_ai_SiteMC_Dev",
+    "scriptHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/home/site/wwwroot/function_app.py",
+    "scriptRootPathHref": null,
+    "secretsFileHref": null,
+    "testData": "",
+    "testDataHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/tmp/FunctionsData/enqueue_incoming_cv_blob.dat",
+    "type": "Microsoft.Web/sites/functions"
+  },
+  {
+    "config": {
+      "bindings": [
+        {
+          "authLevel": "FUNCTION",
+          "direction": "IN",
+          "methods": [
+            "POST"
+          ],
+          "name": "req",
+          "route": "extract",
+          "type": "httpTrigger"
+        },
+        {
+          "direction": "OUT",
+          "name": "$return",
+          "type": "http"
+        }
+      ],
+      "entryPoint": "extract",
+      "functionDirectory": "/home/site/wwwroot",
+      "language": "python",
+      "name": "extract",
+      "scriptFile": "function_app.py"
+    },
+    "configHref": null,
+    "files": null,
+    "functionAppId": null,
+    "href": "https://dev-function-ai-mc.azurewebsites.net/admin/functions/extract",
+    "id": "/subscriptions/d01e831c-b045-4aad-b3e2-69609002adb2/resourceGroups/rg_ai_SiteMC_Dev/providers/Microsoft.Web/sites/dev-function-ai-mc/functions/extract",
+    "invokeUrlTemplate": "https://dev-function-ai-mc.azurewebsites.net/api/extract",
+    "isDisabled": false,
+    "kind": null,
+    "language": "python",
+    "location": "West Europe",
+    "name": "dev-function-ai-mc/extract",
+    "resourceGroup": "rg_ai_SiteMC_Dev",
+    "scriptHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/home/site/wwwroot/function_app.py",
+    "scriptRootPathHref": null,
+    "secretsFileHref": null,
+    "testData": "",
+    "testDataHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/tmp/FunctionsData/extract.dat",
+    "type": "Microsoft.Web/sites/functions"
+  },
+  {
+    "config": {
+      "bindings": [
+        {
+          "connection": "AzureWebJobsStorage",
+          "direction": "IN",
+          "name": "msg",
+          "queueName": "%DOCUMENT_PROCESSING_QUEUE_NAME%",
+          "type": "queueTrigger"
+        }
+      ],
+      "entryPoint": "process_incoming_cv",
+      "functionDirectory": "/home/site/wwwroot",
+      "language": "python",
+      "name": "process_incoming_cv",
+      "scriptFile": "function_app.py"
+    },
+    "configHref": null,
+    "files": null,
+    "functionAppId": null,
+    "href": "https://dev-function-ai-mc.azurewebsites.net/admin/functions/process_incoming_cv",
+    "id": "/subscriptions/d01e831c-b045-4aad-b3e2-69609002adb2/resourceGroups/rg_ai_SiteMC_Dev/providers/Microsoft.Web/sites/dev-function-ai-mc/functions/process_incoming_cv",
+    "invokeUrlTemplate": null,
+    "isDisabled": false,
+    "kind": null,
+    "language": "python",
+    "location": "West Europe",
+    "name": "dev-function-ai-mc/process_incoming_cv",
+    "resourceGroup": "rg_ai_SiteMC_Dev",
+    "scriptHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/home/site/wwwroot/function_app.py",
+    "scriptRootPathHref": null,
+    "secretsFileHref": null,
+    "testData": "",
+    "testDataHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/tmp/FunctionsData/process_incoming_cv.dat",
+    "type": "Microsoft.Web/sites/functions"
+  },
+  {
+    "config": {
+      "bindings": [
+        {
+          "authLevel": "FUNCTION",
+          "direction": "IN",
+          "methods": [
+            "POST"
+          ],
+          "name": "req",
+          "route": "search",
+          "type": "httpTrigger"
+        },
+        {
+          "direction": "OUT",
+          "name": "$return",
+          "type": "http"
+        }
+      ],
+      "entryPoint": "search_candidates",
+      "functionDirectory": "/home/site/wwwroot",
+      "language": "python",
+      "name": "search_candidates",
+      "scriptFile": "function_app.py"
+    },
+    "configHref": null,
+    "files": null,
+    "functionAppId": null,
+    "href": "https://dev-function-ai-mc.azurewebsites.net/admin/functions/search_candidates",
+    "id": "/subscriptions/d01e831c-b045-4aad-b3e2-69609002adb2/resourceGroups/rg_ai_SiteMC_Dev/providers/Microsoft.Web/sites/dev-function-ai-mc/functions/search_candidates",
+    "invokeUrlTemplate": "https://dev-function-ai-mc.azurewebsites.net/api/search",
+    "isDisabled": false,
+    "kind": null,
+    "language": "python",
+    "location": "West Europe",
+    "name": "dev-function-ai-mc/search_candidates",
+    "resourceGroup": "rg_ai_SiteMC_Dev",
+    "scriptHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/home/site/wwwroot/function_app.py",
+    "scriptRootPathHref": null,
+    "secretsFileHref": null,
+    "testData": "",
+    "testDataHref": "https://dev-function-ai-mc.azurewebsites.net/admin/vfs/tmp/FunctionsData/search_candidates.dat",
+    "type": "Microsoft.Web/sites/functions"
+  }
+]

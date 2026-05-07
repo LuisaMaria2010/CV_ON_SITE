@@ -6,7 +6,10 @@
   },
   "extensions": {
     "queues": {
-      "messageEncoding": "none"
+      "messageEncoding": "none",
+      "maxDequeueCount": 3,
+      "batchSize": 2,
+      "maxPollingInterval": "00:00:02"
     }
   }
 }

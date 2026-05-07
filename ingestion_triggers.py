@@ -204,9 +204,10 @@ def process_incoming_cv(msg: func.QueueMessage):
             correlation_id,
         )
 
-        # Index chunks (conditional) before marking as processed
+        # Index chunks with hybrid embeddings before marking as processed
         try:
             from core.schema import NormalizedCVMetadata
+            from infra.llm_client import get_embedding_client
             indexer = DocumentIndexer()
             version = int(registry_record.get("version") or 1)
             try:
@@ -220,8 +221,18 @@ def process_incoming_cv(msg: func.QueueMessage):
                         "processed_at": enriched_meta.get("processed_at") or proc_meta.get("processed_at"),
                     }
                 )
-                docs = indexer.index(markdown, chunk_meta)
-                logger.info("Indexed %s chunks for document_id=%s version=%s", len(docs), registry_record.get("document_id"), version)
+
+                # Build async embedding function using Azure OpenAI embeddings client
+                _embed_client = get_embedding_client()
+
+                async def _embedding_fn(text: str) -> list[float]:
+                    return await _embed_client.aembed_query(text)
+
+                docs = asyncio.run(indexer.index_async(markdown, chunk_meta, embedding_fn=_embedding_fn))
+                logger.info(
+                    "Indexed %s chunks (with embeddings) for document_id=%s version=%s",
+                    len(docs), registry_record.get("document_id"), version,
+                )
             except Exception:
                 logger.exception("Indexing failed for document_id=%s version=%s", registry_record.get("document_id"), version)
         except Exception:
