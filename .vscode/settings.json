@@ -10,5 +10,12 @@
         "bin": true
     },
     "azureFunctions.projectLanguageModel": 2,
-    "azureFunctions.preDeployTask": "func: extensions install"
+    "azureFunctions.preDeployTask": "func: extensions install",
+    "python-envs.pythonProjects": [
+        {
+            "path": ".",
+            "envManager": "ms-python.python:system",
+            "packageManager": "ms-python.python:pip"
+        }
+    ]
 }

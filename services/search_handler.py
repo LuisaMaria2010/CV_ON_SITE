@@ -6,7 +6,7 @@ L'handler HTTP in function_app.py le orchestra.
 """
 from __future__ import annotations
 
-import math
+import re
 from datetime import datetime, timezone
 from typing import Any
 
@@ -149,6 +149,252 @@ def rerank(
     return scored[:top]
 
 
+def _norm_text(value: Any) -> str:
+    if value is None:
+        return ""
+    return str(value).strip().lower()
+
+
+def _norm_list(values: Any) -> list[str]:
+    if values is None:
+        return []
+    if isinstance(values, list):
+        return [_norm_text(v) for v in values if _norm_text(v)]
+    if isinstance(values, str):
+        return [_norm_text(v) for v in values.split(",") if _norm_text(v)]
+    return []
+
+
+def _seniority_from_years(years: float | None) -> str | None:
+    if years is None:
+        return None
+    if years < 2:
+        return "junior"
+    if years < 5:
+        return "mid"
+    if years < 10:
+        return "senior"
+    if years < 15:
+        return "lead"
+    return "principal"
+
+
+def _derive_request_seniority(
+    explicit_seniority: str | None,
+    *,
+    min_experience_years: float | None,
+    max_experience_years: float | None,
+) -> tuple[str | None, bool]:
+    normalized_explicit = _norm_text(explicit_seniority) or None
+    if normalized_explicit:
+        return normalized_explicit, False
+
+    # Derive only from the lower bound. Using max years would create an
+    # arbitrary hard label and make broad requests overly brittle.
+    if min_experience_years is not None:
+        return _seniority_from_years(min_experience_years), True
+
+    return None, False
+
+
+def _parse_experience_years_from_query(query: str) -> tuple[float | None, float | None]:
+    text = _norm_text(query)
+    if not text:
+        return None, None
+
+    min_years: float | None = None
+    max_years: float | None = None
+
+    patterns_min = [
+        r"\balmeno\s+(\d+(?:[.,]\d+)?)\s*(?:anni?|years?)\b",
+        r"\bda\s+(\d+(?:[.,]\d+)?)\s*(?:anni?|years?)\b",
+        r"\b(\d+(?:[.,]\d+)?)\s*\+\s*(?:anni?|years?)\b",
+        r"\b(\d+(?:[.,]\d+)?)\s*(?:anni?|years?)\s*(?:di )?esperienz",
+    ]
+    patterns_max = [
+        r"\bmassimo\s+(\d+(?:[.,]\d+)?)\s*(?:anni?|years?)\b",
+        r"\bentro\s+(\d+(?:[.,]\d+)?)\s*(?:anni?|years?)\b",
+        r"\bfino a\s+(\d+(?:[.,]\d+)?)\s*(?:anni?|years?)\b",
+    ]
+    range_patterns = [
+        r"\btra\s+(\d+(?:[.,]\d+)?)\s+e\s+(\d+(?:[.,]\d+)?)\s*(?:anni?|years?)\b",
+        r"\b(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)\s*(?:anni?|years?)\b",
+    ]
+
+    for pattern in range_patterns:
+        match = re.search(pattern, text)
+        if match:
+            try:
+                min_years = float(match.group(1).replace(",", "."))
+                max_years = float(match.group(2).replace(",", "."))
+                return min_years, max_years
+            except ValueError:
+                pass
+
+    for pattern in patterns_min:
+        match = re.search(pattern, text)
+        if match:
+            try:
+                min_years = float(match.group(1).replace(",", "."))
+                break
+            except ValueError:
+                pass
+
+    for pattern in patterns_max:
+        match = re.search(pattern, text)
+        if match:
+            try:
+                max_years = float(match.group(1).replace(",", "."))
+                break
+            except ValueError:
+                pass
+
+    return min_years, max_years
+
+
+def _role_match_score(requested_role: str, candidate_role: str) -> float:
+    if not requested_role or not candidate_role:
+        return 0.0
+    if requested_role == candidate_role:
+        return 1.0
+    if requested_role in candidate_role or candidate_role in requested_role:
+        return 0.75
+    req_tokens = set(requested_role.split())
+    cand_tokens = set(candidate_role.split())
+    if not req_tokens or not cand_tokens:
+        return 0.0
+    overlap = len(req_tokens & cand_tokens)
+    return round(overlap / len(req_tokens), 4)
+
+
+def _location_match_label(requested_location: str, candidate_location: str, work_mode: str) -> str:
+    if not requested_location:
+        return "unknown"
+    if work_mode == "remote":
+        return "not_applicable"
+    if not candidate_location:
+        return "none"
+    if requested_location == candidate_location:
+        return "exact"
+    if requested_location in candidate_location or candidate_location in requested_location:
+        return "soft"
+    return "none"
+
+
+def build_match_features(
+    candidate: dict[str, Any],
+    *,
+    query_skills: list[str] | None,
+    query_role: str | None,
+    query_location: str | None,
+    query_language: str | None,
+    work_mode: str,
+    relaxed_criteria: list[str],
+    is_relaxed_result: bool,
+) -> dict[str, Any]:
+    requested_skills = _norm_list(query_skills)
+    candidate_skills = _norm_list(candidate.get("skills"))
+
+    matched_skills: list[str] = []
+    semantic_matches: list[str] = []
+    missing_skills: list[str] = []
+    for req_skill in requested_skills:
+        if req_skill in candidate_skills:
+            matched_skills.append(req_skill)
+            continue
+        semantic_candidate = next(
+            (
+                cs
+                for cs in candidate_skills
+                if req_skill in cs or cs in req_skill
+            ),
+            None,
+        )
+        if semantic_candidate:
+            semantic_matches.append(semantic_candidate)
+        else:
+            missing_skills.append(req_skill)
+
+    requested_role = _norm_text(query_role)
+    candidate_role = _norm_text(candidate.get("role"))
+    role_score = _role_match_score(requested_role, candidate_role)
+
+    requested_location = _norm_text(query_location)
+    candidate_location = _norm_text(candidate.get("location"))
+    location_match = _location_match_label(requested_location, candidate_location, _norm_text(work_mode) or "unknown")
+
+    requested_language = _norm_text(query_language)
+    candidate_language = _norm_text(candidate.get("language"))
+    if requested_language:
+        language_match: bool | str = requested_language in candidate_language if candidate_language else False
+    else:
+        language_match = "unknown"
+
+    matched_on: list[str] = []
+    if matched_skills or semantic_matches:
+        matched_on.append("skills")
+    if role_score >= 0.5:
+        matched_on.append("role")
+    if location_match in {"exact", "soft"}:
+        matched_on.append("location")
+    if language_match is True:
+        matched_on.append("language")
+
+    return {
+        "skills": {
+            "requested": requested_skills,
+            "matched": matched_skills,
+            "semantic_matches": semantic_matches,
+            "missing": missing_skills,
+        },
+        "role": {
+            "requested": requested_role or None,
+            "candidate": candidate_role or None,
+            "score": round(role_score, 4),
+        },
+        "location": {
+            "requested": requested_location or None,
+            "candidate": candidate_location or None,
+            "match": location_match,
+        },
+        "language": {
+            "requested": requested_language or None,
+            "candidate": candidate_language or None,
+            "match": language_match,
+        },
+        "relaxed_criteria": list(dict.fromkeys(relaxed_criteria if is_relaxed_result else [])),
+        "is_relaxed_result": bool(is_relaxed_result),
+        "matched_on": matched_on,
+    }
+
+
+def enrich_hits_with_match_features(
+    hits: list[dict[str, Any]],
+    *,
+    query_skills: list[str] | None,
+    query_role: str | None,
+    query_location: str | None,
+    query_language: str | None,
+    work_mode: str,
+    relaxed_criteria: list[str],
+) -> list[dict[str, Any]]:
+    enriched: list[dict[str, Any]] = []
+    for hit in hits:
+        entry = dict(hit)
+        entry["match_features"] = build_match_features(
+            entry,
+            query_skills=query_skills,
+            query_role=query_role,
+            query_location=query_location,
+            query_language=query_language,
+            work_mode=work_mode,
+            relaxed_criteria=relaxed_criteria,
+            is_relaxed_result=bool(entry.get("is_relaxed_result", False)),
+        )
+        enriched.append(entry)
+    return enriched
+
+
 # =========================================================
 # Request normaliser
 # =========================================================
@@ -164,9 +410,15 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
     query = str(payload.get("query") or "").strip()
     role = str(payload.get("role") or "").strip() or None
     location = str(payload.get("location") or "").strip() or None
-    seniority = str(payload.get("seniority") or "").strip() or None
+    explicit_seniority = str(payload.get("seniority") or "").strip() or None
     language = str(payload.get("language") or "").strip() or None
     subco = str(payload.get("subco") or "").strip().lower() or None
+    work_mode = str(payload.get("work_mode") or "").strip().lower() or "unknown"
+    if work_mode not in {"remote", "hybrid", "onsite", "unknown"}:
+        work_mode = "unknown"
+
+    raw_relaxed = payload.get("relaxed_criteria") or []
+    relaxed_criteria = sorted({str(v).strip().lower() for v in raw_relaxed if str(v).strip()})
 
     try:
         top = int(payload.get("top") or 10)
@@ -184,21 +436,51 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
     except (ValueError, TypeError):
         max_exp = None
 
+    inferred_min_exp, inferred_max_exp = _parse_experience_years_from_query(query)
+    if min_exp is None:
+        min_exp = inferred_min_exp
+    if max_exp is None:
+        max_exp = inferred_max_exp
+
+    seniority, seniority_inferred = _derive_request_seniority(
+        explicit_seniority,
+        min_experience_years=min_exp,
+        max_experience_years=max_exp,
+    )
+
     hybrid = bool(payload.get("hybrid", True))
+
+    # Support classifier outputs where availability can arrive as free text
+    # (e.g. "entro lunedi") instead of an explicit boolean flag.
+    availability = payload.get("availability")
     availability_required = bool(payload.get("availability_required", False))
+    if isinstance(availability, bool):
+        availability_required = availability_required or availability
+    elif isinstance(availability, (int, float)):
+        availability_required = availability_required or bool(availability)
+    elif isinstance(availability, str):
+        availability_required = availability_required or bool(availability.strip())
+
+    strict = bool(payload.get("strict", True))
 
     return {
         "query": query,
         "skills": skills,
         "role": role,
         "location": location,
+        "work_mode": work_mode,
         "seniority": seniority,
+        "seniority_explicit": _norm_text(explicit_seniority) or None,
+        "seniority_inferred": seniority_inferred,
         "language": language,
         "subco": subco,
         "top": top,
+        "strict": strict,
+        "relaxed_criteria": relaxed_criteria,
         "min_experience_years": min_exp,
         "max_experience_years": max_exp,
         "hybrid": hybrid,
+        "availability": availability,
         "availability_required": availability_required,
     }
 

@@ -1,7 +1,6 @@
 import base64
 import json
 import logging
-import os
 from uuid import uuid4
 
 import azure.functions as func
@@ -19,8 +18,15 @@ from services.document_indexer import DocumentIndexer
 
 bp = func.Blueprint()
 logger = logging.getLogger(__name__)
-document_registry = DocumentRegistry.from_settings()
+document_registry: DocumentRegistry | None = None
 document_processor = DocumentProcessor()
+
+
+def _get_document_registry() -> DocumentRegistry:
+    global document_registry
+    if document_registry is None:
+        document_registry = DocumentRegistry.from_settings()
+    return document_registry
 
 
 def _download_blob_sync(container_name: str, blob_name: str) -> bytes:
@@ -109,6 +115,7 @@ def process_incoming_cv(msg: func.QueueMessage):
         raise InvalidInputError("Queue message missing required fields")
 
     try:
+        registry = _get_document_registry()
         container_name, blob_name = _split_blob_path(blob_path)
         mime_type = _detect_mime_type(filename)
 
@@ -149,7 +156,7 @@ def process_incoming_cv(msg: func.QueueMessage):
             logger.exception(
                 "LLM enrichment failed, proceeding with partial metadata document_id=%s", document_id
             )
-        should_process, next_version = document_registry.should_process(
+        should_process, next_version = registry.should_process(
             source_path, content_hash, document_id=document_id
         )
         if not should_process:
@@ -161,7 +168,7 @@ def process_incoming_cv(msg: func.QueueMessage):
             )
             return
         # Register using normalized document id
-        registry_record = document_registry.register(document_id, source_path, content_hash)
+        registry_record = registry.register(document_id, source_path, content_hash)
 
         # If we are incrementing version for an existing document, delete old chunks
         try:
@@ -238,7 +245,7 @@ def process_incoming_cv(msg: func.QueueMessage):
         except Exception:
             logger.exception("Failed to initialize DocumentIndexer")
 
-        document_registry.mark_status(
+        registry.mark_status(
             registry_record.get("document_id") or document_id or filename,
             source_path,
             DocumentRegistry.STATUS_PROCESSED,
@@ -251,7 +258,8 @@ def process_incoming_cv(msg: func.QueueMessage):
             correlation_id,
         )
     except Exception:
-        document_registry.mark_status(
+        registry = _get_document_registry()
+        registry.mark_status(
             registry_record.get("document_id") if 'registry_record' in locals() else filename,
             source_path,
             DocumentRegistry.STATUS_FAILED,
