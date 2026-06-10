@@ -1,1 +1,11 @@
 .venv
+.foundry-agent-venv
+*.csv
+*.xlsx
+eval_classifier_*
+scripts/
+test_docs_md/
+*.bak
+*.sln
+*.md
+local.settings.json

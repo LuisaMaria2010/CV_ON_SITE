@@ -38,6 +38,7 @@ def _build_classifier_instructions() -> str:
                 7) Eventualmente rilanciare una ricerca piu' ampia
                 8) Chiamare il Match Evaluator
                 9) Restituire una risposta finale chiara e coerente
+                10) Se l'utente chiede dettagli specifici su un profilo, usa il tool DB read-only per recuperare il dettaglio candidato
 
                 REGOLE BUSINESS MC
                 - Subco/P.IVA = si -> subco = "risorse"
@@ -60,6 +61,13 @@ def _build_classifier_instructions() -> str:
                 - massimo 2-3 skill principali
                 - priorita' maggiore del ruolo
 
+                Seniority:
+                - Se la seniority e' esplicita (junior, mid, senior, lead, principal), valorizza `seniority`.
+                - Se la richiesta esprime anni di esperienza, valorizza preferibilmente `min_experience_years` e/o `max_experience_years`.
+                - Se la seniority e' incerta o sfumata (es. "non troppo senior", "profilo con esperienza ma non senior"), NON forzare una label rigida: traduci la richiesta in un vincolo di anni esperienza, preferendo `max_experience_years` o un range.
+                - Se nella query compaiono sia seniority sia anni esperienza e sono potenzialmente incoerenti, dai priorita' agli anni esperienza come segnale strutturato principale.
+                - Se la seniority non e' chiaramente espressa, non inventare un livello rigido solo per completare il payload.
+
                 Disponibilita': solo se richiesta esplicitamente.
                 Lingue: chiarimenti solo se discriminanti.
 
@@ -73,17 +81,117 @@ def _build_classifier_instructions() -> str:
                 2. Chiama `invoke_searcher_wrapper`
                 3. Se necessario esegui step relaxed
                 4. Prepara `candidates_compact` (ridotti)
-                5. Chiama `invoke_match_evaluator`
-                5. Genera risposta finale
+                5. Chiama `invoke_match_evaluator` (valutazione deterministica: score, coverage, recovery_strategy)
+                6. Applica recovery_strategy (vedi sezione dedicata)
+                7. Componi la risposta finale in testo naturale
+                8. Chiama `invoke_response_judger` con `original_request` e `final_answer` (testo che stai per inviare)
+                9. Se `compatible=false` o `verdict=mismatch`: rivedi la risposta e rispondi diversamente
+                10. Invia la risposta finale all'utente
 
                 Chiamata tool: formato obbligatorio
                                 - Entrambi i tool ricevono payload JSON nel body POST (application/json), NON in query string.
                                 - Per `invoke_searcher_wrapper`: body con almeno `search_request`.
                                 - Per `invoke_match_evaluator`: body con almeno `original_request`, `interpreted_request`, `candidates` (oppure `search_response`).
+                                - Per `invoke_response_judger`: body con `original_request` (testo richiesta utente) e `final_answer` (testo risposta che stai per inviare).
                                 - Mantieni comunque un payload pulito:
-                                    - per ogni candidato includi SOLO: `document_id`, `full_name`, `role`, `location`, `skills`, `seniority`, `language`, `retrieval_score`, `source_path`
+                                    - per ogni candidato includi: `document_id`, `full_name`, `role`, `location`, `skills`, `seniority`, `language`, `retrieval_score`, `source_path`, `match_features`
                                     - `skills` massimo 2 elementi
                                     - NON includere campi pesanti come `content`, `highlights`, `certifications`, testi lunghi
+
+                EVALUATION-DRIVEN RECOVERY (OBBLIGATORIO)
+
+                REGOLA ASSOLUTA: dopo ogni chiamata a `invoke_searcher_wrapper` (con o senza risultati),
+                DEVI chiamare `invoke_match_evaluator` prima di generare qualsiasi risposta.
+                L'unica eccezione e' needs_clarification=true stabilita PRIMA della ricerca (query insufficiente).
+
+                `invoke_match_evaluator` e' deterministico: calcola score e segnali di recovery senza LLM.
+                Usa i suoi output (verdict, recovery_strategy, coverage, relaxation_suggestions, best_candidates)
+                per decidere cosa fare.
+
+                VERIFICA FINALE RISPOSTA (OBBLIGATORIA se response_judger disponibile)
+
+                Prima di inviare la risposta all'utente:
+                1. Componi il testo finale da inviare (user_message)
+                2. Chiama `invoke_response_judger` con:
+                   - `original_request`: la richiesta originale dell'utente
+                   - `final_answer`: il testo che stai per inviare
+                3. Se `compatible=false` o `verdict=mismatch`:
+                   - Leggi `issues` e `notes` per capire il problema
+                   - Rivedi la risposta per correggere l'incoerenza
+                   - NON rieseguire la ricerca: e' un problema di formulazione della risposta, non di dati
+                4. Se `compatible=true` o `verdict=ok|partial`: invia la risposta senza modifiche.
+
+                `invoke_response_judger` NON rifà il ranking ne' valuta i candidati:
+                verifica solo se il tuo testo risponde adeguatamente alla domanda posta.
+                - verdict              — qualita' globale del match
+                - failure_type         — causa strutturata del problema (es. poor_skill_coverage, location_mismatch)
+                - recovery_strategy    — azione obbligatoria da eseguire (vedi tabella sotto)
+                - improved_queries     — query alternative per retry automatico
+                - missing_entities     — informazioni mancanti nella query utente
+                - needs_clarification  — booleano
+                - clarifying_questions — domande suggerite da porre all'utente
+                - coverage             — copertura per dimensione (skills/role/location/seniority/language): high|medium|low|unknown
+                - critical_gaps        — lista gap critici identificati dal judge
+                - relaxation_suggestions — dimensioni da rilassare in caso di retry (es. ["location", "seniority"])
+                - best_candidates      — lista ordinata dei migliori profili con why_fit e risk gia' scritti dal judge
+                - candidate_evaluations — valutazioni complete per profilo (strengths, weaknesses, missing_requirements)
+
+                ## Regola prioritaria: needs_clarification sovrasta il recovery
+
+                - Se needs_clarification=true E recovery_strategy NON e' RETURN_ANSWER:
+                  → Poni all'utente UNA SOLA domanda (primo elemento di clarifying_questions).
+                  → Non ritentare la ricerca: la causa e' che la query e' ambigua o incompleta.
+                  → Prefer la chiarificazione rispetto al recovery automatico quando la query e' ambigua.
+
+                - Se needs_clarification=true E recovery_strategy=RETURN_ANSWER:
+                  → Rispondi normalmente (il match e' passato, il flag puo' essere ignorato).
+
+                - Se needs_clarification=false:
+                  → Applica il recovery_strategy come descritto di seguito.
+
+                ## Recovery behavior
+
+                1. RETURN_ANSWER
+                   → Verdict strong_match o partial_match: genera la risposta finale normale.
+
+                2. RELAX_AND_RETRY
+                   → Richiama `invoke_searcher_wrapper` con criteri piu' ampi:
+                     - usa `relaxation_suggestions` del valutatore per sapere cosa rilassare
+                     - usa `coverage` per capire quale dimensione e' piu' carente (es. coverage.location = "low" → rilassa location)
+                     - aggiungi `relaxed_criteria` nel payload (es. ["location", "seniority"])
+                     - usa `improved_queries` se disponibili come nuova query
+                   → Poi chiama di nuovo `invoke_match_evaluator` sul nuovo risultato.
+
+                3. REWRITE_QUERY
+                   → Richiama `invoke_searcher_wrapper` usando gli `improved_queries` del valutatore come query.
+                   → Non riscrivere ulteriormente la query del valutatore.
+                   → Poi chiama di nuovo `invoke_match_evaluator`.
+
+                4. ASK_USER_CLARIFICATION
+                   → Poni all'utente UNA SOLA domanda (usa `clarifying_questions`, primo elemento).
+                   → Se `missing_entities` e' disponibile, privilegia l'entita' con impatto maggiore sul retrieval.
+                   → Non fare piu' domande nello stesso messaggio.
+
+                5. RETURN_PARTIAL_ANSWER
+                   → Restituisci solo i candidati supportati (anche se pochi o con gap).
+                   → Indica esplicitamente cosa manca o perche' il match e' parziale.
+
+                6. SAFE_REFUSAL
+                   → Comunica chiaramente che non ci sono profili coerenti.
+                   → Suggerisci di riformulare la richiesta o ampliare i criteri.
+
+                ## Loop di recovery sicuro
+
+                - Massimo 1 retry di ricerca automatico (RELAX_AND_RETRY o REWRITE_QUERY).
+                - Dopo un retry: se il nuovo verdict e' ancora no_match o weak_match con recovery!=RETURN_ANSWER,
+                  applica RETURN_PARTIAL_ANSWER o ASK_USER_CLARIFICATION — non ritentare ulteriormente.
+                - Non entrare mai in loop infiniti di ricerca.
+
+                ## Minimizzazione delle chiarificazioni
+
+                Non chiedere all'utente se il problema puo' essere risolto con retry automatico
+                (RELAX_AND_RETRY o REWRITE_QUERY). Preferisci il recovery automatico prima di interrompere
+                l'utente con una domanda.
 
                 OUTPUT FINALE (SOLO TESTO PER L'UTENTE)
                 - Restituisci solo testo naturale in italiano.
@@ -93,8 +201,19 @@ def _build_classifier_instructions() -> str:
                   1) breve sintesi iniziale
                   2) Match coerenti
                   3) Potrebbero interessarti anche (se presenti)
-                - Per ogni profilo cita: nome, ruolo, location e motivazione breve.
+                - Per ogni profilo usa DIRETTAMENTE i campi del valutatore:
+                  - nome, ruolo, location da `best_candidates` o `candidate_evaluations`
+                  - motivazione: usa `why_fit` cosi' com'e' (non riscrivere)
+                  - caveat/rischio: aggiungi `risk` se presente e non nullo
+                  - per match parziali puoi citare `missing_requirements` o `weaknesses` in modo sintetico
+                - NON riscrivere o parafrasare le motivazioni gia' generate dal valutatore.
+                - Dopo aver composto la risposta, chiama `invoke_response_judger` prima di inviarla.
                 - Se `needs_clarification=true`, fai solo una domanda mirata in testo naturale.
+
+                Accesso DB read-only (quando disponibile tool):
+                - Usa `invoke_db_candidates_lookup` solo per cercare o dettagliare candidati gia' persistiti.
+                - Usa `match_key` (o email) per il dettaglio puntuale.
+                - Non inventare campi: usa solo i dati restituiti dall'endpoint DB.
 
                 Regole di coerenza output (vincolanti):
                 - skills sempre lowercase
@@ -223,7 +342,7 @@ def _build_search_instructions() -> str:
 
           OUTPUT
 
-          Restituisci SOLO JSON valido.
+                    Restituisci SOLO JSON valido.
           Formato:
           {
              "strategy": "strict|relaxed",
@@ -244,7 +363,32 @@ def _build_search_instructions() -> str:
                   "availability_days": 15,
                   "language": "it",
                   "retrieval_score": 0.81,
-                  "source_path": "/profiles/mario_rossi.pdf"
+                                    "source_path": "/profiles/mario_rossi.pdf",
+                                    "match_features": {
+                                        "skills": {
+                                            "requested": ["java", "spring", "docker"],
+                                            "matched": ["java"],
+                                            "semantic_matches": ["spring boot"],
+                                            "missing": ["docker"]
+                                        },
+                                        "role": {
+                                            "requested": "backend developer",
+                                            "candidate": "java developer",
+                                            "score": 0.74
+                                        },
+                                        "location": {
+                                            "requested": "milano",
+                                            "candidate": "milano",
+                                            "match": "exact"
+                                        },
+                                        "language": {
+                                            "requested": "english",
+                                            "candidate": "b2",
+                                            "match": true
+                                        },
+                                        "relaxed_criteria": [],
+                                        "matched_on": ["skills", "role", "location"]
+                                    }
                 }
              ]
           }
@@ -265,7 +409,11 @@ def _build_search_instructions() -> str:
           - ranking retrieval
 
           NON rappresenta il match finale business.
-          Il Match Evaluator si occupera' della valutazione qualitativa finale.
+          Il Match Evaluator si occupera' della valutazione finale usando soprattutto `match_features`.
+
+          REQUISITO CRITICO:
+          - Ogni risultato DEVE includere `match_features` completi e coerenti.
+          - NON lasciare `match_features` vuoto quando sono presenti segnali nel profilo.
 
           VINCOLI IMPORTANTI
 
@@ -359,30 +507,86 @@ def _build_evaluator_instructions() -> str:
 
                 Se manca sia `candidates` sia `search_response.data.hits`, oppure il payload e' non valido, imposta verdict = "invalid_input" e confidence bassa.
 
-                Output JSON richiesto (nessun markdown), mantieni questo formato:
+                OUTPUT JSON richiesto (nessun markdown), mantieni questo formato:
                 {
                     "verdict": "strong_match|partial_match|weak_match|no_match|invalid_input",
                     "confidence": 0.0,
                     "summary": "stringa breve",
-                    "coverage": {
-                        "skills": "high|medium|low|unknown",
-                        "role": "high|medium|low|unknown",
-                        "location": "high|medium|low|unknown",
-                        "seniority": "high|medium|low|unknown",
-                        "language": "high|medium|low|unknown"
+                    "failure_type": "no_matches|poor_skill_coverage|location_mismatch|seniority_mismatch|ambiguous_query|invalid_input|none",
+                    "recovery_strategy": "RETURN_ANSWER|RELAX_AND_RETRY|REWRITE_QUERY|ASK_USER_CLARIFICATION|RETURN_PARTIAL_ANSWER|SAFE_REFUSAL",
+                    "needs_clarification": false,
+                    "clarifying_questions": [],
+                    "improved_queries": [],
+                    "missing_entities": [],
+                    "search_evaluation": {
+                        "quality": "excellent|good|fair|poor|insufficient_data",
+                        "summary": "stringa breve",
+                        "coverage": {
+                            "skills": "high|medium|low|unknown",
+                            "role": "high|medium|low|unknown",
+                            "location": "high|medium|low|unknown",
+                            "seniority": "high|medium|low|unknown",
+                            "language": "high|medium|low|unknown"
+                        },
+                        "critical_gaps": ["..."]
                     },
-                    "critical_gaps": ["..."],
                     "relaxation_suggestions": ["availability", "languages", "role", "skills", "location"],
-                    "best_candidates": [
+                    "candidate_evaluations": [
                         {
+                            "candidate_id": "string",
                             "full_name": "string",
                             "role": "string|null",
                             "location": "string|null",
+                            "match_score": 0.0,
+                            "match_type": "strong|good|weak|extended",
                             "why_fit": "string",
-                            "risk": "string|null"
+                            "risk": "string|null",
+                            "matched_on": ["skills", "role", "location"]
                         }
                     ]
                 }
+
+                ## Come derivare i segnali di recovery
+
+                ### failure_type
+                - "none"                → verdict strong_match o partial_match
+                - "poor_skill_coverage" → le skill richieste non sono presenti o scarse nei candidati
+                - "location_mismatch"   → location richiesta non coperta dai candidati disponibili
+                - "seniority_mismatch"  → seniority/anni di esperienza non coerenti con i candidati
+                - "ambiguous_query"     → la query utente e' troppo vaga per restituire risultati coerenti
+                - "no_matches"          → nessuna causa identificabile, semplicemente nessun profilo coerente
+                - "invalid_input"       → payload mancante o non valido
+
+                ### recovery_strategy
+                - "RETURN_ANSWER"           → verdict strong_match (top score ≥ 0.75) o partial_match con buona copertura
+                - "RELAX_AND_RETRY"         → verdict weak_match (prima ricerca, non ancora rilassata) o no_match con cause strutturali chiare
+                - "REWRITE_QUERY"           → query molto vaga o mal formulata; i candidati esistono ma non vengono raggiunti
+                - "ASK_USER_CLARIFICATION"  → ricerca gia' rilassata e ancora no_match, o query ambigua senza segnali sufficienti
+                - "RETURN_PARTIAL_ANSWER"   → ricerca gia' rilassata e verdict weak_match: mostra i risultati parziali con caveats
+                - "SAFE_REFUSAL"            → invalid_input o zero candidati anche dopo relaxation
+
+                ### needs_clarification
+                - true solo se recovery_strategy = ASK_USER_CLARIFICATION
+
+                ### clarifying_questions
+                - Genera 1-2 domande concrete basate su failure_type e missing_entities.
+                - Usa "tu" (informale), in italiano.
+                - Esempio per poor_skill_coverage: "Puoi specificare le skill tecniche prioritarie che cerchi?"
+                - Esempio per location_mismatch: "Il profilo deve essere in sede o accetti anche modalita' remota?"
+                - Esempio per seniority_mismatch: "Puoi indicare gli anni di esperienza o la seniority che cerchi?"
+
+                ### improved_queries
+                - Se recovery_strategy e' RELAX_AND_RETRY o REWRITE_QUERY: genera 1-2 query alternative.
+                - Usa le stesse keyword ma con focus diverso (es. solo skill, senza location, ruolo piu' generico).
+                - Non inventare skill non presenti nella richiesta originale.
+
+                ### missing_entities
+                - Lista delle entita' assenti nell'interpreted_request che avrebbero migliorato il retrieval.
+                - Esempi: "skills", "role", "location", "seniority", "language".
+
+                Regola fondamentale:
+                - Usa `match_features` del search come fonte primaria.
+                - Evita inferenze arbitrarie quando le feature sono disponibili.
 
                 VINCOLI IMPORTANTI:
                 - NON fare retrieval.
@@ -620,6 +824,119 @@ def _build_evaluator_wrapper_openapi_spec(wrapper_url: str) -> dict[str, Any]:
         },
     }
 
+
+def _build_db_lookup_openapi_spec(db_lookup_url: str) -> dict[str, Any]:
+    parsed = urlparse(db_lookup_url)
+    if not parsed.scheme or not parsed.netloc:
+        raise SystemExit("FOUNDRY_DB_LOOKUP_URL deve essere un URL assoluto verso POST /api/db/candidates/details")
+
+    server_url = f"{parsed.scheme}://{parsed.netloc}"
+    path = parsed.path or "/api/db/candidates/details"
+
+    return {
+        "openapi": "3.0.1",
+        "info": {
+            "title": "MC Flash DB Candidate Lookup",
+            "version": "1.0.0",
+            "description": "Lookup read-only candidati nel DB MC Flash via endpoint details.",
+        },
+        "servers": [{"url": server_url}],
+        "paths": {
+            path: {
+                "post": {
+                    "operationId": "lookupCandidateDetails",
+                    "summary": "Lookup candidate details",
+                    "description": "Recupera il dettaglio candidato con match_key o email.",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": False,
+                                    "properties": {
+                                        "match_key": {"type": "string"},
+                                        "email": {"type": "string"},
+                                        "include_payload": {"type": "boolean", "default": True},
+                                    },
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Dettaglio candidato o found=false.",
+                        }
+                    },
+                }
+            }
+        },
+    }
+
+def _build_response_judger_openapi_spec(judger_url: str) -> dict[str, Any]:
+    parsed = urlparse(judger_url)
+    if not parsed.scheme or not parsed.netloc:
+        raise SystemExit("FOUNDRY_RESPONSE_JUDGER_URL deve essere un URL assoluto verso POST /api/response-judger")
+
+    server_url = f"{parsed.scheme}://{parsed.netloc}"
+    path = parsed.path or "/api/response-judger"
+
+    return {
+        "openapi": "3.0.1",
+        "info": {
+            "title": "MC Flash Response Judger",
+            "version": "1.0.0",
+            "description": "Verifica la compatibilita' della risposta finale rispetto alla richiesta originale.",
+        },
+        "servers": [{"url": server_url}],
+        "paths": {
+            path: {
+                "post": {
+                    "operationId": "invokeResponseJudger",
+                    "summary": "Verify response compatibility",
+                    "description": (
+                        "Invia la risposta finale e la richiesta originale per verificare la coerenza. "
+                        "NON rifa' ranking ne' search. Restituisce compatible, verdict, issues, notes."
+                    ),
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ResponseJudgerRequest"
+                                }
+                            }
+                        },
+                    },
+                    "responses": {
+                        "200": {
+                            "description": "Giudizio di compatibilita' risposta/richiesta.",
+                        }
+                    },
+                }
+            }
+        },
+        "components": {
+            "schemas": {
+                "ResponseJudgerRequest": {
+                    "type": "object",
+                    "required": ["original_request", "final_answer"],
+                    "properties": {
+                        "original_request": {
+                            "type": "string",
+                            "description": "La richiesta originale dell'utente in testo libero.",
+                        },
+                        "final_answer": {
+                            "type": "string",
+                            "description": "Il testo della risposta finale generata dal bot.",
+                        },
+                    },
+                }
+            }
+        },
+    }
+
+
 def _create_definition_payload(model: str, instructions: str, tools: list | None = None) -> dict[str, Any]:
     payload: dict[str, Any] = {
         "model": model,
@@ -636,6 +953,8 @@ def create_agents(
     search_url: str,
     searcher_wrapper_url: str,
     evaluator_wrapper_url: str,
+    response_judger_url: str | None,
+    db_lookup_url: str | None,
     classifier_agent_name: str,
     search_agent_name: str,
     evaluator_agent_name: str,
@@ -644,6 +963,8 @@ def create_agents(
     search_spec = _build_search_openapi_spec(search_url)
     wrapper_spec = _build_searcher_wrapper_openapi_spec(searcher_wrapper_url)
     evaluator_wrapper_spec = _build_evaluator_wrapper_openapi_spec(evaluator_wrapper_url)
+    response_judger_spec = _build_response_judger_openapi_spec(response_judger_url) if response_judger_url else None
+    db_lookup_spec = _build_db_lookup_openapi_spec(db_lookup_url) if db_lookup_url else None
     classifier_definition = _create_definition_payload(
         model=model,
         instructions=_build_classifier_instructions(),
@@ -680,6 +1001,7 @@ def create_agents(
                     "wrapper_openapi_server": wrapper_spec["servers"][0]["url"],
                     "evaluator_wrapper_url": evaluator_wrapper_url,
                     "evaluator_wrapper_openapi_server": evaluator_wrapper_spec["servers"][0]["url"],
+                    "db_lookup_url": db_lookup_url,
                 },
                 {
                     "name": search_agent_name,
@@ -734,12 +1056,36 @@ def create_agents(
         openapi=OpenApiFunctionDefinition(
             name="invoke_match_evaluator",
             spec=evaluator_wrapper_spec,
-            description="Invoca il wrapper /api/match-evaluator-wrapper con richiesta e candidati.",
+            description="Invoca il wrapper /api/match-evaluator-wrapper con richiesta e candidati. Valutazione deterministica del match.",
             auth=OpenApiAnonymousAuthDetails(),
         )
     )
+    response_judger_tool = None
+    if response_judger_spec:
+        response_judger_tool = OpenApiTool(
+            openapi=OpenApiFunctionDefinition(
+                name="invoke_response_judger",
+                spec=response_judger_spec,
+                description="Verifica la compatibilita' della risposta finale con la richiesta originale. NON rifa' ranking. Solo coerenza risposta/domanda.",
+                auth=OpenApiAnonymousAuthDetails(),
+            )
+        )
+    db_lookup_tool = None
+    if db_lookup_spec:
+        db_lookup_tool = OpenApiTool(
+            openapi=OpenApiFunctionDefinition(
+                name="invoke_db_candidates_lookup",
+                spec=db_lookup_spec,
+                description="Invoca endpoint DB read-only per dettaglio candidato persistito.",
+                auth=OpenApiAnonymousAuthDetails(),
+            )
+        )
     classifier_definition_obj = PromptAgentDefinition(**classifier_definition)
     classifier_definition_obj.tools = [wrapper_tool, evaluator_wrapper_tool]
+    if response_judger_tool is not None:
+        classifier_definition_obj.tools.append(response_judger_tool)
+    if db_lookup_tool is not None:
+        classifier_definition_obj.tools.append(db_lookup_tool)
     search_definition_obj = PromptAgentDefinition(
         model=search_definition["model"],
         instructions=search_definition["instructions"],
@@ -814,6 +1160,16 @@ def parse_args() -> argparse.Namespace:
         help="URL completo verso POST /api/match-evaluator-wrapper. Può includere ?code=<function-key>.",
     )
     parser.add_argument(
+        "--response-judger-url",
+        default=_env_first("FOUNDRY_RESPONSE_JUDGER_URL", "RESPONSE_JUDGER_URL"),
+        help="URL completo verso POST /api/response-judger. Opzionale.",
+    )
+    parser.add_argument(
+        "--db-lookup-url",
+        default=_env_first("FOUNDRY_DB_LOOKUP_URL", "DB_LOOKUP_URL"),
+        help="URL completo verso POST /api/db/candidates/details. Opzionale.",
+    )
+    parser.add_argument(
         "--classifier-agent-name",
         default="mc-query-classifier-agent",
         help="Nome logico dell'agente classificatore.",
@@ -860,6 +1216,8 @@ def main() -> None:
         search_url=search_url,
         searcher_wrapper_url=searcher_wrapper_url,
         evaluator_wrapper_url=evaluator_wrapper_url,
+        response_judger_url=args.response_judger_url,
+        db_lookup_url=args.db_lookup_url,
         classifier_agent_name=args.classifier_agent_name,
         search_agent_name=args.search_agent_name,
         evaluator_agent_name=args.evaluator_agent_name,
