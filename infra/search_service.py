@@ -9,6 +9,8 @@ Responsabilità:
 """
 
 import logging
+import re
+from typing import Any
 from azure.identity.aio import DefaultAzureCredential
 from azure.search.documents.aio import SearchClient
 from azure.search.documents.models import VectorizedQuery
@@ -33,6 +35,68 @@ from core.config import settings
 
 
 logger = logging.getLogger(__name__)
+
+_HTML_TAG_RE = re.compile(r"<[^>]+>")
+
+
+def _clean_text(value: str | None) -> str:
+    if not value:
+        return ""
+    text = _HTML_TAG_RE.sub(" ", str(value))
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
+
+
+def _build_semantic_evidence(
+    *,
+    caption: str | None,
+    highlights: dict[str, list[str]] | None,
+) -> str | None:
+    parts: list[str] = []
+
+    clean_caption = _clean_text(caption)
+    if clean_caption:
+        parts.append(clean_caption)
+
+    if isinstance(highlights, dict):
+        for snippets in highlights.values():
+            if not isinstance(snippets, list):
+                continue
+            for snippet in snippets:
+                clean_snippet = _clean_text(snippet)
+                if clean_snippet:
+                    parts.append(clean_snippet)
+                if len(parts) >= 6:
+                    break
+            if len(parts) >= 6:
+                break
+
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for item in parts:
+        key = item.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+
+    if not deduped:
+        return None
+
+    return " | ".join(deduped)[:1000]
+
+
+def _extract_caption_text(captions: list[Any] | None) -> str | None:
+    if not captions:
+        return None
+    first = captions[0]
+    if isinstance(first, dict):
+        text = first.get("text")
+        return str(text).strip() if text else None
+    text = getattr(first, "text", None)
+    if text:
+        return str(text).strip()
+    return None
 
 
 class SearchService:
@@ -212,8 +276,7 @@ class SearchService:
         index_name: str | None = None,
     ) -> list[dict]:
         """
-        Ricerca ibrida (lexical + vector) su chunk index.
-        Merge per document_id tenendo lo score migliore per ogni risultato.
+        Ricerca ibrida (keyword -> semantic sui candidati keyword + vector) su chunk index.
         Ritorna lista normalizzata con: document_id, full_name, role,
         location, skills, seniority, experience_years, score, highlights, source_path, version.
         """
@@ -231,28 +294,103 @@ class SearchService:
             "section", "content", "source_path", "processed_at",
         ]
 
+        # Chunk-level merge: key by chunk id, keep document_id as metadata.
         merged: dict[str, dict] = {}
 
         try:
-            # --- lexical pass ---
             if query:
-                lex_results = await client.search(
+                # --- step 1: keyword search pura ---
+                keyword_results = await client.search(
                     search_text=query,
                     filter=odata_filter,
-                    top=top * 3,
+                    top=top * 5,
                     highlight_fields=highlight_fields,
                     select=select_fields,
+                    query_type="simple",
                 )
-                async for hit in lex_results:
-                    doc_id = hit.get("document_id") or hit.get("id", "")
-                    score = hit.get("@search.score", 0.0)
-                    entry = dict(hit)
-                    entry["lex_score"] = score
-                    entry["vec_score"] = 0.0
-                    entry["highlights"] = dict(hit.get("@search.highlights") or {})
-                    merged[doc_id] = entry
 
-            # --- vector pass ---
+                candidate_chunk_ids: list[str] = []
+                keyword_chunk_scores: dict[str, float] = {}
+                keyword_chunk_entries: dict[str, dict] = {}
+                async for hit in keyword_results:
+                    chunk_id = hit.get("id") or hit.get("document_id", "")
+                    if not chunk_id:
+                        continue
+                    score = hit.get("@search.score", 0.0)
+
+                    if chunk_id not in keyword_chunk_scores:
+                        candidate_chunk_ids.append(chunk_id)
+                        keyword_chunk_scores[chunk_id] = score
+                        keyword_chunk_entries[chunk_id] = dict(hit)
+                    elif score > keyword_chunk_scores[chunk_id]:
+                        keyword_chunk_scores[chunk_id] = score
+                        keyword_chunk_entries[chunk_id] = dict(hit)
+
+                MAX_SEMANTIC_CANDIDATES = 20
+                candidate_chunk_ids = candidate_chunk_ids[:MAX_SEMANTIC_CANDIDATES]
+
+                # --- step 2: semantic query solo sui candidati keyword ---
+                candidate_filter = None
+                if candidate_chunk_ids:
+                    clauses = [
+                        "id eq '{0}'".format(chunk_id.replace("'", "''"))
+                        for chunk_id in candidate_chunk_ids
+                    ]
+                    ids_filter = " or ".join(clauses)
+                    candidate_filter = f"({odata_filter}) and ({ids_filter})" if odata_filter else ids_filter
+
+                if candidate_filter:
+                    try:
+                        semantic_results = await client.search(
+                            search_text=query,
+                            filter=candidate_filter,
+                            top=top * 3,
+                            select=select_fields,
+                            highlight_fields=highlight_fields,
+                            query_type="semantic",
+                            semantic_configuration_name="cv-semantic",
+                            query_caption="extractive",
+                        )
+
+                        async for hit in semantic_results:
+                            chunk_id = hit.get("id") or hit.get("document_id", "")
+                            if not chunk_id:
+                                continue
+
+                            captions = hit.get("@search.captions", [])
+                            semantic_caption = _extract_caption_text(captions)
+                            semantic_highlights = dict(hit.get("@search.highlights") or {})
+
+                            semantic_evidence = _build_semantic_evidence(
+                                caption=semantic_caption,
+                                highlights=semantic_highlights,
+                            )
+
+                            entry = dict(hit)
+                            entry["lex_score"] = keyword_chunk_scores.get(chunk_id, 0.0)
+                            entry["semantic_score"] = hit.get("@search.reranker_score", 0.0)
+                            entry["vec_score"] = 0.0
+                            entry["semantic_evidence"] = semantic_evidence
+                            entry["highlights"] = semantic_highlights
+                            merged[chunk_id] = entry
+                    except Exception as exc:
+                        # Semantic configuration/filter issues should not fail the whole search.
+                        logger.warning("Semantic pass failed; using keyword candidates only: %s", exc)
+
+                # Fallback: mantieni candidati keyword anche senza risultato semantic.
+                for chunk_id in candidate_chunk_ids:
+                    if chunk_id in merged:
+                        continue
+                    base = keyword_chunk_entries.get(chunk_id, {})
+                    entry = dict(base)
+                    entry["lex_score"] = keyword_chunk_scores.get(chunk_id, 0.0)
+                    entry["semantic_score"] = 0.0
+                    entry["vec_score"] = 0.0
+                    entry["semantic_evidence"] = None
+                    entry["highlights"] = dict(base.get("@search.highlights") or {})
+                    merged[chunk_id] = entry
+
+            # --- step 3: vector pass ---
             if embedding:
                 vec_query = VectorizedQuery(
                     vector=embedding,
@@ -267,16 +405,18 @@ class SearchService:
                     select=select_fields,
                 )
                 async for hit in vec_results:
-                    doc_id = hit.get("document_id") or hit.get("id", "")
+                    chunk_id = hit.get("id") or hit.get("document_id", "")
                     score = hit.get("@search.score", 0.0)
-                    if doc_id in merged:
-                        merged[doc_id]["vec_score"] = score
+                    if chunk_id in merged:
+                        merged[chunk_id]["vec_score"] = score
                     else:
                         entry = dict(hit)
                         entry["lex_score"] = 0.0
+                        entry["semantic_score"] = 0.0
                         entry["vec_score"] = score
+                        entry["semantic_evidence"] = None
                         entry["highlights"] = {}
-                        merged[doc_id] = entry
+                        merged[chunk_id] = entry
 
         finally:
             await client.close()
@@ -284,7 +424,11 @@ class SearchService:
         # normalise output
         hits = []
         for entry in merged.values():
+            semantic_score = entry.get("semantic_score", 0.0) or 0.0
+            lex_score = entry.get("lex_score", 0.0) or 0.0
+            vec_score = entry.get("vec_score", 0.0) or 0.0
             hits.append({
+                "id": entry.get("id"),
                 "document_id": entry.get("document_id"),
                 "full_name": entry.get("full_name"),
                 "role": entry.get("role"),
@@ -301,9 +445,66 @@ class SearchService:
                 "content": entry.get("content"),
                 "highlights": entry.get("highlights") or {},
                 "lex_score": entry.get("lex_score", 0.0),
+                "semantic_score": entry.get("semantic_score", 0.0),
                 "vec_score": entry.get("vec_score", 0.0),
-                # composite score computed by caller (reranker in Phase E)
-                "score": max(entry.get("lex_score", 0.0), entry.get("vec_score", 0.0)),
+                "semantic_evidence": entry.get("semantic_evidence"),
+                "score": (
+                    semantic_score
+                    if semantic_score > 0
+                    else max(lex_score, vec_score)
+                ),
             })
 
         return hits
+
+    async def load_chunks_for_candidates(
+        self,
+        document_ids: list[str],
+        *,
+        index_name: str | None = None,
+        per_candidate_limit: int = 40,
+    ) -> dict[str, list[dict]]:
+        """
+        Carica tutti (o quasi) i chunk per una lista di document_id.
+        Usato per l'aggregazione evidence a livello candidato dopo il rerank chunk.
+        """
+        ids = [str(v).strip() for v in (document_ids or []) if str(v).strip()]
+        if not ids:
+            return {}
+
+        target_index = index_name or self.chunk_index_name
+        client = SearchClient(
+            endpoint=settings.search_endpoint,
+            index_name=target_index,
+            credential=self._credential,
+        )
+
+        escaped = [f"document_id eq '{doc_id.replace(chr(39), chr(39) * 2)}'" for doc_id in ids]
+        doc_filter = " or ".join(escaped)
+        top = max(1, min(1000, len(ids) * max(1, int(per_candidate_limit))))
+
+        select_fields = [
+            "id", "document_id", "full_name", "role", "location",
+            "skills", "certifications", "seniority", "experience_years",
+            "language", "availability", "version", "chunk_index",
+            "section", "content", "source_path", "processed_at",
+        ]
+
+        grouped: dict[str, list[dict]] = {doc_id: [] for doc_id in ids}
+        try:
+            results = await client.search(
+                search_text="*",
+                filter=doc_filter,
+                top=top,
+                select=select_fields,
+                query_type="simple",
+            )
+            async for hit in results:
+                doc_id = str(hit.get("document_id") or "").strip()
+                if not doc_id:
+                    continue
+                grouped.setdefault(doc_id, []).append(dict(hit))
+        finally:
+            await client.close()
+
+        return grouped

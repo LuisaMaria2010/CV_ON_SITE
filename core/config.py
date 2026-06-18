@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     azure_openai_embedding_endpoint: str | None = None
 
     # richiesta solo per Azure OpenAI
-    azure_openai_api_version: str = "2025-01-01-preview"
+    azure_openai_api_version: str = "2025-03-01-preview"
 
     azure_openai_temperature: float = 0.0
     azure_openai_max_tokens: int = 1200
