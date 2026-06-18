@@ -1,8 +1,8 @@
 """
-Evaluation — mc-query-classifier-agent, senza ground truth.
+Evaluation — mc-classifier, senza ground truth.
 
 Differenze rispetto a run_evaluationV2.py:
-  - Agente target : mc-query-classifier-agent (non orchestrator-agent-v2).
+  - Agente target : mc-classifier (non orchestrator-agent-v2).
   - No ground truth: non esiste una risposta attesa fornita dal cliente.
     Il judge valuta coerenza, completezza e rilevanza basandosi solo su:
       (a) la query originale
@@ -83,11 +83,11 @@ def _cfg(key: str, default: str = "") -> str:
 
 # Foundry — Responses API con agent_reference
 # PROJECT_ENDPOINT = https://<account>.services.ai.azure.com/api/projects/<project>
-FOUNDRY_ENDPOINT  = _cfg("FOUNDRY_ENDPOINT", "").rstrip("/")
-FOUNDRY_PROJECT   = _cfg("FOUNDRY_PROJECT",  "")
-FOUNDRY_API_KEY   = _cfg("FOUNDRY_API_KEY",  "") or _cfg("AZURE_OPENAI_KEY", "")
+FOUNDRY_ENDPOINT  = _cfg("FOUNDRY_ENDPOINT", "https://foundry-ai-mc-dev.services.ai.azure.com/").rstrip("/")
+FOUNDRY_PROJECT   = _cfg("FOUNDRY_PROJECT",  "test-project")
+FOUNDRY_API_KEY   = _cfg("FOUNDRY_API_KEY",  "5Gum7Js3kot14QDeU2sbhi1THB83kVveBp9BkH635tV6JoGJIEPtJQQJ99CBACfhMk5XJ3w3AAAAACOGPvCI") or _cfg("AZURE_OPENAI_KEY", "")
 FOUNDRY_API_VER   = _cfg("FOUNDRY_API_VERSION", "2025-05-15-preview")
-AGENT_ID          = _cfg("CLASSIFIER_AGENT_ID", "mc-query-classifier-agent")
+AGENT_ID          = _cfg("CLASSIFIER_AGENT_ID", "mc-classifier")
 FOUNDRY_MODEL     = _cfg("FOUNDRY_MODEL", _cfg("AZURE_OPENAI_MODEL", "gpt-4.1-mini"))
 
 if FOUNDRY_PROJECT:
@@ -106,7 +106,7 @@ JUDGE_MODEL  = _cfg("JUDGE_DEPLOYMENT", _cfg("AZURE_OPENAI_MODEL", "gpt-4.1-mini
 # CLI
 # ---------------------------------------------------------------------------
 parser = argparse.ArgumentParser(
-    description="Evaluation mc-query-classifier-agent — senza ground truth."
+    description="Evaluation mc-classifier — senza ground truth."
 )
 parser.add_argument("--dataset",               default="")
 parser.add_argument("--max-rows",              type=int,   default=0)
@@ -443,7 +443,7 @@ FINAL_SCORE_WEIGHTS = {
 _JUDGE_SYSTEM = """\
 Sei un valutatore esperto di sistemi AI per il recruiting IT (staffing B2B).
 
-Stai valutando le risposte del classificatore mc-query-classifier-agent del sistema MC Flash.
+Stai valutando le risposte del classificatore mc-classifier del sistema MC Flash.
 Questo agente:
 1. Interpreta una query in linguaggio naturale di un cliente che cerca un profilo IT
 2. Estrae campi strutturati (skills, ruolo, location, seniority, lingua, work_mode, ecc.)
@@ -469,7 +469,7 @@ Principi fondamentali:
 """
 
 _JUDGE_PROMPT = """\
-Valuta la risposta dell'agente mc-query-classifier-agent per una richiesta
+Valuta la risposta dell'agente mc-classifier per una richiesta
 di ricerca profilo IT in italiano.
 
 NON hai una ground truth. Valuta basandoti esclusivamente su:
@@ -676,7 +676,7 @@ def _call_retry(fn: Any, *, label: str, channel: str, min_interval: float) -> An
 
 
 # ---------------------------------------------------------------------------
-# Agent call — mc-query-classifier-agent
+# Agent call — mc-classifier
 # ---------------------------------------------------------------------------
 
 def _response_to_dict(response: Any) -> dict[str, Any]:
@@ -798,7 +798,7 @@ def _extract_search_index_evidence(response_dict: dict[str, Any]) -> dict[str, A
         seen.add(key)
         deduped.append(c)
 
-    top = deduped[:10]
+    top = deduped[:20]
     names = [str(c.get("name") or "") for c in top if str(c.get("name") or "")]
     evidence_payload = {
         "candidates_count": len(deduped),
@@ -964,7 +964,7 @@ def _parse_classifier_output(response_text: str, response_dict: dict[str, Any]) 
 
 
 def call_agent(query: str) -> dict[str, Any]:
-    """Chiama mc-query-classifier-agent via Foundry Responses API."""
+    """Chiama mc-classifier via Foundry Responses API."""
     try:
         response = _call_retry(
             lambda: agent_client.responses.create(

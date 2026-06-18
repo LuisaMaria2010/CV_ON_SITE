@@ -48,7 +48,7 @@ $env:PYTHONPATH='.'; .venv\Scripts\python -m pytest -q
 
 Per creare i tre agenti Foundry per MC Flash:
 
-- `mc-query-classifier-agent`: classifica la query utente in un JSON strutturato e chiama il wrapper API del searcher per ottenere le risposte.
+- `mc-classifier`: classifica la query utente in un JSON strutturato e chiama il wrapper API del searcher per ottenere le risposte.
 - `mc-profile-search-agent`: usa la vostra `POST /api/search` tramite tool OpenAPI e applica la logica di rilassamento coerente con l'email di Kim.
 - `mc-search-evaluator-agent`: valuta la qualita' del `search_response` e restituisce un verdetto strutturato riutilizzabile dal classifier/orchestratore.
 

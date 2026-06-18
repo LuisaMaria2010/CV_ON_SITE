@@ -175,6 +175,7 @@ class TestMonthsAgo:
 
 def _make_hit(
     document_id: str = "doc1",
+    semantic_score: float = 0.0,
     lex_score: float = 0.5,
     vec_score: float = 0.5,
     skills: list[str] | None = None,
@@ -185,6 +186,7 @@ def _make_hit(
 ) -> dict:
     return {
         "document_id": document_id,
+        "semantic_score": semantic_score,
         "lex_score": lex_score,
         "vec_score": vec_score,
         "skills": skills or [],
@@ -198,47 +200,30 @@ def _make_hit(
 class TestRerank:
 
     def test_base_score_formula(self):
-        hit = _make_hit(lex_score=1.0, vec_score=0.0)
+        hit = _make_hit(semantic_score=0.0, lex_score=1.0, vec_score=0.0)
         ranked = rerank([hit], top=1)
-        # 1.0 * 0.40 + 0.0 * 0.60 = 0.40
-        assert abs(ranked[0]["score"] - 0.40) < 0.001
+        # retrieval-only: 0.0*0.70 + 0.0*0.20 + 1.0*0.10 = 0.10
+        assert abs(ranked[0]["score"] - 0.10) < 0.001
 
     def test_vec_weight(self):
-        hit = _make_hit(lex_score=0.0, vec_score=1.0)
+        hit = _make_hit(semantic_score=0.0, lex_score=0.0, vec_score=1.0)
         ranked = rerank([hit], top=1)
-        assert abs(ranked[0]["score"] - 0.60) < 0.001
+        assert abs(ranked[0]["score"] - 0.20) < 0.001
 
     def test_mixed_lex_vec(self):
-        hit = _make_hit(lex_score=1.0, vec_score=1.0)
+        hit = _make_hit(semantic_score=0.0, lex_score=1.0, vec_score=1.0)
         ranked = rerank([hit], top=1)
-        # 0.40 + 0.60 = 1.0
-        assert abs(ranked[0]["score"] - 1.0) < 0.001
+        assert abs(ranked[0]["score"] - 0.30) < 0.001
 
-    def test_skill_boost_per_match(self):
+    def test_semantic_score_dominates(self):
+        hit = _make_hit(semantic_score=4.0, lex_score=0.0, vec_score=0.0)
+        ranked = rerank([hit], top=1)
+        assert abs(ranked[0]["score"] - 0.70) < 0.001
+
+    def test_query_business_params_do_not_change_score(self):
         hit = _make_hit(lex_score=0.0, vec_score=0.0, skills=["python", "azure", "docker"])
         ranked = rerank([hit], query_skills=["python", "azure"], top=1)
-        # 2 matching skills → 2 * 0.10 = 0.20
-        assert abs(ranked[0]["score"] - 0.20) < 0.001
-
-    def test_skill_boost_case_insensitive(self):
-        hit = _make_hit(lex_score=0.0, vec_score=0.0, skills=["Python", "AZURE"])
-        ranked = rerank([hit], query_skills=["python", "azure"], top=1)
-        assert abs(ranked[0]["score"] - 0.20) < 0.001
-
-    def test_role_boost(self):
-        hit = _make_hit(lex_score=0.0, vec_score=0.0, role="software developer")
-        ranked = rerank([hit], query_role="developer", top=1)
-        assert abs(ranked[0]["score"] - settings.search_reranker_role_boost) < 0.001
-
-    def test_role_boost_not_applied_mismatch(self):
-        hit = _make_hit(lex_score=0.0, vec_score=0.0, role="accountant")
-        ranked = rerank([hit], query_role="developer", top=1)
-        assert ranked[0]["score"] < settings.search_reranker_role_boost
-
-    def test_location_boost(self):
-        hit = _make_hit(lex_score=0.0, vec_score=0.0, location="Milano, Italy")
-        ranked = rerank([hit], query_location="milano", top=1)
-        assert abs(ranked[0]["score"] - settings.search_reranker_location_boost) < 0.001
+        assert ranked[0]["score"] == 0.0
 
     def test_recency_boost_recent(self):
         recent_date = "2026-03-01T00:00:00+00:00"  # ~2 months ago from April 2026
@@ -283,6 +268,7 @@ class TestRerank:
     def test_all_boosts_combined(self):
         recent = "2026-04-01T00:00:00+00:00"
         hit = _make_hit(
+            semantic_score=4.0,
             lex_score=1.0, vec_score=1.0,
             skills=["python", "azure"],
             role="software developer",
@@ -291,11 +277,9 @@ class TestRerank:
         )
         ranked = rerank([hit], query_skills=["python", "azure"], query_role="developer", query_location="milano")
         expected = (
-            1.0 * settings.search_reranker_lex_weight
-            + 1.0 * settings.search_reranker_vec_weight
-            + 2 * settings.search_reranker_skill_boost
-            + settings.search_reranker_role_boost
-            + settings.search_reranker_location_boost
+            0.70
+            + 0.20
+            + 0.10
             + settings.search_reranker_recency_boost
         )
         assert abs(ranked[0]["score"] - expected) < 0.001

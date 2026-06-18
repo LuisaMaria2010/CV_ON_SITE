@@ -266,6 +266,52 @@ class TestSearchChunksOutputFields:
         assert r["score"] == max(r["lex_score"], r["vec_score"])
 
 
+class _CaptionObj:
+    def __init__(self, text: str):
+        self.text = text
+
+
+class TestSearchChunksSemanticCaptions:
+
+    def test_semantic_caption_object_is_supported(self, monkeypatch):
+        lex_hits = [_make_hit("doc1", 0.8, {"id": "chunk-1"})]
+        semantic_hits = [
+            _make_hit(
+                "doc1",
+                0.7,
+                {
+                    "id": "chunk-1",
+                    "@search.reranker_score": 2.3,
+                    "@search.captions": [_CaptionObj("Strong Java backend experience")],
+                    "@search.highlights": {"content": ["<em>Java</em> backend"]},
+                },
+            )
+        ]
+
+        async def fake_search(search_text=None, query_type=None, **kwargs):
+            if query_type == "semantic":
+                return _make_async_iter(semantic_hits)
+            return _make_async_iter(lex_hits)
+
+        fake_client = MagicMock()
+        fake_client.search = fake_search
+        fake_client.close = AsyncMock()
+
+        with patch("infra.search_service.SearchClient", return_value=fake_client), \
+             patch("infra.search_service.DefaultAzureCredential", return_value=MagicMock()), \
+             patch("infra.search_service.AzureKeyCredential", side_effect=lambda k: MagicMock()):
+            svc = SearchService()
+
+            async def _run():
+                return await svc.search_chunks(query="java developer", embedding=None, top=5)
+
+            results = asyncio.run(_run())
+
+        assert len(results) == 1
+        assert results[0]["semantic_score"] == 2.3
+        assert "Strong Java backend experience" in (results[0]["semantic_evidence"] or "")
+
+
 # =========================================================
 # upsert_chunks
 # =========================================================
