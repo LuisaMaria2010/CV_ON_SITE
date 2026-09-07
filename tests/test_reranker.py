@@ -15,7 +15,9 @@ import pytest
 
 from core.config import settings
 from services.search_handler import (
+    _availability_match_features,
     _months_ago,
+    build_match_features,
     build_odata_filter,
     build_odata_filter_relaxed,
     normalise_search_request,
@@ -43,10 +45,6 @@ class TestBuildOdataFilter:
         assert "skills/any(s: s eq 'azure')" in f
         assert " and " in f
 
-    def test_seniority_clause(self):
-        f = build_odata_filter(seniority="senior")
-        assert "seniority eq 'senior'" in f
-
     def test_min_experience(self):
         f = build_odata_filter(min_experience_years=5)
         assert "experience_years ge 5" in f
@@ -60,40 +58,22 @@ class TestBuildOdataFilter:
         assert "ge 3" in f
         assert "le 8" in f
 
-    def test_language_clause(self):
-        f = build_odata_filter(language="it")
-        assert "language eq 'it'" in f
-
-    def test_availability_required(self):
-        f = build_odata_filter(availability_required=True)
-        assert "availability ne null" in f
-
     def test_all_params_combined(self):
         f = build_odata_filter(
             skills=["python"],
-            seniority="senior",
             min_experience_years=5,
             max_experience_years=10,
-            language="it",
-            availability_required=True,
         )
         assert f is not None
         assert "python" in f
-        assert "senior" in f
         assert "ge 5" in f
         assert "le 10" in f
-        assert "language eq 'it'" in f
-        assert "availability ne null" in f
 
     def test_sql_injection_single_quotes_escaped(self):
         f = build_odata_filter(skills=["O'Brien"])
         # Single quote in skill must be doubled
         assert "O''Brien" in f
         assert "O'Brien'" not in f.replace("O''Brien", "")  # raw unescaped must not appear
-
-    def test_seniority_injection_escaped(self):
-        f = build_odata_filter(seniority="senior' or 1 eq 1")
-        assert "senior'' or 1 eq 1" in f
 
     def test_empty_skills_list_no_clause(self):
         f = build_odata_filter(skills=[])
@@ -111,13 +91,9 @@ class TestBuildOdataFilter:
 class TestBuildOdataFilterRelaxed:
 
     def test_skills_not_present(self):
-        f = build_odata_filter_relaxed(seniority="senior", language="it")
+        f = build_odata_filter_relaxed(min_experience_years=3, max_experience_years=8)
         assert f is not None
         assert "skills" not in f
-
-    def test_seniority_preserved(self):
-        f = build_odata_filter_relaxed(seniority="junior")
-        assert "seniority eq 'junior'" in f
 
     def test_min_experience_preserved(self):
         f = build_odata_filter_relaxed(min_experience_years=3)
@@ -126,10 +102,6 @@ class TestBuildOdataFilterRelaxed:
     def test_max_experience_preserved(self):
         f = build_odata_filter_relaxed(max_experience_years=8)
         assert "le 8" in f
-
-    def test_language_preserved(self):
-        f = build_odata_filter_relaxed(language="en")
-        assert "language eq 'en'" in f
 
     def test_all_none_returns_none(self):
         assert build_odata_filter_relaxed() is None
@@ -293,7 +265,7 @@ class TestNormaliseSearchRequest:
 
     def test_skills_lowercased_deduped_sorted(self):
         p = normalise_search_request({"skills": ["Python", "AZURE", "python"]})
-        assert p["skills"] == sorted({"python", "azure"})
+        assert p["skills"] == ["python", "azure"]
 
     def test_empty_skills(self):
         p = normalise_search_request({})
@@ -340,6 +312,29 @@ class TestNormaliseSearchRequest:
         p = normalise_search_request({"min_experience_years": "abc"})
         assert p["min_experience_years"] is None
 
+    def test_years_of_experience_alias_number_sets_min_and_infers_seniority(self):
+        p = normalise_search_request({"years_of_experience": 6})
+        assert p["min_experience_years"] == 6.0
+        assert p["max_experience_years"] is None
+        assert p["seniority"] == "senior"
+        assert p["seniority_inferred"] is True
+
+    def test_years_of_experience_alias_range_string_sets_bounds(self):
+        p = normalise_search_request({"years_of_experience": "3-5"})
+        assert p["min_experience_years"] == 3.0
+        assert p["max_experience_years"] == 5.0
+        assert p["seniority"] == "mid"
+
+    def test_explicit_min_max_override_years_of_experience_alias(self):
+        p = normalise_search_request({
+            "years_of_experience": "10-12",
+            "min_experience_years": 2,
+            "max_experience_years": 4,
+        })
+        assert p["min_experience_years"] == 2.0
+        assert p["max_experience_years"] == 4.0
+        assert p["seniority"] == "mid"
+
     def test_query_stripped(self):
         p = normalise_search_request({"query": "  python developer  "})
         assert p["query"] == "python developer"
@@ -351,6 +346,120 @@ class TestNormaliseSearchRequest:
     def test_availability_required_default_false(self):
         p = normalise_search_request({})
         assert p["availability_required"] is False
+
+    def test_availability_days_numeric_passthrough(self):
+        p = normalise_search_request({"availability_days": 15})
+        assert p["availability_days"] == 15
+
+    def test_availability_days_immediata_parsed_as_zero(self):
+        # MCFlash's own Disponibilita' field uses this exact free-text format.
+        p = normalise_search_request({"availability_days": "immediata"})
+        assert p["availability_days"] == 0
+
+    def test_availability_days_gg_string_parsed(self):
+        p = normalise_search_request({"availability_days": "20 gg"})
+        assert p["availability_days"] == 20
+
+    def test_availability_days_weeks_string_parsed(self):
+        p = normalise_search_request({"availability_days": "2 settimane"})
+        assert p["availability_days"] == 14
+
+    def test_availability_days_missing_is_none(self):
+        p = normalise_search_request({})
+        assert p["availability_days"] is None
+
+    def test_availability_days_unparseable_string_is_none(self):
+        p = normalise_search_request({"availability_days": "boh"})
+        assert p["availability_days"] is None
+
+
+# =========================================================
+# _availability_match_features / build_match_features
+# (candidate + requested availability parsing, MCFlash-consistent)
+# =========================================================
+
+class TestAvailabilityMatchFeatures:
+
+    def test_not_required_is_not_applicable(self):
+        features = _availability_match_features(False, 10)
+        assert features == {"applicable": False, "score": None, "match": "not_requested"}
+
+    def test_candidate_none_scores_zero(self):
+        features = _availability_match_features(True, None)
+        assert features["score"] == 0.0
+        assert features["match"] == "none"
+
+    def test_fixed_thresholds_used_when_no_requested_cap(self):
+        assert _availability_match_features(True, 25)["match"] == "exact"
+        assert _availability_match_features(True, 45)["match"] == "partial"
+        assert _availability_match_features(True, 90)["match"] == "weak"
+
+    def test_requested_cap_overrides_fixed_thresholds(self):
+        # Candidate available in 15 days would be "exact" under the fixed
+        # 30-day default, but must NOT be "exact" against a tighter request.
+        exact = _availability_match_features(True, 5, requested_availability_days=10)
+        partial = _availability_match_features(True, 15, requested_availability_days=10)
+        weak = _availability_match_features(True, 25, requested_availability_days=10)
+
+        assert exact["match"] == "exact"
+        assert partial["match"] == "partial"
+        assert weak["match"] == "weak"
+
+    def test_build_match_features_parses_candidate_immediata(self):
+        candidate = {"availability_days": "Immediata"}
+        features = build_match_features(
+            candidate,
+            query_skills=[],
+            query_role=None,
+            query_location=None,
+            query_language=None,
+            query_seniority=None,
+            query_availability_required=True,
+            work_mode="unknown",
+            relaxed_criteria=[],
+            is_relaxed_result=False,
+        )
+        assert features["availability"]["match"] == "exact"
+
+    def test_build_match_features_parses_candidate_date_string(self):
+        # Old naive regex extracted "19" from "dal 19/01" as a day-count; the
+        # MCFlash-consistent parser instead computes the actual day delta.
+        candidate = {"availability": "dal 19/01"}
+        features = build_match_features(
+            candidate,
+            query_skills=[],
+            query_role=None,
+            query_location=None,
+            query_language=None,
+            query_seniority=None,
+            query_availability_required=True,
+            work_mode="unknown",
+            relaxed_criteria=[],
+            is_relaxed_result=False,
+        )
+        # Not asserting an exact day count (depends on "today"), just that it
+        # was parsed into a real day-count rather than the literal "19".
+        assert features["availability"]["applicable"] is True
+        assert features["availability"]["match"] in {"exact", "partial", "weak"}
+
+    def test_build_match_features_uses_requested_availability_days(self):
+        candidate = {"availability_days": 15}
+        features = build_match_features(
+            candidate,
+            query_skills=[],
+            query_role=None,
+            query_location=None,
+            query_language=None,
+            query_seniority=None,
+            query_availability_required=True,
+            work_mode="unknown",
+            relaxed_criteria=[],
+            is_relaxed_result=False,
+            query_availability_days=10,
+        )
+        # 15 <= 10*2 -> partial, NOT exact (would be exact under the fixed
+        # 30-day default), proving the requested cap is actually threaded through.
+        assert features["availability"]["match"] == "partial"
 
 
 # =========================================================

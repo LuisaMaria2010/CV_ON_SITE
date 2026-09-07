@@ -236,7 +236,7 @@ class CVExtraction(BaseModel):
 
     seniority: Optional[str] = Field(
         default=None,
-        description="Derived seniority level based on experience years (junior, mid, senior, lead, principal)"
+        description="Derived seniority level based on experience years (junior, mid, senior)"
     )
 
     model_config = ConfigDict(
@@ -279,7 +279,7 @@ class CandidateInfo(BaseModel):
     birth_date: Optional[str] = Field(default=None, description="Birth date in ISO format")
     age: Optional[int] = Field(default=None, description="Computed age if available")
     availability: Optional[str] = Field(default=None, description="Availability notes, e.g. immediate, 30 days")
-    seniority: Optional[str] = Field(default=None, description="Derived seniority: junior/mid/senior/lead/principal")
+    seniority: Optional[str] = Field(default=None, description="Derived seniority: junior/mid/senior")
 
     model_config = ConfigDict(extra="ignore")
 
