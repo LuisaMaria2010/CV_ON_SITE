@@ -1,0 +1,807 @@
+{
+  ".net developer": {
+    "junior": 289.0,
+    "mid": 340.0,
+    "senior": 360.0,
+    "lead": 442.0,
+    "principal": 493.0
+  },
+  "ai engineer": {
+    "junior": 285.0,
+    "mid": 292.5,
+    "senior": 425.0,
+    "lead": 380.25,
+    "principal": 424.12
+  },
+  "ai engineer/ml specialist": {
+    "junior": 305.0,
+    "mid": 305.0,
+    "senior": 350.75,
+    "lead": 396.5,
+    "principal": 442.25
+  },
+  "ai engineer/python developer": {
+    "junior": 300.0,
+    "mid": 300.0,
+    "senior": 345.0,
+    "lead": 390.0,
+    "principal": 435.0
+  },
+  "am specialist/full stack developer": {
+    "junior": 255.0,
+    "mid": 300.0,
+    "senior": 300.0,
+    "lead": 390.0,
+    "principal": 435.0
+  },
+  "analista funzionale": {
+    "junior": 293.25,
+    "mid": 345.0,
+    "senior": 345.0,
+    "lead": 448.5,
+    "principal": 500.25
+  },
+  "analista funzionale sap": {
+    "junior": 357.0,
+    "mid": 420.0,
+    "senior": 420.0,
+    "lead": 546.0,
+    "principal": 609.0
+  },
+  "analista funzionale/ai strategy specialist": {
+    "junior": 246.5,
+    "mid": 290.0,
+    "senior": 333.5,
+    "lead": 377.0,
+    "principal": 420.5
+  },
+  "analista programmatore": {
+    "junior": 225.0,
+    "mid": 250.0,
+    "senior": 260.0,
+    "lead": 325.0,
+    "principal": 362.5
+  },
+  "analista programmatore java": {
+    "junior": 293.25,
+    "mid": 345.0,
+    "senior": 345.0,
+    "lead": 448.5,
+    "principal": 500.25
+  },
+  "analista programmatore java-pl/sql": {
+    "junior": 306.0,
+    "mid": 360.0,
+    "senior": 360.0,
+    "lead": 468.0,
+    "principal": 522.0
+  },
+  "analista soc": {
+    "junior": 238.0,
+    "mid": 280.0,
+    "senior": 280.0,
+    "lead": 364.0,
+    "principal": 406.0
+  },
+  "analista tecnico funzionale": {
+    "junior": 293.25,
+    "mid": 345.0,
+    "senior": 345.0,
+    "lead": 448.5,
+    "principal": 500.25
+  },
+  "android developer": {
+    "junior": 272.0,
+    "mid": 320.0,
+    "senior": 368.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "angular developer": {
+    "junior": 215.0,
+    "mid": 295.0,
+    "senior": 370.0,
+    "lead": 383.5,
+    "principal": 427.75
+  },
+  "application support specialist & java developer": {
+    "junior": 215.0,
+    "mid": 215.0,
+    "senior": 247.25,
+    "lead": 279.5,
+    "principal": 311.75
+  },
+  "artificial intelligence specialist": {
+    "junior": 403.75,
+    "mid": 475.0,
+    "senior": 475.0,
+    "lead": 617.5,
+    "principal": 688.75
+  },
+  "automation tester/python developer": {
+    "junior": 250.0,
+    "mid": 250.0,
+    "senior": 287.5,
+    "lead": 325.0,
+    "principal": 362.5
+  },
+  "back end developer": {
+    "junior": 235.0,
+    "mid": 245.0,
+    "senior": 315.0,
+    "lead": 318.5,
+    "principal": 355.25
+  },
+  "back end/fullstack developer": {
+    "junior": 225.0,
+    "mid": 225.0,
+    "senior": 258.75,
+    "lead": 292.5,
+    "principal": 326.25
+  },
+  "backend developer rust": {
+    "junior": 260.0,
+    "mid": 260.0,
+    "senior": 299.0,
+    "lead": 338.0,
+    "principal": 377.0
+  },
+  "bmc remedy developer": {
+    "junior": 272.0,
+    "mid": 320.0,
+    "senior": 320.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "business analyst/project manager": {
+    "junior": 374.0,
+    "mid": 440.0,
+    "senior": 440.0,
+    "lead": 572.0,
+    "principal": 638.0
+  },
+  "business intelligence analyst": {
+    "junior": 297.5,
+    "mid": 350.0,
+    "senior": 402.5,
+    "lead": 455.0,
+    "principal": 507.5
+  },
+  "c++ developer": {
+    "junior": 285.0,
+    "mid": 285.0,
+    "senior": 327.75,
+    "lead": 370.5,
+    "principal": 413.25
+  },
+  "cobol developer": {
+    "junior": 227.38,
+    "mid": 267.5,
+    "senior": 235.0,
+    "lead": 347.75,
+    "principal": 387.88
+  },
+  "cyber security analyst": {
+    "junior": 263.5,
+    "mid": 310.0,
+    "senior": 356.5,
+    "lead": 403.0,
+    "principal": 449.5
+  },
+  "cybersecurity analyst": {
+    "junior": 250.0,
+    "mid": 250.0,
+    "senior": 287.5,
+    "lead": 325.0,
+    "principal": 362.5
+  },
+  "data analyst": {
+    "junior": 285.0,
+    "mid": 320.0,
+    "senior": 405.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "data analyst qlik": {
+    "junior": 2720.0,
+    "mid": 3200.0,
+    "senior": 3680.0,
+    "lead": 4160.0,
+    "principal": 4640.0
+  },
+  "data analyst/data scientist/ai engineer": {
+    "junior": 233.75,
+    "mid": 275.0,
+    "senior": 316.25,
+    "lead": 357.5,
+    "principal": 398.75
+  },
+  "data analyst/ml engineer": {
+    "junior": 204.0,
+    "mid": 240.0,
+    "senior": 276.0,
+    "lead": 312.0,
+    "principal": 348.0
+  },
+  "data analyst/sas specialist": {
+    "junior": 230.0,
+    "mid": 230.0,
+    "senior": 264.5,
+    "lead": 299.0,
+    "principal": 333.5
+  },
+  "data base administrator": {
+    "junior": 215.0,
+    "mid": 215.0,
+    "senior": 247.25,
+    "lead": 279.5,
+    "principal": 311.75
+  },
+  "data engineer": {
+    "junior": 270.0,
+    "mid": 285.0,
+    "senior": 327.75,
+    "lead": 370.5,
+    "principal": 413.25
+  },
+  "data integration specialist / dba": {
+    "junior": 260.0,
+    "mid": 260.0,
+    "senior": 299.0,
+    "lead": 338.0,
+    "principal": 377.0
+  },
+  "data scientist": {
+    "junior": 327.25,
+    "mid": 385.0,
+    "senior": 385.0,
+    "lead": 500.5,
+    "principal": 558.25
+  },
+  "data scientist/ai engineer": {
+    "junior": 297.5,
+    "mid": 350.0,
+    "senior": 402.5,
+    "lead": 455.0,
+    "principal": 507.5
+  },
+  "data scientist/ai/ml engineer": {
+    "junior": 297.5,
+    "mid": 350.0,
+    "senior": 402.5,
+    "lead": 455.0,
+    "principal": 507.5
+  },
+  "data scientist/data engineer": {
+    "junior": 280.0,
+    "mid": 280.0,
+    "senior": 322.0,
+    "lead": 364.0,
+    "principal": 406.0
+  },
+  "data scientist/ml engineer": {
+    "junior": 275.0,
+    "mid": 312.5,
+    "senior": 359.38,
+    "lead": 406.25,
+    "principal": 453.12
+  },
+  "data scientist/python developer": {
+    "junior": 242.25,
+    "mid": 285.0,
+    "senior": 327.75,
+    "lead": 370.5,
+    "principal": 413.25
+  },
+  "data visualization specialist": {
+    "junior": 275.0,
+    "mid": 275.0,
+    "senior": 316.25,
+    "lead": 357.5,
+    "principal": 398.75
+  },
+  "database developer": {
+    "junior": 327.25,
+    "mid": 385.0,
+    "senior": 385.0,
+    "lead": 500.5,
+    "principal": 558.25
+  },
+  "dba sql server": {
+    "junior": 340.0,
+    "mid": 400.0,
+    "senior": 400.0,
+    "lead": 520.0,
+    "principal": 580.0
+  },
+  "developer cobol/backend": {
+    "junior": 233.75,
+    "mid": 275.0,
+    "senior": 275.0,
+    "lead": 357.5,
+    "principal": 398.75
+  },
+  "devops engineer": {
+    "junior": 331.5,
+    "mid": 390.0,
+    "senior": 390.0,
+    "lead": 507.0,
+    "principal": 565.5
+  },
+  "devops/cloud engineer": {
+    "junior": 272.0,
+    "mid": 320.0,
+    "senior": 368.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "digital analytics specialist / front end developer": {
+    "junior": 259.25,
+    "mid": 305.0,
+    "senior": 350.75,
+    "lead": 396.5,
+    "principal": 442.25
+  },
+  "etl oracle developer/am lead": {
+    "junior": 246.5,
+    "mid": 290.0,
+    "senior": 290.0,
+    "lead": 377.0,
+    "principal": 420.5
+  },
+  "flutter developer": {
+    "junior": 240.0,
+    "mid": 305.0,
+    "senior": 350.75,
+    "lead": 396.5,
+    "principal": 442.25
+  },
+  "front end developer": {
+    "junior": 250.0,
+    "mid": 305.0,
+    "senior": 340.0,
+    "lead": 396.5,
+    "principal": 442.25
+  },
+  "front end developer/tech lead": {
+    "junior": 238.0,
+    "mid": 280.0,
+    "senior": 280.0,
+    "lead": 364.0,
+    "principal": 406.0
+  },
+  "front end/mobile developer": {
+    "junior": 285.0,
+    "mid": 285.0,
+    "senior": 327.75,
+    "lead": 370.5,
+    "principal": 413.25
+  },
+  "full stack developer": {
+    "junior": 270.0,
+    "mid": 315.0,
+    "senior": 370.0,
+    "lead": 409.5,
+    "principal": 456.75
+  },
+  "functional analyst/java developer": {
+    "junior": 297.5,
+    "mid": 350.0,
+    "senior": 350.0,
+    "lead": 455.0,
+    "principal": 507.5
+  },
+  "google analytics specialist": {
+    "junior": 240.0,
+    "mid": 240.0,
+    "senior": 276.0,
+    "lead": 312.0,
+    "principal": 348.0
+  },
+  "help desk 1° e 2° livello": {
+    "junior": 255.0,
+    "mid": 300.0,
+    "senior": 300.0,
+    "lead": 390.0,
+    "principal": 435.0
+  },
+  "help desk 1° livello/system administrator": {
+    "junior": 250.0,
+    "mid": 250.0,
+    "senior": 287.5,
+    "lead": 325.0,
+    "principal": 362.5
+  },
+  "help desk 1°-2° livello": {
+    "junior": 229.5,
+    "mid": 270.0,
+    "senior": 270.0,
+    "lead": 351.0,
+    "principal": 391.5
+  },
+  "help desk/cyber security analyst": {
+    "junior": 245.0,
+    "mid": 245.0,
+    "senior": 281.75,
+    "lead": 318.5,
+    "principal": 355.25
+  },
+  "help desk/sistemista": {
+    "junior": 187.0,
+    "mid": 220.0,
+    "senior": 220.0,
+    "lead": 286.0,
+    "principal": 319.0
+  },
+  "iam specialist": {
+    "junior": 242.25,
+    "mid": 285.0,
+    "senior": 327.75,
+    "lead": 370.5,
+    "principal": 413.25
+  },
+  "integration analyst": {
+    "junior": 293.25,
+    "mid": 345.0,
+    "senior": 345.0,
+    "lead": 448.5,
+    "principal": 500.25
+  },
+  "ios developer": {
+    "junior": 267.75,
+    "mid": 315.0,
+    "senior": 345.0,
+    "lead": 409.5,
+    "principal": 456.75
+  },
+  "it operations & am technical analyst": {
+    "junior": 267.75,
+    "mid": 315.0,
+    "senior": 315.0,
+    "lead": 409.5,
+    "principal": 456.75
+  },
+  "it support/helpdesk 2° livello": {
+    "junior": 272.0,
+    "mid": 320.0,
+    "senior": 320.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "java developer": {
+    "junior": 285.0,
+    "mid": 300.0,
+    "senior": 335.0,
+    "lead": 390.0,
+    "principal": 435.0
+  },
+  "machine learning engineer": {
+    "junior": 301.75,
+    "mid": 355.0,
+    "senior": 355.0,
+    "lead": 461.5,
+    "principal": 514.75
+  },
+  "maui developer": {
+    "junior": 314.5,
+    "mid": 370.0,
+    "senior": 370.0,
+    "lead": 481.0,
+    "principal": 536.5
+  },
+  "mobile developer": {
+    "junior": 225.0,
+    "mid": 290.0,
+    "senior": 325.0,
+    "lead": 377.0,
+    "principal": 420.5
+  },
+  "mobile developer/android team leader": {
+    "junior": 323.0,
+    "mid": 380.0,
+    "senior": 380.0,
+    "lead": 494.0,
+    "principal": 551.0
+  },
+  "network specialist": {
+    "junior": 276.25,
+    "mid": 325.0,
+    "senior": 373.75,
+    "lead": 422.5,
+    "principal": 471.25
+  },
+  "phyton developer": {
+    "junior": 272.0,
+    "mid": 320.0,
+    "senior": 368.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "power platform developer": {
+    "junior": 230.0,
+    "mid": 230.0,
+    "senior": 264.5,
+    "lead": 299.0,
+    "principal": 333.5
+  },
+  "power platform developer/bi specialist": {
+    "junior": 285.0,
+    "mid": 285.0,
+    "senior": 327.75,
+    "lead": 370.5,
+    "principal": 413.25
+  },
+  "project manager": {
+    "junior": 300.0,
+    "mid": 360.0,
+    "senior": 400.0,
+    "lead": 468.0,
+    "principal": 522.0
+  },
+  "project manager security": {
+    "junior": 335.75,
+    "mid": 395.0,
+    "senior": 395.0,
+    "lead": 513.5,
+    "principal": 572.75
+  },
+  "project manager/ business analyst": {
+    "junior": 331.5,
+    "mid": 390.0,
+    "senior": 390.0,
+    "lead": 507.0,
+    "principal": 565.5
+  },
+  "project manager/business analyst": {
+    "junior": 284.75,
+    "mid": 335.0,
+    "senior": 300.0,
+    "lead": 435.5,
+    "principal": 485.75
+  },
+  "project manager/product owner": {
+    "junior": 386.75,
+    "mid": 455.0,
+    "senior": 455.0,
+    "lead": 591.5,
+    "principal": 659.75
+  },
+  "python developer": {
+    "junior": 220.0,
+    "mid": 250.0,
+    "senior": 345.0,
+    "lead": 325.0,
+    "principal": 362.5
+  },
+  "react developer": {
+    "junior": 225.0,
+    "mid": 305.0,
+    "senior": 330.0,
+    "lead": 396.5,
+    "principal": 442.25
+  },
+  "rpa developer": {
+    "junior": 284.75,
+    "mid": 335.0,
+    "senior": 385.25,
+    "lead": 435.5,
+    "principal": 485.75
+  },
+  "rpa specialist": {
+    "junior": 208.25,
+    "mid": 245.0,
+    "senior": 281.75,
+    "lead": 318.5,
+    "principal": 355.25
+  },
+  "salesforce admin/developer": {
+    "junior": 255.0,
+    "mid": 300.0,
+    "senior": 345.0,
+    "lead": 390.0,
+    "principal": 435.0
+  },
+  "salesforce developer": {
+    "junior": 285.0,
+    "mid": 320.0,
+    "senior": 380.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "salesforce marketing cloud specialist": {
+    "junior": 272.0,
+    "mid": 320.0,
+    "senior": 320.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "sap abap developer": {
+    "junior": 297.5,
+    "mid": 350.0,
+    "senior": 350.0,
+    "lead": 455.0,
+    "principal": 507.5
+  },
+  "sap specialist": {
+    "junior": 361.25,
+    "mid": 425.0,
+    "senior": 425.0,
+    "lead": 552.5,
+    "principal": 616.25
+  },
+  "scrum master/scala & python developer": {
+    "junior": 242.25,
+    "mid": 285.0,
+    "senior": 327.75,
+    "lead": 370.5,
+    "principal": 413.25
+  },
+  "service manager": {
+    "junior": 297.5,
+    "mid": 350.0,
+    "senior": 350.0,
+    "lead": 455.0,
+    "principal": 507.5
+  },
+  "service manager/project manager": {
+    "junior": 340.0,
+    "mid": 400.0,
+    "senior": 400.0,
+    "lead": 520.0,
+    "principal": 580.0
+  },
+  "sistemista informatico": {
+    "junior": 212.5,
+    "mid": 250.0,
+    "senior": 250.0,
+    "lead": 325.0,
+    "principal": 362.5
+  },
+  "sistemista linux": {
+    "junior": 310.25,
+    "mid": 365.0,
+    "senior": 365.0,
+    "lead": 474.5,
+    "principal": 529.25
+  },
+  "sistemista linux/unix": {
+    "junior": 308.12,
+    "mid": 362.5,
+    "senior": 380.0,
+    "lead": 471.25,
+    "principal": 525.62
+  },
+  "sistemista windows": {
+    "junior": 323.0,
+    "mid": 380.0,
+    "senior": 380.0,
+    "lead": 494.0,
+    "principal": 551.0
+  },
+  "sistemista/full-stack developer": {
+    "junior": 245.0,
+    "mid": 245.0,
+    "senior": 281.75,
+    "lead": 318.5,
+    "principal": 355.25
+  },
+  "sistemista/helpdesk it": {
+    "junior": 255.0,
+    "mid": 300.0,
+    "senior": 345.0,
+    "lead": 390.0,
+    "principal": 435.0
+  },
+  "soc analyst": {
+    "junior": 255.0,
+    "mid": 300.0,
+    "senior": 300.0,
+    "lead": 390.0,
+    "principal": 435.0
+  },
+  "software developer": {
+    "junior": 260.0,
+    "mid": 287.5,
+    "senior": 370.0,
+    "lead": 373.75,
+    "principal": 416.88
+  },
+  "software developer/architect": {
+    "junior": 369.75,
+    "mid": 435.0,
+    "senior": 435.0,
+    "lead": 565.5,
+    "principal": 630.75
+  },
+  "software developer/devops engineer": {
+    "junior": 272.0,
+    "mid": 320.0,
+    "senior": 368.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "software tester": {
+    "junior": 208.25,
+    "mid": 245.0,
+    "senior": 281.75,
+    "lead": 318.5,
+    "principal": 355.25
+  },
+  "splunk specialist": {
+    "junior": 320.0,
+    "mid": 320.0,
+    "senior": 368.0,
+    "lead": 416.0,
+    "principal": 464.0
+  },
+  "sql developer": {
+    "junior": 208.25,
+    "mid": 245.0,
+    "senior": 281.75,
+    "lead": 318.5,
+    "principal": 355.25
+  },
+  "sviluppatore service now/sviluppatore remedy": {
+    "junior": 259.25,
+    "mid": 305.0,
+    "senior": 305.0,
+    "lead": 396.5,
+    "principal": 442.25
+  },
+  "system administrator": {
+    "junior": 255.0,
+    "mid": 300.0,
+    "senior": 335.0,
+    "lead": 390.0,
+    "principal": 435.0
+  },
+  "system administrator linux/windows": {
+    "junior": 260.0,
+    "mid": 272.5,
+    "senior": 313.38,
+    "lead": 354.25,
+    "principal": 395.12
+  },
+  "system administrator/cloud engineer": {
+    "junior": 284.75,
+    "mid": 335.0,
+    "senior": 335.0,
+    "lead": 435.5,
+    "principal": 485.75
+  },
+  "team leader mainframe": {
+    "junior": 297.5,
+    "mid": 350.0,
+    "senior": 350.0,
+    "lead": 455.0,
+    "principal": 507.5
+  },
+  "technical leader .net": {
+    "junior": 323.0,
+    "mid": 380.0,
+    "senior": 380.0,
+    "lead": 494.0,
+    "principal": 551.0
+  },
+  "test automation engineer": {
+    "junior": 259.25,
+    "mid": 305.0,
+    "senior": 350.75,
+    "lead": 396.5,
+    "principal": 442.25
+  },
+  "test engineer": {
+    "junior": 285.0,
+    "mid": 285.0,
+    "senior": 327.75,
+    "lead": 370.5,
+    "principal": 413.25
+  },
+  "vmware engieer": {
+    "junior": 344.25,
+    "mid": 405.0,
+    "senior": 405.0,
+    "lead": 526.5,
+    "principal": 587.25
+  }
+}

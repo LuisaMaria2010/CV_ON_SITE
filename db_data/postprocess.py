@@ -86,7 +86,7 @@ def _compute_experience(cv: CVExtraction) -> Optional[float]:
 
 def _seniority_from_years(years: Optional[float]) -> Optional[str]:
     """
-    Determina la seniority (junior, mid, senior, lead, principal) in base agli anni di esperienza.
+    Determina la seniority (junior, mid, senior) in base agli anni di esperienza.
 
     Args:
         years (Optional[float]): Anni di esperienza.
@@ -101,11 +101,7 @@ def _seniority_from_years(years: Optional[float]) -> Optional[str]:
         return "junior"
     if years < 5:
         return "mid"
-    if years < 10:
-        return "senior"
-    if years < 15:
-        return "lead"
-    return "principal"
+    return "senior"
 
 
 # =========================================================

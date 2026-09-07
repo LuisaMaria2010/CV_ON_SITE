@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from core.config import settings
+from infra.mcflash_candidates import MCFlashCandidatesClient
 
 
 ROLE_NOISE = {
@@ -18,8 +19,6 @@ ROLE_NOISE = {
     "mid",
     "middle",
     "senior",
-    "lead",
-    "principal",
     "staff",
 }
 
@@ -30,11 +29,8 @@ ROLE_NOISE = {
 
 def build_odata_filter(
     skills: list[str] | None = None,
-    seniority: str | None = None,
     min_experience_years: float | None = None,
     max_experience_years: float | None = None,
-    language: str | None = None,
-    availability_required: bool = False,
 ) -> str | None:
     """
     Costruisce un filtro OData combinando i constraint passati.
@@ -47,39 +43,24 @@ def build_odata_filter(
             safe = skill.replace("'", "''")
             clauses.append(f"skills/any(s: s eq '{safe}')")
 
-    if seniority:
-        safe = seniority.replace("'", "''")
-        clauses.append(f"seniority eq '{safe}'")
-
     if min_experience_years is not None:
         clauses.append(f"experience_years ge {min_experience_years}")
 
     if max_experience_years is not None:
         clauses.append(f"experience_years le {max_experience_years}")
 
-    if language:
-        safe = language.replace("'", "''")
-        clauses.append(f"language eq '{safe}'")
-
-    if availability_required:
-        clauses.append("availability ne null")
-
     return " and ".join(clauses) if clauses else None
 
 
 def build_odata_filter_relaxed(
-    seniority: str | None = None,
     min_experience_years: float | None = None,
     max_experience_years: float | None = None,
-    language: str | None = None,
 ) -> str | None:
     """Versione rilassata: rimuove il filtro skills, mantiene gli altri."""
     return build_odata_filter(
         skills=None,
-        seniority=seniority,
         min_experience_years=min_experience_years,
         max_experience_years=max_experience_years,
-        language=language,
     )
 
 
@@ -181,18 +162,13 @@ def _seniority_from_years(years: float | None) -> str | None:
         return "junior"
     if years < 5:
         return "mid"
-    if years < 10:
-        return "senior"
-    if years < 15:
-        return "lead"
-    return "principal"
+    return "senior"
 
 
 def _derive_request_seniority(
     explicit_seniority: str | None,
     *,
     min_experience_years: float | None,
-    max_experience_years: float | None,
 ) -> tuple[str | None, bool]:
     normalized_explicit = _norm_text(explicit_seniority) or None
     if normalized_explicit:
@@ -377,11 +353,40 @@ def _seniority_match_features(requested_seniority: str, candidate_seniority: str
     return {"applicable": True, "score": 0.0, "match": "none"}
 
 
-def _availability_match_features(required: bool, candidate_availability_days: int | None) -> dict[str, Any]:
+def _coerce_availability_days(value: Any, *, parser) -> int | None:
+    """
+    Parse a raw availability value (int/float day-count, or free text like
+    "immediata", "20 gg", "dal 19/01", a weekday name...) into a day-count.
+    Delegates text parsing to MCFlashCandidatesClient's parsers so the
+    interpretation is identical to the one used for MCFlash hard-select
+    matching (MCFlash's own `Disponibilita` field uses these same formats).
+    """
+    if isinstance(value, (int, float)):
+        n = int(value)
+        return n if n >= 0 else None
+    if isinstance(value, str) and value.strip():
+        return parser(value)
+    return None
+
+
+def _availability_match_features(
+    required: bool,
+    candidate_availability_days: int | None,
+    requested_availability_days: int | None = None,
+) -> dict[str, Any]:
     if not required:
         return {"applicable": False, "score": None, "match": "not_requested"}
     if candidate_availability_days is None:
         return {"applicable": True, "score": 0.0, "match": "none"}
+    if requested_availability_days is not None:
+        # Compare against the cap the user actually asked for, instead of a
+        # fixed default: "entro 20 giorni" must not be scored the same as
+        # "entro 60 giorni".
+        if candidate_availability_days <= requested_availability_days:
+            return {"applicable": True, "score": 1.0, "match": "exact"}
+        if candidate_availability_days <= requested_availability_days * 2:
+            return {"applicable": True, "score": 0.6, "match": "partial"}
+        return {"applicable": True, "score": 0.2, "match": "weak"}
     if candidate_availability_days <= 30:
         return {"applicable": True, "score": 1.0, "match": "exact"}
     if candidate_availability_days <= 60:
@@ -471,6 +476,7 @@ def build_match_features(
     work_mode: str,
     relaxed_criteria: list[str],
     is_relaxed_result: bool,
+    query_availability_days: int | None = None,
 ) -> dict[str, Any]:
     requested_skills = _norm_list(query_skills)
     candidate_skills = _norm_list(candidate.get("skills"))
@@ -483,16 +489,20 @@ def build_match_features(
     requested_seniority = _norm_text(query_seniority)
     candidate_seniority = _norm_text(candidate.get("seniority"))
 
-    candidate_availability_days: int | None = None
-    availability_raw = candidate.get("availability_days")
-    if isinstance(availability_raw, (int, float)):
-        candidate_availability_days = int(availability_raw)
-    elif isinstance(candidate.get("availability"), (int, float)):
-        candidate_availability_days = int(candidate.get("availability"))
-    elif isinstance(candidate.get("availability"), str):
-        m = re.search(r"(\d+)", candidate.get("availability") or "")
-        if m:
-            candidate_availability_days = int(m.group(1))
+    # "availability_days" and "availability" both carry free-text formats in
+    # practice (MCFlash's own Disponibilita' field uses "Immediata", "20 gg",
+    # "dal 19/01", weekday names...) — parse with the same rules used for
+    # MCFlash hard-select matching instead of a naive int()/digit-regex, which
+    # silently drops "Immediata" (no digits) and misreads "dal 19/01" as day 19.
+    candidate_availability_days = _coerce_availability_days(
+        candidate.get("availability_days"),
+        parser=MCFlashCandidatesClient._parse_candidate_availability_days,
+    )
+    if candidate_availability_days is None:
+        candidate_availability_days = _coerce_availability_days(
+            candidate.get("availability"),
+            parser=MCFlashCandidatesClient._parse_candidate_availability_days,
+        )
 
     skills_features = _skills_match_features(requested_skills, candidate_skills)
     role_features = _role_match_features(requested_role, candidate_role)
@@ -503,7 +513,11 @@ def build_match_features(
     )
     language_features = _language_match_features(requested_language, candidate_language)
     seniority_features = _seniority_match_features(requested_seniority, candidate_seniority)
-    availability_features = _availability_match_features(bool(query_availability_required), candidate_availability_days)
+    availability_features = _availability_match_features(
+        bool(query_availability_required),
+        candidate_availability_days,
+        query_availability_days,
+    )
 
     matched_on: list[str] = []
     if skills_features["score"] > 0:
@@ -547,6 +561,7 @@ def enrich_hits_with_match_features(
     query_availability_required: bool,
     work_mode: str,
     relaxed_criteria: list[str],
+    query_availability_days: int | None = None,
 ) -> list[dict[str, Any]]:
     enriched: list[dict[str, Any]] = []
     for hit in hits:
@@ -562,6 +577,7 @@ def enrich_hits_with_match_features(
             work_mode=work_mode,
             relaxed_criteria=relaxed_criteria,
             is_relaxed_result=bool(entry.get("is_relaxed_result", False)),
+            query_availability_days=query_availability_days,
         )
         enriched.append(entry)
     return enriched
@@ -577,7 +593,14 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
     Ritorna il dict normalizzato pronto per l'uso nell'handler.
     """
     raw_skills = payload.get("skills") or []
-    skills = sorted({str(s).lower().strip() for s in raw_skills if s and str(s).strip()})
+    skills: list[str] = []
+    seen_skills: set[str] = set()
+    for raw_skill in raw_skills:
+        skill = str(raw_skill).lower().strip() if raw_skill is not None else ""
+        if not skill or skill in seen_skills:
+            continue
+        seen_skills.add(skill)
+        skills.append(skill)
 
     query = str(payload.get("query") or "").strip()
     role = str(payload.get("role") or "").strip() or None
@@ -608,6 +631,55 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
     except (ValueError, TypeError):
         max_exp = None
 
+    # Backward-compatible aliases from classifier/request wrappers.
+    # If min/max are not provided explicitly, infer them from years_of_experience.
+    raw_years = payload.get("years_of_experience")
+    if raw_years is None:
+        raw_years = payload.get("experience_years")
+
+    def _to_years_number(value: Any) -> float | None:
+        if value is None:
+            return None
+        if isinstance(value, (int, float)):
+            return float(value)
+        if isinstance(value, str):
+            text = value.strip().replace(",", ".")
+            if not text:
+                return None
+            try:
+                return float(text)
+            except ValueError:
+                return None
+        return None
+
+    alias_min_exp: float | None = None
+    alias_max_exp: float | None = None
+    if isinstance(raw_years, dict):
+        alias_min_exp = _to_years_number(raw_years.get("min"))
+        alias_max_exp = _to_years_number(raw_years.get("max"))
+    elif isinstance(raw_years, (int, float)):
+        alias_min_exp = float(raw_years)
+    elif isinstance(raw_years, str):
+        raw_years_text = raw_years.strip()
+        if raw_years_text:
+            range_match = re.search(r"(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)", raw_years_text)
+            if range_match:
+                try:
+                    alias_min_exp = float(range_match.group(1).replace(",", "."))
+                    alias_max_exp = float(range_match.group(2).replace(",", "."))
+                except ValueError:
+                    alias_min_exp = None
+                    alias_max_exp = None
+            else:
+                alias_min_exp = _to_years_number(raw_years_text)
+                if alias_min_exp is None:
+                    alias_min_exp, alias_max_exp = _parse_experience_years_from_query(raw_years_text)
+
+    if min_exp is None and alias_min_exp is not None:
+        min_exp = alias_min_exp
+    if max_exp is None and alias_max_exp is not None:
+        max_exp = alias_max_exp
+
     inferred_min_exp, inferred_max_exp = _parse_experience_years_from_query(query)
     if min_exp is None:
         min_exp = inferred_min_exp
@@ -617,7 +689,6 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
     seniority, seniority_inferred = _derive_request_seniority(
         explicit_seniority,
         min_experience_years=min_exp,
-        max_experience_years=max_exp,
     )
 
     hybrid = bool(payload.get("hybrid", True))
@@ -630,15 +701,15 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
         str(availability_date_raw).strip() if availability_date_raw is not None else ""
     ) or None
 
-    availability_days_raw = payload.get("availability_days")
-    try:
-        availability_days = (
-            int(availability_days_raw)
-            if availability_days_raw is not None and str(availability_days_raw).strip() != ""
-            else None
-        )
-    except (ValueError, TypeError):
-        availability_days = None
+    # availability_days arrives from the classifier as free text as often as a
+    # number ("immediata", "20 gg", "dal 19/01"...) — MCFlash's own
+    # Disponibilita' field uses the same formats. Parse with the same rules
+    # used for MCFlash hard-select matching instead of a bare int(), which
+    # would silently discard any non-numeric value to None.
+    availability_days = _coerce_availability_days(
+        payload.get("availability_days"),
+        parser=MCFlashCandidatesClient._parse_requested_availability_days,
+    )
 
     availability_required = bool(payload.get("availability_required", False))
     if isinstance(availability, bool):

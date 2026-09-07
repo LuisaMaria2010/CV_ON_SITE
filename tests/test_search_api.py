@@ -92,11 +92,24 @@ class FakeSearchService:
     def __init__(self, hits_sequence: list[list[dict]] | None = None):
         self._hits_sequence = hits_sequence or [[]]
         self._call_count = 0
+        self._last_hits: list[dict[str, Any]] = []
         self.calls: list[dict[str, Any]] = []
 
-    async def search_chunks(self, query, odata_filter=None, embedding=None, top=10, index_name=None):
+    async def search_chunks(
+        self,
+        query=None,
+        *,
+        lexical_query=None,
+        semantic_query=None,
+        odata_filter=None,
+        embedding=None,
+        top=10,
+        index_name=None,
+    ):
         self.calls.append({
             "query": query,
+            "lexical_query": lexical_query,
+            "semantic_query": semantic_query,
             "odata_filter": odata_filter,
             "top": top,
             "index_name": index_name,
@@ -106,15 +119,60 @@ class FakeSearchService:
         else:
             hits = []
         self._call_count += 1
+        self._last_hits = list(hits or [])
         return hits
 
+    async def load_chunks_for_candidates(
+        self,
+        document_ids: list[str],
+        *,
+        index_name=None,
+        per_candidate_limit: int = 40,
+    ):
+        _ = index_name
+        grouped: dict[str, list[dict[str, Any]]] = {
+            str(doc_id): []
+            for doc_id in (document_ids or [])
+            if str(doc_id).strip()
+        }
+        if not grouped:
+            return {}
 
-async def _call_handler(req: func.HttpRequest, monkeypatch, fake_service: FakeSearchService):
+        limit = max(1, int(per_candidate_limit or 1))
+        for hit in self._last_hits:
+            if not isinstance(hit, dict):
+                continue
+            doc_id = str(hit.get("document_id") or hit.get("id") or "").strip()
+            if not doc_id or doc_id not in grouped:
+                continue
+            if len(grouped[doc_id]) >= limit:
+                continue
+            grouped[doc_id].append(dict(hit))
+
+        return grouped
+
+
+async def _call_handler(req: func.HttpRequest, monkeypatch, fake_service: FakeSearchService, mcflash_client=None):
     """Wire fake SearchService and call the handler."""
     monkeypatch.setattr(search_mod, "SearchService", lambda: fake_service)
 
     import function_app as fa
     monkeypatch.setattr(fa, "SearchService", lambda: fake_service)
+
+    import services.search_pipeline as pipeline_mod
+    monkeypatch.setattr(pipeline_mod, "SearchService", lambda: fake_service)
+
+    class _FakeMCFlashClient:
+        async def filter_candidates(self, **kwargs):
+            _ = kwargs
+            return [{"Id": "doc1", "Nome": "Test User"}]
+
+        async def fetch_page(self, *, limit: int, offset: int):
+            _ = (limit, offset)
+            # One row is enough: hard-select will accept fake hits by normalized name.
+            return [{"Id": "doc1", "Nome": "Test User"}]
+
+    monkeypatch.setattr(fa, "_get_mcflash_candidates_client", lambda: (mcflash_client or _FakeMCFlashClient()))
 
     # Disable embedding to keep tests fast and network-free
     async def fake_embed(text):
@@ -179,6 +237,41 @@ class TestSearchHappyPath:
         data = _parse_response(result)
         assert "hits" in data
         assert len(data["hits"]) == 2
+
+    def test_semantic_query_prefers_explicit_query(self, monkeypatch):
+        fake = FakeSearchService(hits_sequence=[[_make_fake_hit("doc1")]])
+        req = _make_request({
+            "query": "python engineer milano",
+            "role": "developer",
+            "skills": ["azure"],
+            "hybrid": False,
+        })
+
+        async def _run():
+            return await _call_handler(req, monkeypatch, fake)
+
+        asyncio.run(_run())
+        assert "developer azure" in fake.calls[0]["lexical_query"]
+        assert fake.calls[0]["semantic_query"] == "python engineer milano"
+
+    def test_semantic_query_empty_when_no_free_text(self, monkeypatch):
+        # Semantic search only makes sense over free-text intent. With no
+        # `query`, role/skills still drive the lexical pass, but semantic
+        # search must stay off rather than run on keyword text.
+        fake = FakeSearchService(hits_sequence=[[_make_fake_hit("doc1")]])
+        req = _make_request({
+            "query": "",
+            "role": "developer",
+            "skills": ["python"],
+            "hybrid": False,
+        })
+
+        async def _run():
+            return await _call_handler(req, monkeypatch, fake)
+
+        asyncio.run(_run())
+        assert "developer python" in fake.calls[0]["lexical_query"]
+        assert fake.calls[0]["semantic_query"] == ""
 
     def test_meta_fields_present(self, monkeypatch):
         fake = FakeSearchService(hits_sequence=[[_make_fake_hit("doc1")]])
@@ -334,7 +427,7 @@ class TestFallbackRelaxation:
         assert len(data["suggestions"]) > 0
 
     def test_relaxed_not_triggered_without_skills(self, monkeypatch):
-        # No skills → no relaxed search even with 0 hits
+        # No skills -> no skill-relax branch.
         fake = FakeSearchService(hits_sequence=[[]])
         req = _make_request({"query": "developer", "top": 10, "hybrid": False})
 
@@ -362,6 +455,20 @@ class TestFallbackRelaxation:
         data = _parse_response(result)
         doc_ids = [h["document_id"] for h in data["hits"]]
         assert len(doc_ids) == len(set(doc_ids)), "Duplicate document_ids in results"
+
+    def test_relaxed_semantic_query_stays_empty_without_free_text(self, monkeypatch):
+        # query empty + role empty -> relaxed_lexical_query empty; semantic search
+        # must stay off (no fallback to joined skills) since there is no free text.
+        relaxed_hits = [_make_fake_hit("rdoc1")]
+        fake = FakeSearchService(hits_sequence=[[], relaxed_hits])
+        req = _make_request({"query": "", "skills": ["python", "azure"], "top": 10, "hybrid": False})
+
+        async def _run():
+            return await _call_handler(req, monkeypatch, fake)
+
+        asyncio.run(_run())
+        assert len(fake.calls) >= 2
+        assert fake.calls[1]["semantic_query"] == ""
 
 
 # =========================================================
@@ -391,3 +498,135 @@ class TestHybridFlag:
         result = asyncio.run(_run())
         data = _parse_response(result)
         assert data["meta"]["hybrid"] is False
+
+
+# =========================================================
+# Homonym disambiguation (name + role)
+# =========================================================
+
+def _hit(document_id: str, full_name: str, role: str) -> dict:
+    return {
+        "document_id": document_id,
+        "full_name": full_name,
+        "role": role,
+        "location": "Milano",
+        "skills": ["python"],
+        "certifications": [],
+        "seniority": "senior",
+        "experience_years": 5.0,
+        "language": "it",
+        "availability": None,
+        "version": 1,
+        "source_path": "incoming/cv.pdf",
+        "chunk_index": 0,
+        "content": "content text",
+        "highlights": {},
+        "lex_score": 0.8,
+        "vec_score": 0.7,
+        "score": 0.8,
+        "processed_at": "2026-04-01T00:00:00+00:00",
+    }
+
+
+class _HomonymMCFlashClient:
+    """Two MCFlash rows sharing the same normalized name but different roles."""
+
+    def __init__(self, rows, name_lookup: dict[str, list[dict]] | None = None):
+        self._rows = rows
+        self._name_lookup = name_lookup or {}
+
+    async def filter_candidates(self, **kwargs):
+        _ = kwargs
+        return list(self._rows)
+
+    async def fetch_page(self, *, limit: int, offset: int):
+        if offset > 0:
+            return []
+        return list(self._rows)
+
+    async def find_candidates(self, key: str):
+        return list(self._name_lookup.get((key or "").strip().lower(), []))
+
+    async def find_candidate(self, key: str):
+        matches = await self.find_candidates(key)
+        return matches[0] if matches else None
+
+
+class TestHomonymDisambiguation:
+
+    def test_homonyms_disambiguated_by_role(self, monkeypatch):
+        mcflash = _HomonymMCFlashClient([
+            {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
+            {"Id": "mc2", "Nome": "Mario Rossi", "Ruolo": "Data Analyst"},
+        ])
+        fake = FakeSearchService(hits_sequence=[[
+            _hit("doc1", "Mario Rossi", "java developer"),
+            _hit("doc2", "Mario Rossi", "data analyst"),
+        ]])
+        req = _make_request({"query": "mario rossi", "hybrid": False})
+
+        async def _run():
+            return await _call_handler(req, monkeypatch, fake, mcflash_client=mcflash)
+
+        result = asyncio.run(_run())
+        data = _parse_response(result)
+        by_doc = {h["document_id"]: h for h in data["hits"]}
+
+        assert by_doc["doc1"]["mcflash_profile"]["Id"] == "mc1"
+        assert by_doc["doc1"]["mcflash_name_ambiguous"] is False
+        assert by_doc["doc2"]["mcflash_profile"]["Id"] == "mc2"
+        assert by_doc["doc2"]["mcflash_name_ambiguous"] is False
+
+    def test_homonyms_flagged_ambiguous_when_role_does_not_disambiguate(self, monkeypatch):
+        mcflash = _HomonymMCFlashClient([
+            {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
+            {"Id": "mc2", "Nome": "Mario Rossi", "Ruolo": "Data Analyst"},
+        ])
+        # Role on the CV side does not match either MCFlash homonym closely enough.
+        fake = FakeSearchService(hits_sequence=[[
+            _hit("doc1", "Mario Rossi", "project manager"),
+        ]])
+        req = _make_request({"query": "mario rossi", "hybrid": False})
+
+        async def _run():
+            return await _call_handler(req, monkeypatch, fake, mcflash_client=mcflash)
+
+        result = asyncio.run(_run())
+        data = _parse_response(result)
+
+        assert data["hits"][0]["mcflash_name_ambiguous"] is True
+
+    def test_second_pass_extension_disambiguates_homonyms_by_role(self, monkeypatch):
+        # Hard-select universe only contains an unrelated person, so the
+        # "Mario Rossi" CVs miss the strict first-pass name match and fall
+        # into the second-pass hybrid extension, where identity is resolved
+        # via a live MCFlash name lookup instead.
+        mcflash = _HomonymMCFlashClient(
+            rows=[{"Id": "other", "Nome": "Altra Persona"}],
+            name_lookup={
+                "mario rossi": [
+                    {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
+                    {"Id": "mc2", "Nome": "Mario Rossi", "Ruolo": "Data Analyst"},
+                ],
+            },
+        )
+        fake = FakeSearchService(hits_sequence=[
+            [],  # first pass: nothing survives the strict hard-select name filter
+            [
+                _hit("doc1", "Mario Rossi", "java developer"),
+                _hit("doc2", "Mario Rossi", "data analyst"),
+            ],  # second-pass hybrid extension
+        ])
+        req = _make_request({"query": "mario rossi", "role": "java developer", "hybrid": False})
+
+        async def _run():
+            return await _call_handler(req, monkeypatch, fake, mcflash_client=mcflash)
+
+        result = asyncio.run(_run())
+        data = _parse_response(result)
+        by_doc = {h["document_id"]: h for h in data["hits"]}
+
+        assert by_doc["doc1"]["mcflash_profile"]["Id"] == "mc1"
+        assert by_doc["doc1"]["mcflash_name_ambiguous"] is False
+        assert by_doc["doc2"]["mcflash_profile"]["Id"] == "mc2"
+        assert by_doc["doc2"]["mcflash_name_ambiguous"] is False

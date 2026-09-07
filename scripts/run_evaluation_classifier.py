@@ -1,8 +1,8 @@
 """
-Evaluation — mc-classifier, senza ground truth.
+Evaluation — mc-matcher, senza ground truth.
 
 Differenze rispetto a run_evaluationV2.py:
-  - Agente target : mc-classifier (non orchestrator-agent-v2).
+  - Agente target : mc-matcher (non orchestrator-agent-v2).
   - No ground truth: non esiste una risposta attesa fornita dal cliente.
     Il judge valuta coerenza, completezza e rilevanza basandosi solo su:
       (a) la query originale
@@ -87,7 +87,7 @@ FOUNDRY_ENDPOINT  = _cfg("FOUNDRY_ENDPOINT", "https://foundry-ai-mc-dev.services
 FOUNDRY_PROJECT   = _cfg("FOUNDRY_PROJECT",  "test-project")
 FOUNDRY_API_KEY   = _cfg("FOUNDRY_API_KEY",  "5Gum7Js3kot14QDeU2sbhi1THB83kVveBp9BkH635tV6JoGJIEPtJQQJ99CBACfhMk5XJ3w3AAAAACOGPvCI") or _cfg("AZURE_OPENAI_KEY", "")
 FOUNDRY_API_VER   = _cfg("FOUNDRY_API_VERSION", "2025-05-15-preview")
-AGENT_ID          = _cfg("CLASSIFIER_AGENT_ID", "mc-classifier")
+AGENT_ID          = _cfg("CLASSIFIER_AGENT_ID", "mc-matcher")
 FOUNDRY_MODEL     = _cfg("FOUNDRY_MODEL", _cfg("AZURE_OPENAI_MODEL", "gpt-4.1-mini"))
 
 if FOUNDRY_PROJECT:
@@ -100,13 +100,13 @@ else:
 OAI_ENDPOINT = _cfg("AZURE_OPENAI_ENDPOINT", FOUNDRY_ENDPOINT).rstrip("/")
 OAI_API_KEY  = _cfg("AZURE_OPENAI_KEY", FOUNDRY_API_KEY)
 OAI_API_VER  = _cfg("AZURE_OPENAI_API_VERSION", "2025-01-01-preview")
-JUDGE_MODEL  = _cfg("JUDGE_DEPLOYMENT", _cfg("AZURE_OPENAI_MODEL", "gpt-4.1-mini"))
+JUDGE_MODEL  = _cfg("JUDGE_DEPLOYMENT", _cfg("AZURE_OPENAI_MODEL", "gpt-4.1"))
 
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 parser = argparse.ArgumentParser(
-    description="Evaluation mc-classifier — senza ground truth."
+    description="Evaluation mc-matcher — senza ground truth."
 )
 parser.add_argument("--dataset",               default="")
 parser.add_argument("--max-rows",              type=int,   default=0)
@@ -443,7 +443,7 @@ FINAL_SCORE_WEIGHTS = {
 _JUDGE_SYSTEM = """\
 Sei un valutatore esperto di sistemi AI per il recruiting IT (staffing B2B).
 
-Stai valutando le risposte del classificatore mc-classifier del sistema MC Flash.
+Stai valutando le risposte del classificatore mc-matcher del sistema MC Flash.
 Questo agente:
 1. Interpreta una query in linguaggio naturale di un cliente che cerca un profilo IT
 2. Estrae campi strutturati (skills, ruolo, location, seniority, lingua, work_mode, ecc.)
@@ -469,7 +469,7 @@ Principi fondamentali:
 """
 
 _JUDGE_PROMPT = """\
-Valuta la risposta dell'agente mc-classifier per una richiesta
+Valuta la risposta dell'agente mc-matcher per una richiesta
 di ricerca profilo IT in italiano.
 
 NON hai una ground truth. Valuta basandoti esclusivamente su:
@@ -676,7 +676,7 @@ def _call_retry(fn: Any, *, label: str, channel: str, min_interval: float) -> An
 
 
 # ---------------------------------------------------------------------------
-# Agent call — mc-classifier
+# Agent call — mc-matcher
 # ---------------------------------------------------------------------------
 
 def _response_to_dict(response: Any) -> dict[str, Any]:
@@ -726,14 +726,31 @@ def _extract_search_index_evidence(response_dict: dict[str, Any]) -> dict[str, A
     candidates: list[dict[str, Any]] = []
 
     def _looks_like_candidate(item: dict[str, Any]) -> bool:
-        return any(k in item for k in ("name", "full_name", "candidate_id", "skills", "role", "location"))
+        # "nome"/"ruolo" coprono il contratto italiano a 12 campi del
+        # searcher-wrapper (v. function_app._build_minimal_search_hit).
+        return any(
+            k in item
+            for k in ("name", "full_name", "candidate_id", "skills", "role", "location", "nome", "ruolo")
+        )
 
     def _normalize_candidate(item: dict[str, Any]) -> dict[str, Any]:
         return {
-            "name": _text(item.get("name") or item.get("full_name") or item.get("candidate_id")),
-            "role": _text(item.get("role")),
+            "name": _text(
+                item.get("name") or item.get("full_name") or item.get("nome")
+                or item.get("candidate_id") or item.get("id_mcflash")
+            ),
+            "role": _text(item.get("role") or item.get("ruolo")),
             "location": _text(item.get("location")),
+            # "skills" qui e' spesso solo un'anteprima compatta (v.
+            # function_app._compact_skills_for_wrapper: se la query non estrae
+            # skill esplicite, mostra le prime skill del candidato in ordine
+            # alfabetico, non necessariamente quelle rilevanti). Il vero segnale
+            # di pertinenza per query senza skill strutturate vive quasi sempre
+            # in semantic_snippet - ometterlo qui faceva giudicare "non
+            # supportato dall'evidenza" anche quando l'evidenza c'era, solo mai
+            # mostrata al judge.
             "skills": item.get("skills") if isinstance(item.get("skills"), list) else [],
+            "semantic_snippet": _text(item.get("semantic_snippet") or item.get("semantic_evidence")),
             "retrieval_score": item.get("retrieval_score"),
             "source_path": _text(item.get("source_path") or item.get("path") or item.get("source")),
         }
@@ -918,7 +935,10 @@ def _parse_classifier_output(response_text: str, response_dict: dict[str, Any]) 
                                     if isinstance(maybe, list) and maybe:
                                         result["candidates_count"] = max(result["candidates_count"], len(maybe))
                                         names = [
-                                            str(h.get("name") or h.get("full_name") or h.get("candidate_id") or "")
+                                            str(
+                                                h.get("name") or h.get("full_name") or h.get("nome")
+                                                or h.get("candidate_id") or h.get("id_mcflash") or ""
+                                            )
                                             for h in maybe[:5]
                                             if isinstance(h, dict)
                                         ]
@@ -964,7 +984,7 @@ def _parse_classifier_output(response_text: str, response_dict: dict[str, Any]) 
 
 
 def call_agent(query: str) -> dict[str, Any]:
-    """Chiama mc-classifier via Foundry Responses API."""
+    """Chiama mc-matcher via Foundry Responses API."""
     try:
         response = _call_retry(
             lambda: agent_client.responses.create(

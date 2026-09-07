@@ -44,6 +44,41 @@ Per lanciare i test in ambiente di sviluppo:
 $env:PYTHONPATH='.'; .venv\Scripts\python -m pytest -q
 ```
 
+## Export DB -> Table Storage automatico (giornaliero, locale)
+
+Per eseguire export candidati senza passare dalla runtime Function App, sono disponibili due script locali:
+
+- `scripts/run_daily_candidates_export.ps1`
+	- esegue l'export una tantum
+	- legge i settings DB/Storage dalla Function App (solo config management via Azure CLI)
+	- scrive log in `logs_extracted/`
+- `scripts/register_daily_candidates_export_task.ps1`
+	- registra un task schedulato Windows giornaliero
+
+Esecuzione manuale (una tantum):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\run_daily_candidates_export.ps1 -MaxRows 0
+```
+
+Registrazione task giornaliero (es. ore 02:00):
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\register_daily_candidates_export_task.ps1 -StartTime 02:00
+```
+
+Test run immediato del task:
+
+```powershell
+schtasks /Run /TN "DailyCandidatesExport"
+```
+
+Note:
+
+- `-MaxRows 0` significa export completo (nessun limite).
+- `-IncludePayload` aggiunge `payload_json` nella tabella di destinazione.
+- Nome tabella di default: `CandidatesSnapshot`.
+
 ## Foundry agents
 
 Per creare i tre agenti Foundry per MC Flash:

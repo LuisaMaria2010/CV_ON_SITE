@@ -266,9 +266,58 @@ class SearchService:
         finally:
             await index_client.close()
 
+    async def resolve_document_ids_by_name(
+        self,
+        name_query: str,
+        *,
+        top: int = 5000,
+        index_name: str | None = None,
+    ) -> set[str]:
+        """
+        Risolve un blob di nomi (OR di frasi esatte, es. da _build_name_keyword_query)
+        in un insieme di document_id nell'indice CV.
+
+        Usata SOLO per identita': il campo `full_name` non e' filterable nell'indice
+        (verificato: Azure rifiuta `search.in(full_name, ...)`), quindi non possiamo
+        esprimere "solo questi candidati" come filtro diretto sul nome. Risolviamo
+        prima i nomi in document_id (che e' filterable) con una ricerca testuale
+        dedicata, e scartiamo qui il punteggio BM25 di questa ricerca: serve solo a
+        stabilire CHI e' ammissibile, non quanto e' pertinente. Il chiamante userà il
+        risultato per costruire un filtro (search.in(document_id, ...)) da applicare
+        alle vere ricerche di rilevanza (lessicale/semantica/vettoriale), cosi' che
+        l'identita' non contamini piu' il punteggio di pertinenza.
+        """
+        if not name_query.strip():
+            return set()
+
+        target_index = index_name or self.chunk_index_name
+        client = SearchClient(
+            endpoint=settings.search_endpoint,
+            index_name=target_index,
+            credential=self._credential,
+        )
+        try:
+            results = await client.search(
+                search_text=name_query,
+                select=["document_id"],
+                top=top,
+                query_type="simple",
+            )
+            doc_ids: set[str] = set()
+            async for hit in results:
+                doc_id = str(hit.get("document_id") or "").strip()
+                if doc_id:
+                    doc_ids.add(doc_id)
+            return doc_ids
+        finally:
+            await client.close()
+
     async def search_chunks(
         self,
-        query: str,
+        query: str | None = None,
+        *,
+        lexical_query: str | None = None,
+        semantic_query: str | None = None,
         odata_filter: str | None = None,
         embedding: list[float] | None = None,
         top: int = 10,
@@ -280,6 +329,20 @@ class SearchService:
         Ritorna lista normalizzata con: document_id, full_name, role,
         location, skills, seniority, experience_years, score, highlights, source_path, version.
         """
+        lexical_text = str(lexical_query or "").strip()
+        semantic_text = str(semantic_query or "").strip()
+
+        # Backward compatibility for old callers that pass only `query`.
+        if query is not None:
+            legacy_query = str(query).strip()
+            if not lexical_text:
+                lexical_text = legacy_query
+            if not semantic_text:
+                semantic_text = legacy_query
+
+        # Keep candidate seeding robust when lexical query is not provided.
+        lexical_seed_text = lexical_text or semantic_text
+
         target_index = index_name or self.chunk_index_name
         client = SearchClient(
             endpoint=settings.search_endpoint,
@@ -298,10 +361,10 @@ class SearchService:
         merged: dict[str, dict] = {}
 
         try:
-            if query:
+            if lexical_seed_text:
                 # --- step 1: keyword search pura ---
                 keyword_results = await client.search(
-                    search_text=query,
+                    search_text=lexical_seed_text,
                     filter=odata_filter,
                     top=top * 5,
                     highlight_fields=highlight_fields,
@@ -309,7 +372,7 @@ class SearchService:
                     query_type="simple",
                 )
 
-                candidate_chunk_ids: list[str] = []
+                keyword_chunk_ids: list[str] = []
                 keyword_chunk_scores: dict[str, float] = {}
                 keyword_chunk_entries: dict[str, dict] = {}
                 async for hit in keyword_results:
@@ -319,32 +382,27 @@ class SearchService:
                     score = hit.get("@search.score", 0.0)
 
                     if chunk_id not in keyword_chunk_scores:
-                        candidate_chunk_ids.append(chunk_id)
+                        keyword_chunk_ids.append(chunk_id)
                         keyword_chunk_scores[chunk_id] = score
                         keyword_chunk_entries[chunk_id] = dict(hit)
                     elif score > keyword_chunk_scores[chunk_id]:
                         keyword_chunk_scores[chunk_id] = score
                         keyword_chunk_entries[chunk_id] = dict(hit)
 
-                MAX_SEMANTIC_CANDIDATES = 20
-                candidate_chunk_ids = candidate_chunk_ids[:MAX_SEMANTIC_CANDIDATES]
-
-                # --- step 2: semantic query solo sui candidati keyword ---
-                candidate_filter = None
-                if candidate_chunk_ids:
-                    clauses = [
-                        "id eq '{0}'".format(chunk_id.replace("'", "''"))
-                        for chunk_id in candidate_chunk_ids
-                    ]
-                    ids_filter = " or ".join(clauses)
-                    candidate_filter = f"({odata_filter}) and ({ids_filter})" if odata_filter else ids_filter
-
-                if candidate_filter:
+                # --- step 2: semantic query sull'intero universo ammissibile ---
+                # Lo step 2 e' scoped direttamente da odata_filter (identita' + skills,
+                # gia' garantite a monte da chi chiama search_chunks), non piu' dai
+                # document_id ristretti trovati dallo step 1. Restringere qui ai soli
+                # candidate_doc_ids dello step 1 (versione precedente) significava che
+                # un candidato pertinente ma con punteggio BM25 debole allo step 1 non
+                # arrivava mai alla vera valutazione semantica - indipendentemente da
+                # quanto fosse ampia la finestra dello step 1.
+                if semantic_text:
                     try:
                         semantic_results = await client.search(
-                            search_text=query,
-                            filter=candidate_filter,
-                            top=top * 3,
+                            search_text=semantic_text,
+                            filter=odata_filter,
+                            top=top * 6,
                             select=select_fields,
                             highlight_fields=highlight_fields,
                             query_type="semantic",
@@ -378,7 +436,7 @@ class SearchService:
                         logger.warning("Semantic pass failed; using keyword candidates only: %s", exc)
 
                 # Fallback: mantieni candidati keyword anche senza risultato semantic.
-                for chunk_id in candidate_chunk_ids:
+                for chunk_id in keyword_chunk_ids:
                     if chunk_id in merged:
                         continue
                     base = keyword_chunk_entries.get(chunk_id, {})

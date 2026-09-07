@@ -1,0 +1,547 @@
+{
+  ".net developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "ai engineer": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "ai specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "ai strategy specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "am lead": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "am specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "am technical analyst": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "analista funzionale": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "analista funzionale sap": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "analista programmatore": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "analista programmatore java": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "analista programmatore java-pl": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "analista soc": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "analista tecnico funzionale": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "android developer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "android team leader": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "angular developer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "application support specialist": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "architect": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "automation tester": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "backend": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "backend developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "backend developer rust": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "bi specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "bmc remedy developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "business analyst": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "business intelligence analyst": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "cloud engineer": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "cobol developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "cybersecurity analyst": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "data analyst": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "data analyst qlik": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "data engineer": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "data integration specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "data scientist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "data visualization specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "database administrator": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "database developer": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "dba": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "dba sql server": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "developer cobol": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "devops": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "devops engineer": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "digital analytics specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "etl oracle developer": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "flutter developer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "frontend": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "frontend developer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "full-stack developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "fullstack developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "functional analyst": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "google analytics specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "helpdesk": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "helpdesk 1° e 2° livello": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "helpdesk 1° livello": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "helpdesk 1°-2° livello": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "helpdesk 2° livello": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "helpdesk it": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "iam specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "integration analyst": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "ios developer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "it operations": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "it support": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "java developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "maui developer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "ml engineer": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "ml specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "mobile developer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "network specialist": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "power platform developer": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "product owner": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "project manager": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "project manager security": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "python developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "react developer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 340.0
+  },
+  "rpa developer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "rpa specialist": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "salesforce admin": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "salesforce developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "salesforce marketing cloud specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "sap abap developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "sap specialist": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "sas specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "scala": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "scrum master": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "service manager": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "sistemista": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "sistemista informatico": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "sistemista linux": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "sistemista windows": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "soc analyst": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "software developer": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "software tester": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "splunk specialist": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "sql": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "sql developer": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "sviluppatore remedy": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "sviluppatore service now": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "system administrator": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "system administrator linux": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "team leader mainframe": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "tech lead": {
+    "junior": 280.0,
+    "mid": 320.0,
+    "senior": 370.0
+  },
+  "technical leader .net": {
+    "junior": 270.0,
+    "mid": 310.0,
+    "senior": 360.0
+  },
+  "test automation engineer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "test engineer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 360.0
+  },
+  "unix": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "vmware engieer": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  },
+  "windows": {
+    "junior": 260.0,
+    "mid": 300.0,
+    "senior": 350.0
+  }
+}
