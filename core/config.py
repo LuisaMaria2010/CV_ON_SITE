@@ -125,6 +125,16 @@ class Settings(BaseSettings):
     search_reranker_recency_boost: float = 0.02
     search_fallback_threshold: float = 0.20
 
+    # Structured rerank: deterministic skill/role/seniority score used as a
+    # tie-breaker when semantic/vector signal exists, and as the sole ranking
+    # signal when it does not (fully structured query -> no free text ->
+    # semantic pass skipped). No LLM / embedding involved.
+    search_rerank_retrieval_weight: float = 0.75
+    search_rerank_structured_weight: float = 0.25
+    search_rerank_w_skill: float = 0.55
+    search_rerank_w_role: float = 0.35
+    search_rerank_w_seniority: float = 0.10
+
     # =====================================================
     # Limits
     # =====================================================

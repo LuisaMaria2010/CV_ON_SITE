@@ -1,0 +1,400 @@
+{"query": "Profilo orientato all’analisi requisiti.", "title": "Architettura/Qualita"}
+{"query": "Cerco qualcuno che possa scrivere documentazione tecnica.", "title": "Architettura/Qualita"}
+{"query": "Mi serve esperienza ambito payments.", "title": "Settoriale"}
+{"query": "Cerco supporto su sistemi antifrode.", "title": "Settoriale"}
+{"query": "Figura con esperienza ambito telecomunicazioni.", "title": "Settoriale"}
+{"query": "Mi serve esperienza settore energy.", "title": "Settoriale"}
+{"query": "Cerco persona che abbia lavorato su IoT.", "title": "Settoriale"}
+{"query": "Profilo con esperienza automotive.", "title": "Settoriale"}
+{"query": "Cerco qualcuno che abbia lavorato su sistemi embedded.", "title": "Settoriale"}
+{"query": "Esperienza firewall e sicurezza infrastrutturale.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco supporto SOC.", "title": "Sicurezza/Infrastructure"}
+{"query": "Esperienza Sentinel gradita.", "title": "Sicurezza/Infrastructure"}
+{"query": "Mi serve qualcuno che sappia fare vulnerability assessment.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco qualcuno forte lato Azure.", "title": "Cloud/DevOps"}
+{"query": "Cerco figura GCP.", "title": "Cloud/DevOps"}
+{"query": "Mi serve supporto cloud migration.", "title": "Cloud/DevOps"}
+{"query": "Figura con esperienza monitoring sistemi.", "title": "Cloud/DevOps"}
+{"query": "Esperienza Prometheus e Grafana.", "title": "Cloud/DevOps"}
+{"query": "Cerco supporto observability.", "title": "Cloud/DevOps"}
+{"query": "Mi serve una figura orientata ai dati.", "title": "Data/AI"}
+{"query": "Cerco persona forte lato reporting.", "title": "Data/AI"}
+{"query": "Figura con esperienza ETL.", "title": "Data/AI"}
+{"query": "Cerco supporto Data Warehouse.", "title": "Data/AI"}
+{"query": "Cerco supporto computer vision.", "title": "Data/AI"}
+{"query": "Cerco una persona che possa dare valore subito senza troppo affiancamento.", "title": "Consulenziale"}
+{"query": "Cerco qualcuno con esperienza integrazione SAP e sistemi legacy.", "title": "Settoriale"}
+{"query": "Mi serve una figura che possa seguire attività di assessment infrastrutturale.", "title": "Settoriale"}
+{"query": "Avete profili con esperienza in ambienti multinazionali?", "title": "Settoriale"}
+{"query": "Cerco persona che sappia lavorare bene in team distribuiti.", "title": "Settoriale"}
+{"query": "Figura con esperienza rollout applicativi su più paesi.", "title": "Settoriale"}
+{"query": "Mi serve qualcuno che abbia gestito migrazioni massive di dati.", "title": "Settoriale"}
+{"query": "Cerco esperienza ambito fatturazione elettronica.", "title": "Settoriale"}
+{"query": "Profilo con esperienza PagoPA o SPID.", "title": "Settoriale"}
+{"query": "Cerco figura con esperienza Pubblica Amministrazione.", "title": "Settoriale"}
+{"query": "Esperienza ANPR o sistemi governativi gradita.", "title": "Settoriale"}
+{"query": "Cerco qualcuno con background consulenziale forte.", "title": "Consulenziale"}
+{"query": "Mi serve supporto per attività di audit applicativo.", "title": "Compliance"}
+{"query": "Figura con esperienza revisione codice e code quality.", "title": "Architettura/Qualita"}
+{"query": "Cerco qualcuno forte lato clean architecture.", "title": "Architettura/Qualita"}
+{"query": "Esperienza DDD gradita.", "title": "Architettura/Qualita"}
+{"query": "Cerco supporto CQRS/event sourcing.", "title": "Architettura/Qualita"}
+{"query": "Figura con esperienza serverless.", "title": "Cloud/DevOps"}
+{"query": "Cerco qualcuno che conosca Lambda e API Gateway.", "title": "Cloud/DevOps"}
+{"query": "Profilo con esperienza CDN e caching distribuito.", "title": "Cloud/DevOps"}
+{"query": "Mi serve qualcuno che sappia ottimizzare query lente.", "title": "Database"}
+{"query": "Cerco esperienza tuning database Oracle.", "title": "Database"}
+{"query": "Figura con esperienza replica dati e alta disponibilità.", "title": "Disponibilita"}
+{"query": "Cerco supporto disaster recovery test.", "title": "Database"}
+{"query": "Esperienza business continuity obbligatoria.", "title": "Database"}
+{"query": "Cerco qualcuno che abbia lavorato in ambienti ISO27001.", "title": "Compliance"}
+{"query": "Figura con esperienza NIS2.", "title": "Compliance"}
+{"query": "Cerco supporto hardening infrastrutturale.", "title": "Sicurezza/Infrastructure"}
+{"query": "Esperienza MFA e identity federation.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco qualcuno che sappia lavorare su Zero Trust Architecture.", "title": "Sicurezza/Infrastructure"}
+{"query": "Profilo con esperienza proxy e bilanciatori.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco supporto reverse proxy e networking avanzato.", "title": "Sicurezza/Infrastructure"}
+{"query": "Esperienza F5 gradita.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco qualcuno che conosca Palo Alto.", "title": "Sicurezza/Infrastructure"}
+{"query": "Figura con esperienza Fortinet.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco esperienza infrastrutture ibride.", "title": "Sicurezza/Infrastructure"}
+{"query": "Mi serve supporto container orchestration.", "title": "Cloud/DevOps"}
+{"query": "Cerco qualcuno con esperienza Rancher.", "title": "Cloud/DevOps"}
+{"query": "Figura con esperienza ArgoCD.", "title": "Cloud/DevOps"}
+{"query": "Cerco supporto Infrastructure as Code.", "title": "Cloud/DevOps"}
+{"query": "Esperienza automazione infrastrutturale richiesta.", "title": "Settoriale"}
+{"query": "Cerco qualcuno che sappia lavorare con ambienti multi-cloud.", "title": "Cloud/DevOps"}
+{"query": "Figura con esperienza cloud cost optimization.", "title": "Cloud/DevOps"}
+{"query": "Cerco supporto cloud governance.", "title": "Cloud/DevOps"}
+{"query": "Esperienza FinOps gradita.", "title": "Cloud/DevOps"}
+{"query": "Cerco qualcuno che abbia lavorato su CRM custom.", "title": "CRM/Digital"}
+{"query": "Figura con esperienza integrazione Salesforce.", "title": "CRM/Digital"}
+{"query": "Cerco supporto omnicanalità.", "title": "CRM/Digital"}
+{"query": "Esperienza customer journey digitale.", "title": "CRM/Digital"}
+{"query": "Cerco qualcuno con esperienza loyalty platform.", "title": "CRM/Digital"}
+{"query": "Figura con esperienza recommendation engine.", "title": "CRM/Digital"}
+{"query": "Cerco supporto search engine enterprise.", "title": "Data/AI"}
+{"query": "Esperienza Elasticsearch richiesta.", "title": "Data/AI"}
+{"query": "Cerco qualcuno che conosca Solr.", "title": "Data/AI"}
+{"query": "Figura con esperienza motori di ricerca semantici.", "title": "Data/AI"}
+{"query": "Cerco supporto chatbot AI enterprise.", "title": "Data/AI"}
+{"query": "Esperienza prompt engineering gradita.", "title": "Data/AI"}
+{"query": "Cerco qualcuno con esperienza AI governance.", "title": "Data/AI"}
+{"query": "Figura con esperienza training modelli AI.", "title": "Data/AI"}
+{"query": "Cerco supporto inferenza modelli in produzione.", "title": "Data/AI"}
+{"query": "Esperienza MLOps richiesta.", "title": "Data/AI"}
+{"query": "Cerco qualcuno che sappia deployare modelli ML.", "title": "Data/AI"}
+{"query": "Figura con esperienza pipeline dati realtime.", "title": "Data/AI"}
+{"query": "Cerco supporto stream analytics.", "title": "Data/AI"}
+{"query": "Esperienza Azure Data Factory gradita.", "title": "Cloud/DevOps"}
+{"query": "Cerco qualcuno con esperienza Snowflake.", "title": "Data/AI"}
+{"query": "Figura con esperienza Redshift.", "title": "Data/AI"}
+{"query": "Cerco supporto BigQuery.", "title": "Data/AI"}
+{"query": "Esperienza data lakehouse richiesta.", "title": "Data/AI"}
+{"query": "Cerco qualcuno forte lato governance documentale.", "title": "ITSM/PMO"}
+{"query": "Figura con esperienza SharePoint enterprise.", "title": "Workplace/M365"}
+{"query": "Cerco supporto Microsoft 365.", "title": "Workplace/M365"}
+{"query": "Esperienza Teams administration gradita.", "title": "Workplace/M365"}
+{"query": "Cerco qualcuno con esperienza Exchange Online.", "title": "Workplace/M365"}
+{"query": "Figura con esperienza Intune.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco supporto device management enterprise.", "title": "Sicurezza/Infrastructure"}
+{"query": "Esperienza virtual desktop infrastructure.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco qualcuno con esperienza Citrix.", "title": "Sicurezza/Infrastructure"}
+{"query": "Figura con esperienza VMware Horizon.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco supporto endpoint security.", "title": "Sicurezza/Infrastructure"}
+{"query": "Esperienza EDR/XDR richiesta.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco qualcuno con esperienza CrowdStrike.", "title": "Sicurezza/Infrastructure"}
+{"query": "Figura con esperienza Microsoft Defender.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco supporto SOC di secondo livello.", "title": "Sicurezza/Infrastructure"}
+{"query": "Esperienza incident response richiesta.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco qualcuno con esperienza digital forensics.", "title": "Sicurezza/Infrastructure"}
+{"query": "Figura con esperienza threat intelligence.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco supporto vulnerability remediation.", "title": "Sicurezza/Infrastructure"}
+{"query": "Esperienza patch management gradita.", "title": "Sicurezza/Infrastructure"}
+{"query": "Cerco qualcuno con esperienza IT asset management.", "title": "Consulenziale"}
+{"query": "Figura con esperienza CMDB.", "title": "ITSM/PMO"}
+{"query": "Cerco supporto ServiceNow.", "title": "ITSM/PMO"}
+{"query": "Esperienza Jira Service Management richiesta.", "title": "ITSM/PMO"}
+{"query": "Cerco qualcuno con esperienza Confluence e Jira.", "title": "ITSM/PMO"}
+{"query": "Figura con esperienza ALM enterprise.", "title": "ITSM/PMO"}
+{"query": "Cerco supporto governance progetti IT.", "title": "Compliance"}
+{"query": "Esperienza PMO internazionale.", "title": "ITSM/PMO"}
+{"query": "Cerco qualcuno che sappia gestire fornitori esterni.", "title": "ITSM/PMO"}
+{"query": "Figura con esperienza gestione SLA/KPI.", "title": "ITSM/PMO"}
+{"query": "Cerco supporto demand management.", "title": "ITSM/PMO"}
+{"query": "Esperienza capacity planning richiesta.", "title": "ITSM/PMO"}
+{"query": "Cerco un profilo senior ma con tariffa contenuta.", "title": "Budget"}
+{"query": "Budget massimo 350€ al giorno.", "title": "Budget"}
+{"query": "Avete qualcuno sotto i 400€/day?", "title": "Budget"}
+{"query": "Cerco una figura middle per contenere i costi.", "title": "Budget"}
+{"query": "Profilo junior con buona autonomia.", "title": "Budget"}
+{"query": "Mi serve una persona senior ma non troppo costosa.", "title": "Budget"}
+{"query": "Cerco consulente con tariffa competitiva.", "title": "Budget"}
+{"query": "Budget limitato, valutiamo anche figure meno esperte.", "title": "Budget"}
+{"query": "Mi serve un profilo entry level da far crescere.", "title": "Budget"}
+{"query": "Cerco qualcuno con almeno 8 anni di esperienza.", "title": "Budget"}
+{"query": "Esperienza minima 2 anni.", "title": "Budget"}
+{"query": "Figura junior da inserire in team strutturato.", "title": "Budget"}
+{"query": "Cerco profilo staffabile velocemente.", "title": "Disponibilita"}
+{"query": "Disponibilità immediata obbligatoria.", "title": "Disponibilita"}
+{"query": "Mi serve qualcuno entro fine settimana.", "title": "Disponibilita"}
+{"query": "Cerco profilo disponibile da lunedì prossimo.", "title": "Disponibilita"}
+{"query": "Disponibilità entro 30 giorni massimo.", "title": "Disponibilita"}
+{"query": "Avete qualcuno libero già da domani?", "title": "Disponibilita"}
+{"query": "Cerco figura disponibile part-time.", "title": "Disponibilita"}
+{"query": "Disponibilità 2 giorni a settimana.", "title": "Disponibilita"}
+{"query": "Cerco qualcuno disponibile solo fascia mattina.", "title": "Disponibilita"}
+{"query": "Mi serve una figura per copertura temporanea di 1 mese.", "title": "Disponibilita"}
+{"query": "Cerco consulente per attività spot.", "title": "Disponibilita"}
+{"query": "Disponibilità richiesta fino a fine anno.", "title": "Disponibilita"}
+{"query": "Cerco figura per progetto pluriennale.", "title": "Disponibilita"}
+{"query": "Full remote obbligatorio.", "title": "Location/Trasferte"}
+{"query": "Ibrido con presenza 2 giorni a settimana.", "title": "Location/Trasferte"}
+{"query": "Onsite Milano almeno 4 giorni.", "title": "Location/Trasferte"}
+{"query": "Cerco qualcuno disponibile a trasferte frequenti.", "title": "Location/Trasferte"}
+{"query": "Disponibilità a viaggiare in Europa richiesta.", "title": "Location/Trasferte"}
+{"query": "Cerco figura residente in Lombardia.", "title": "Location/Trasferte"}
+{"query": "Full remote ma solo dall’Italia.", "title": "Location/Trasferte"}
+{"query": "Cerco qualcuno vicino Bologna per eventuali meeting.", "title": "Location/Trasferte"}
+{"query": "Presenza occasionale presso cliente a Roma.", "title": "Location/Trasferte"}
+{"query": "Profilo disponibile per turni serali.", "title": "Disponibilita"}
+{"query": "Cerco figura con reperibilità weekend.", "title": "Disponibilita"}
+{"query": "Disponibilità h24 gradita.", "title": "Disponibilita"}
+{"query": "Inglese fluente obbligatorio.", "title": "Lingue"}
+{"query": "Inglese tecnico sufficiente.", "title": "Lingue"}
+{"query": "Cerco figura bilingue italiano/inglese.", "title": "Lingue"}
+{"query": "Francese obbligatorio per progetto internazionale.", "title": "Lingue"}
+{"query": "Tedesco preferenziale.", "title": "Lingue"}
+{"query": "Cerco consulente che parli spagnolo.", "title": "Lingue"}
+{"query": "Inglese livello C1 richiesto.", "title": "Lingue"}
+{"query": "Cerco qualcuno capace di gestire call internazionali.", "title": "Lingue"}
+{"query": "Cliente estero, serve ottima comunicazione.", "title": "Consulenziale"}
+{"query": "Mi serve qualcuno abituato a lavorare con team offshore.", "title": "Lingue"}
+{"query": "Cerco figura con esperienza in contesti multiculturali.", "title": "Lingue"}
+{"query": "Budget molto stretto ma urgenza alta.", "title": "Budget"}
+{"query": "Cerco miglior compromesso qualità/prezzo.", "title": "Budget"}
+{"query": "Mi serve una figura senior ma senza superare budget cliente.", "title": "Budget"}
+{"query": "Tariffa massima 450 all inclusive.", "title": "Budget"}
+{"query": "Cerco figura freelance a costo contenuto.", "title": "Budget"}
+{"query": "Budget aperto per profilo molto forte.", "title": "Budget"}
+{"query": "Cliente disposto a spendere di più per persona autonoma.", "title": "Budget"}
+{"query": "Cerco qualcuno immediatamente operativo.", "title": "Consulenziale"}
+{"query": "Profilo da inserire senza affiancamento.", "title": "Consulenziale"}
+{"query": "Cerco consulente autonomo dalla prima settimana.", "title": "Consulenziale"}
+{"query": "Figura junior ma con forte motivazione.", "title": "Budget"}
+{"query": "Cerco persona smart e veloce da formare.", "title": "Budget"}
+{"query": "Mi serve una figura più operativa che strategica.", "title": "Consulenziale"}
+{"query": "Cerco qualcuno disponibile a lavorare onsite dal cliente finale.", "title": "Disponibilita"}
+{"query": "Richiesta presenza continuativa a Torino.", "title": "Location/Trasferte"}
+{"query": "Cerco figura con flessibilità oraria.", "title": "Disponibilita"}
+{"query": "Disponibilità a straordinari occasionali.", "title": "Disponibilita"}
+{"query": "Cerco qualcuno disponibile nel mese di agosto.", "title": "Disponibilita"}
+{"query": "Figura disponibile durante periodo natalizio.", "title": "Disponibilita"}
+{"query": "Cerco profilo con preavviso massimo 15 giorni.", "title": "Disponibilita"}
+{"query": "Disponibilità immediata preferenziale.", "title": "Disponibilita"}
+{"query": "Cerco consulente disponibile per colloquio già oggi.", "title": "Disponibilita"}
+{"query": "Mi serve qualcuno che possa iniziare entro il mese.", "title": "Disponibilita"}
+{"query": "Profilo disponibile per estensione futura.", "title": "Disponibilita"}
+{"query": "Cerco persona interessata a collaborazione stabile.", "title": "Consulenziale"}
+{"query": "Budget cliente non elevato, evitare profili troppo senior.", "title": "Budget"}
+{"query": "Cerco figura intermedia con buona seniority tecnica.", "title": "Consulenziale"}
+{"query": "Mi serve un senior vero, non solo sulla carta.", "title": "Consulenziale"}
+{"query": "Cerco qualcuno autonomo nella gestione cliente.", "title": "Consulenziale"}
+{"query": "Figura capace di lavorare senza supervisione continua.", "title": "Consulenziale"}
+{"query": "Cerco consulente già abituato a lavorare in consulenza.", "title": "Consulenziale"}
+{"query": "Cliente richiede ottime soft skills oltre alle competenze tecniche.", "title": "Consulenziale"}
+{"query": "Cerco qualcuno molto comunicativo.", "title": "Consulenziale"}
+{"query": "Figura tecnica ma presentabile lato cliente.", "title": "Consulenziale"}
+{"query": "Cerco persona con ottima dialettica.", "title": "Consulenziale"}
+{"query": "Mi serve qualcuno che sappia mediare col business.", "title": "Consulenziale"}
+{"query": "Cerco figura con forte orientamento consulenziale.", "title": "Consulenziale"}
+{"query": "Cliente molto esigente lato comunicazione.", "title": "Consulenziale"}
+{"query": "Cerco qualcuno che sappia gestire stakeholder complessi.", "title": "Consulenziale"}
+{"query": "Figura con esperienza in ambienti corporate strutturati.", "title": "Consulenziale"}
+{"query": "Cerco consulente abituato a lavorare sotto pressione.", "title": "Consulenziale"}
+{"query": "Disponibilità a lavorare su più progetti contemporaneamente.", "title": "Disponibilita"}
+{"query": "Cerco qualcuno che possa seguire anche supporto post go-live.", "title": "Consulenziale"}
+{"query": "Figura disponibile per reperibilità notturna occasionale.", "title": "Disponibilita"}
+{"query": "Cerco risorsa che possa fare onboarding rapido.", "title": "Consulenziale"}
+{"query": "Cliente preferisce persone già abituate a lavorare da remoto.", "title": "Consulenziale"}
+{"query": "Cerco qualcuno che abbia già lavorato con clienti internazionali.", "title": "Consulenziale"}
+{"query": "Profilo con ottima gestione del tempo e delle priorità.", "title": "Consulenziale"}
+{"query": "Cerco figura capace di interfacciarsi con management.", "title": "Consulenziale"}
+{"query": "Budget flessibile in base all’esperienza reale.", "title": "Budget"}
+{"query": "Cerco profilo premium per progetto strategico.", "title": "Consulenziale"}
+{"query": "Mi serve qualcuno valido ma sostenibile economicamente nel lungo periodo.", "title": "Budget"}
+{"query": "Cerco uno sviluppatore Java senior con esperienza Spring Boot e microservizi per progetto bancario a Milano.", "title": "Java"}
+{"query": "Avete profili Java disponibili da settembre in full remote?", "title": "Java"}
+{"query": "Mi serve un backend developer con Kafka e Kubernetes, almeno 4 anni di esperienza.", "title": "Java"}
+{"query": "Cerchiamo un Java developer che abbia lavorato su architetture event driven.", "title": "Java"}
+{"query": "Profilo Java + Angular full stack zona Torino ibrido.", "title": "Java"}
+{"query": "Avete qualcuno con esperienza Quarkus?", "title": "Java"}
+{"query": "Cerco uno sviluppatore backend con Java 17 e Docker.", "title": "Java"}
+{"query": "Team già formato su stack Java/Spring?", "title": "Java"}
+{"query": "Mi servirebbe una figura middle Java con inglese fluente per cliente estero.", "title": "Java"}
+{"query": "Java developer con esperienza settore assicurativo.", "title": "Java"}
+{"query": "Cerco risorsa urgente entro 2 settimane, stack Java + AWS.", "title": "Java"}
+{"query": "Avete profili con esperienza in migrazione monolite-microservizi?", "title": "Java"}
+{"query": "Java developer disponibile part-time 3 giorni a settimana.", "title": "Java"}
+{"query": "Mi serve un consulente Java onsite a Roma almeno 4 giorni.", "title": "Java"}
+{"query": "Cerco profilo backend ma non troppo senior, budget contenuto.", "title": "Java"}
+{"query": "React developer senior con Typescript e Redux.", "title": "Frontend"}
+{"query": "Cerco frontend Angular disponibile subito.", "title": "Frontend"}
+{"query": "Avete qualcuno con esperienza Next.js?", "title": "Frontend"}
+{"query": "Frontend developer con competenze UX/UI.", "title": "Frontend"}
+{"query": "Cerco sviluppatore React Native per progetto mobile.", "title": "Frontend"}
+{"query": "Angular 16 + RxJS + ngrx.", "title": "Frontend"}
+{"query": "Mi serve una figura frontend che sappia anche fare test Cypress.", "title": "Frontend"}
+{"query": "Cerco sviluppatore Vue.js ma con disponibilità immediata.", "title": "Frontend"}
+{"query": "Frontend developer con inglese C1.", "title": "Frontend"}
+{"query": "Team frontend già strutturato su React?", "title": "Frontend"}
+{"query": "Full stack Java + Angular zona Bologna.", "title": "FullStack"}
+{"query": "Cerco un full stack Node.js + React.", "title": "FullStack"}
+{"query": "Avete sviluppatori .NET + Vue?", "title": "FullStack"}
+{"query": "Full stack con esperienza cloud AWS.", "title": "FullStack"}
+{"query": "Cerco figura versatile che possa seguire sia frontend che backend.", "title": "FullStack"}
+{"query": "Full stack senior per startup fintech.", "title": "FullStack"}
+{"query": "Mi serve qualcuno autonomo lato sviluppo end-to-end.", "title": "FullStack"}
+{"query": "Profilo full remote con stack MERN.", "title": "FullStack"}
+{"query": "Cerco sviluppatore con competenze DevOps oltre al coding.", "title": "FullStack"}
+{"query": "Full stack disponibile per progetto breve di 3 mesi.", "title": "FullStack"}
+{"query": "Cerco DevOps engineer con Kubernetes e Terraform.", "title": "DevOps"}
+{"query": "Avete profili AWS certificati?", "title": "DevOps"}
+{"query": "Mi serve un cloud architect Azure.", "title": "DevOps"}
+{"query": "DevOps con esperienza CI/CD GitLab.", "title": "DevOps"}
+{"query": "Cerco sistemista cloud con esperienza Docker.", "title": "DevOps"}
+{"query": "Figura SRE disponibile in tempi brevi.", "title": "DevOps"}
+{"query": "Esperienza OpenShift obbligatoria.", "title": "DevOps"}
+{"query": "Cerco consulente per setup infrastruttura AWS.", "title": "DevOps"}
+{"query": "Kubernetes specialist onsite Milano.", "title": "DevOps"}
+{"query": "DevOps junior con voglia di crescere.", "title": "DevOps"}
+{"query": "Cerco Data Engineer con Spark e Python.", "title": "Data/AI"}
+{"query": "Avete data scientist con esperienza NLP?", "title": "Data/AI"}
+{"query": "Machine learning engineer con esperienza LLM.", "title": "Data/AI"}
+{"query": "Cerco Power BI specialist.", "title": "Data/AI"}
+{"query": "Profilo Tableau senior.", "title": "Data/AI"}
+{"query": "Data analyst con SQL avanzato.", "title": "Data/AI"}
+{"query": "Cerco figura AI Generativa per chatbot enterprise.", "title": "Data/AI"}
+{"query": "Esperienza Databricks richiesta.", "title": "Data/AI"}
+{"query": "Big Data engineer Hadoop/Kafka.", "title": "Data/AI"}
+{"query": "Consulente BI settore finance.", "title": "Data/AI"}
+{"query": "Cerco cyber security analyst SOC.", "title": "Cybersecurity"}
+{"query": "Ethical hacker disponibile onsite?", "title": "Cybersecurity"}
+{"query": "Esperienza IAM e CyberArk.", "title": "Cybersecurity"}
+{"query": "Security engineer con ISO27001.", "title": "Cybersecurity"}
+{"query": "Cerco penetration tester freelance.", "title": "Cybersecurity"}
+{"query": "SOC analyst h24.", "title": "Cybersecurity"}
+{"query": "Esperienza SIEM Splunk obbligatoria.", "title": "Cybersecurity"}
+{"query": "Consulente GRC cybersecurity.", "title": "Cybersecurity"}
+{"query": "Security architect cloud Azure.", "title": "Cybersecurity"}
+{"query": "Cerco figura con clearance o esperienza ambito difesa.", "title": "Cybersecurity"}
+{"query": "SAP FI senior per rollout internazionale.", "title": "SAP/ERP"}
+{"query": "Cerco consulente SAP MM disponibile subito.", "title": "SAP/ERP"}
+{"query": "SAP ABAP con esperienza S/4HANA.", "title": "SAP/ERP"}
+{"query": "Avete profili SAP SD bilingue inglese/francese?", "title": "SAP/ERP"}
+{"query": "SAP consultant con esperienza manufacturing.", "title": "SAP/ERP"}
+{"query": "Oracle ERP specialist.", "title": "SAP/ERP"}
+{"query": "Dynamics 365 consultant.", "title": "SAP/ERP"}
+{"query": "SAP PP onsite Torino.", "title": "SAP/ERP"}
+{"query": "Cerco profilo SAP Basis.", "title": "SAP/ERP"}
+{"query": "Team SAP già disponibile?", "title": "SAP/ERP"}
+{"query": "Test automation engineer Selenium.", "title": "QA/Testing"}
+{"query": "QA manuale con esperienza finance.", "title": "QA/Testing"}
+{"query": "Cerco automation tester Cypress.", "title": "QA/Testing"}
+{"query": "Performance tester JMeter.", "title": "QA/Testing"}
+{"query": "QA lead per coordinamento team.", "title": "QA/Testing"}
+{"query": "Test engineer con API testing.", "title": "QA/Testing"}
+{"query": "Esperienza test mobile richiesta.", "title": "QA/Testing"}
+{"query": "QA con inglese fluente.", "title": "QA/Testing"}
+{"query": "Tester disponibile solo part-time?", "title": "QA/Testing"}
+{"query": "Cerco figura junior QA.", "title": "QA/Testing"}
+{"query": "Cerco Scrum Master certificato.", "title": "PM/Agile"}
+{"query": "PM IT con esperienza bancaria.", "title": "PM/Agile"}
+{"query": "Agile coach disponibile da ottobre.", "title": "PM/Agile"}
+{"query": "Project manager SAP rollout.", "title": "PM/Agile"}
+{"query": "PM tecnico con background sviluppo.", "title": "PM/Agile"}
+{"query": "Delivery manager per coordinamento fornitori.", "title": "PM/Agile"}
+{"query": "Cerco PM con ottimo inglese.", "title": "PM/Agile"}
+{"query": "Program manager ambito digital transformation.", "title": "PM/Agile"}
+{"query": "PMO junior.", "title": "PM/Agile"}
+{"query": "Cerco figura ibrida PM + analista funzionale.", "title": "PM/Agile"}
+{"query": "Business analyst settore assicurativo.", "title": "BusinessAnalyst"}
+{"query": "Analista funzionale con esperienza CRM.", "title": "BusinessAnalyst"}
+{"query": "Cerco functional analyst SAP.", "title": "BusinessAnalyst"}
+{"query": "BA con capacità di raccolta requisiti.", "title": "BusinessAnalyst"}
+{"query": "Esperienza UML e BPMN richiesta.", "title": "BusinessAnalyst"}
+{"query": "Analista tecnico-funzionale payments.", "title": "BusinessAnalyst"}
+{"query": "Functional analyst con SQL.", "title": "BusinessAnalyst"}
+{"query": "Cerco figura ponte business-IT.", "title": "BusinessAnalyst"}
+{"query": "Business analyst disponibile onsite Roma.", "title": "BusinessAnalyst"}
+{"query": "Esperienza Agile obbligatoria.", "title": "BusinessAnalyst"}
+{"query": "Mi serve qualcuno bravo su cloud.", "title": "Vago"}
+{"query": "Avete profili AI?", "title": "Vago"}
+{"query": "Cerco uno sviluppatore senior ma con costo contenuto.", "title": "Vago"}
+{"query": "Mi serve una figura tecnica ma anche gestionale.", "title": "Vago"}
+{"query": "Qualcuno disponibile subito per cliente enterprise.", "title": "Vago"}
+{"query": "Cerco risorsa con esperienza moderna.", "title": "Vago"}
+{"query": "Mi serve un profilo forte lato backend.", "title": "Vago"}
+{"query": "Avete qualcuno che conosca bene Microsoft?", "title": "Vago"}
+{"query": "Cerco consulente esperto fintech.", "title": "Vago"}
+{"query": "Ho bisogno di un profilo autonomo.", "title": "Vago"}
+{"query": "Cerco urgentemente java senior milano ibrido banca.", "title": "Colloquiale"}
+{"query": "fullstack react node remoto asap.", "title": "Colloquiale"}
+{"query": "avete cv python ai disponibili?", "title": "Colloquiale"}
+{"query": "servirebbe devops kubernetes inglese ok.", "title": "Colloquiale"}
+{"query": "candidato .net no junior.", "title": "Colloquiale"}
+{"query": "ci serve una persona che possa interfacciarsi col cliente e fare sviluppo.", "title": "Colloquiale"}
+{"query": "React o Angular va bene uguale.", "title": "Colloquiale"}
+{"query": "Cerco figura tecnica ma che sappia parlare con il business.", "title": "Colloquiale"}
+{"query": "Mi servirebbe qualcuno disponibile entro lunedì.", "title": "Colloquiale"}
+{"query": "Team di 2-3 persone su Java riuscite a proporlo?", "title": "Colloquiale"}
+{"query": "Cerco COBOL developer under 30.", "title": "EdgeCase"}
+{"query": "Mi serve un DevOps con esperienza sia AWS che mainframe.", "title": "EdgeCase"}
+{"query": "Full remote ma residente entro 50km da Padova.", "title": "EdgeCase"}
+{"query": "Cerco AI engineer con esperienza sanitaria e conoscenza normativa GDPR.", "title": "EdgeCase"}
+{"query": "SAP consultant disponibile solo mattina.", "title": "EdgeCase"}
+{"query": "Profilo bilingue italiano/tedesco con esperienza banking.", "title": "EdgeCase"}
+{"query": "Cerco sviluppatore React senior con budget da junior.", "title": "EdgeCase"}
+{"query": "Mi serve una figura che sappia fare tutto.", "title": "EdgeCase"}
+{"query": "Cerco consulente blockchain con esperienza assicurativa.", "title": "EdgeCase"}
+{"query": "Avete qualcuno disponibile domani?", "title": "EdgeCase"}
+{"query": "Chi avete disponibile su Roma lato backend?", "title": "Consulenziale"}
+{"query": "Mi consigli un profilo DevOps senior?", "title": "Consulenziale"}
+{"query": "Abbiamo bisogno di rinforzare il team frontend.", "title": "Consulenziale"}
+{"query": "Cerco una figura più architetturale che operativa.", "title": "Consulenziale"}
+{"query": "Avete qualcuno forte su dati e AI?", "title": "Consulenziale"}
+{"query": "Mi serve una persona già abituata a contesti enterprise.", "title": "Consulenziale"}
+{"query": "Qualcuno con esperienza startup ma strutturato.", "title": "Consulenziale"}
+{"query": "Cerco sviluppatore ma con attitudine consulenziale.", "title": "Consulenziale"}
+{"query": "Avete persone che parlano bene inglese?", "title": "Consulenziale"}
+{"query": "Chi potrei inserire su progetto cloud migration?", "title": "Consulenziale"}
+{"query": "Java senior + AWS + inglese + Milano ibrido + disponibilità entro 15 giorni.", "title": "MultiRequisito"}
+{"query": "React developer full remote ma disponibile a trasferte mensili.", "title": "MultiRequisito"}
+{"query": "Data engineer Python/Spark con esperienza finance e inglese fluente.", "title": "MultiRequisito"}
+{"query": "PM SAP con esperienza internazionale e presenza onsite.", "title": "MultiRequisito"}
+{"query": "Cybersecurity specialist con reperibilità weekend.", "title": "MultiRequisito"}
+{"query": "Cerco una persona che possa seguire integrazioni API con sistemi esterni.", "title": "MultiRequisito"}
+{"query": "Mi serve una figura molto autonoma lato tecnico.", "title": "MultiRequisito"}
+{"query": "Cerco qualcuno che abbia già lavorato in contesti enterprise complessi.", "title": "MultiRequisito"}
+{"query": "Cerco una persona forte lato performance applicative.", "title": "MultiRequisito"}
+{"query": "Mi serve supporto per modernizzazione applicativa.", "title": "MultiRequisito"}
+{"query": "Figura con esperienza assicurativa e normativa IVASS.", "title": "Settoriale"}
+{"query": "Cerco qualcuno abituato a lavorare in Agile strutturato.", "title": "Settoriale"}
+{"query": "Mi serve una persona molto pratica e poco teorica.", "title": "Settoriale"}
+{"query": "Cerco qualcuno forte lato troubleshooting.", "title": "Settoriale"}
+{"query": "Profilo tecnico ma con attitudine manageriale.", "title": "Settoriale"}
+{"query": "Mi serve una figura che possa coordinare altri consulenti.", "title": "Settoriale"}
+{"query": "Cerco supporto per attività di refactoring.", "title": "Settoriale"}
+{"query": "Cerco figura con competenze DevSecOps.", "title": "Settoriale"}
+{"query": "Mi serve supporto su CI/CD pipeline.", "title": "Settoriale"}
+{"query": "Figura con esperienza GitLab e automazione deployment.", "title": "Settoriale"}
+{"query": "Cerco persona forte su database relazionali.", "title": "Database"}
+{"query": "Esperienza PostgreSQL gradita.", "title": "Database"}
+{"query": "Profilo con competenze NoSQL.", "title": "Database"}
+{"query": "Mi serve qualcuno che abbia lavorato su MongoDB.", "title": "Database"}
+{"query": "Cerco supporto per applicativi mission critical.", "title": "Infrastructure"}
+{"query": "Figura con esperienza alta affidabilità sistemi.", "title": "Infrastructure"}
+{"query": "Esperienza Linux obbligatoria.", "title": "Infrastructure"}
+{"query": "Mi serve competenza Windows Server.", "title": "Infrastructure"}
+{"query": "Cerco figura con esperienza VMware.", "title": "Infrastructure"}
+{"query": "Profilo con competenze networking.", "title": "Infrastructure"}

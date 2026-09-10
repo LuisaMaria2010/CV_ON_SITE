@@ -22,6 +22,141 @@ ROLE_NOISE = {
     "staff",
 }
 
+# Rank words that qualify a discipline ("QA lead", "QA manager") rather than
+# name a role. They stay in the token set (so they still nudge the score once
+# the discipline matches), but a match whose ONLY overlap is a level token is
+# downgraded to score 0 — otherwise "lead"/"manager" <-> "responsabile" scores
+# every Project Manager on a "QA lead" request. The downgrade only applies when
+# the requested discipline actually exists in the catalog vocabulary (so
+# "Delivery Manager" still scores against Project Manager). Mirrors
+# MCFlashCandidatesClient._ROLE_LEVEL_TOKENS — keep the two in sync.
+ROLE_LEVEL_TOKENS = {
+    "lead",
+    "principal",
+    "head",
+    "chief",
+    "manager",
+    "responsabile",
+    "director",
+    "direttore",
+    "capo",
+}
+
+# Job titles in this catalog are routinely compound ("devops/cloud engineer",
+# "automation tester/python developer", "help desk & sistemista") — a plain
+# str.split() glues the two halves into one token ("tester/python") and they
+# never overlap with anything again. Split on whitespace AND / , & so each
+# half becomes its own token. Not on "-": compounds like "full-stack" are
+# meant to stay one word.
+_ROLE_TOKEN_SPLIT = re.compile(r"[\s/,&]+")
+
+
+def _role_tokens(role: str) -> set[str]:
+    return {t for t in _ROLE_TOKEN_SPLIT.split(role) if t}
+
+
+def _phrase_in(needle: str, haystack: str) -> bool:
+    """Whole-phrase containment, bounded by whitespace/\"/,&\"/start/end — not a
+    raw substring test. A naive `needle in haystack` let short acronyms match
+    embedded inside unrelated words: "po" (Product Owner) inside "power
+    platform developer", "ux" inside "linux", "ui" inside "maui developer"."""
+    if not needle:
+        return False
+    pattern = r"(?:^|[\s/,&])" + re.escape(needle) + r"(?:$|[\s/,&])"
+    return re.search(pattern, haystack) is not None
+
+
+# Role acronyms -> the tokens they expand to. Applied to both the requested and
+# the candidate role before token overlap, so "SRE" matches "Site Reliability
+# Engineer", "BA" matches "Business Analyst", etc. Kept in the Search Layer only
+# (not in the MCFlash hard-select).
+ROLE_ACRONYMS = {
+    # Bare "QA" is placed in the test-engineer domain: it must overlap with
+    # candidates titled test engineer / software tester / automation tester,
+    # the only QA-adjacent roles that actually exist in the MCFlash catalog.
+    # Deliberately NOT adding a bare "engineer" token here: on the real
+    # catalog that alone drags in every unrelated *Engineer title (data
+    # engineer, ai engineer, ...) — verified against all 115 roles.
+    "qa": {"quality", "assurance", "test", "tester", "testing"},
+    # Same "no bare engineer" reasoning as qa/sre below.
+    "qe": {"quality", "test", "tester", "testing"},
+    # Placed in the Cloud/DevOps domain, since that's who actually does SRE
+    # work in this catalog (no "SRE" title exists). Deliberately NOT "engineer"
+    # (drags in every unrelated *Engineer title, same issue as "qa") nor
+    # "platform" (only added Power Platform noise) — verified against all 115
+    # real MCFlash roles.
+    "sre": {"site", "reliability", "devops", "infrastructure", "cloud"},
+    "ba": {"business", "analyst"},
+    "pm": {"project", "manager"},
+    "po": {"product", "owner"},
+    "pmo": {"project", "management", "office"},
+    "sm": {"scrum", "master"},
+    "dba": {"database", "administrator"},
+    # Bare "engineer" dropped (same reasoning as qa/sre/qe) — "software" alone
+    # already reaches every software developer/tester title in the catalog.
+    "swe": {"software"},
+    "ml": {"machine", "learning"},
+    "ux": {"user", "experience"},
+    "ui": {"user", "interface"},
+    "bi": {"business", "intelligence"},
+}
+
+
+def _expand_role_acronyms(tokens: set[str]) -> set[str]:
+    """Replace each known acronym token with the words it stands for, so token
+    overlap compares like with like (req "sre" -> {site, reliability, engineer})."""
+    expanded: set[str] = set()
+    for tok in tokens:
+        if tok in ROLE_ACRONYMS:
+            expanded |= ROLE_ACRONYMS[tok]
+        else:
+            expanded.add(tok)
+    return expanded
+
+
+# EN <-> IT for the common role/job-title vocabulary. The classifier may
+# extract a role in either language ("Dynamics 365 consultant") while MCFlash
+# / CV roles are mostly Italian ("Consulente ERP") — without this, token
+# overlap is zero even when the role is conceptually identical. Each pair is
+# listed once; _expand_role_translations adds both directions. Kept in the
+# Search Layer only (not in the MCFlash hard-select), same as acronyms.
+ROLE_TRANSLATION_PAIRS = [
+    ("consultant", "consulente"),
+    ("consultants", "consulenti"),
+    ("developer", "sviluppatore"),
+    ("engineer", "ingegnere"),
+    ("analyst", "analista"),
+    ("manager", "responsabile"),
+    ("architect", "architetto"),
+    ("administrator", "amministratore"),
+    ("specialist", "specialista"),
+    ("support", "supporto"),
+    ("security", "sicurezza"),
+    ("tester", "collaudatore"),
+    ("designer", "progettista"),
+    ("coordinator", "coordinatore"),
+    ("director", "direttore"),
+    ("owner", "responsabile"),
+    ("lead", "responsabile"),
+    ("assistant", "assistente"),
+    ("technician", "tecnico"),
+]
+ROLE_TRANSLATIONS: dict[str, str] = {}
+for _en, _it in ROLE_TRANSLATION_PAIRS:
+    ROLE_TRANSLATIONS[_en] = _it
+    ROLE_TRANSLATIONS[_it] = _en
+
+
+def _expand_role_translations(tokens: set[str]) -> set[str]:
+    """Add the EN<->IT counterpart of each recognised word, keeping the
+    original (unlike acronyms, both forms can legitimately appear literally)."""
+    expanded = set(tokens)
+    for tok in tokens:
+        translation = ROLE_TRANSLATIONS.get(tok)
+        if translation:
+            expanded.add(translation)
+    return expanded
+
 
 # =========================================================
 # OData filter builder
@@ -81,29 +216,77 @@ def _months_ago(iso_date: str | None, now: datetime) -> float | None:
         return None
 
 
+def _structured_rerank_score(
+    hit: dict,
+    requested_skills: list[str],
+    requested_role: str,
+    requested_seniority: str,
+) -> float | None:
+    """Deterministic 0..1 relevance from the structured signals the request
+    actually carries (skills / role / seniority), each scored with the same
+    helpers used for match_features and renormalised over the requested
+    dimensions only. Returns None when the request carries no structured
+    signal at all (pure free-text intent) — the caller then relies on
+    retrieval scores."""
+    w_skill = settings.search_rerank_w_skill
+    w_role = settings.search_rerank_w_role
+    w_seniority = settings.search_rerank_w_seniority
+
+    parts: list[tuple[float, float]] = []  # (weight, score)
+
+    if requested_skills:
+        sk = _skills_match_features(requested_skills, _norm_list(hit.get("skills")))
+        parts.append((w_skill, float(sk.get("score") or 0.0)))
+    if requested_role:
+        ro = _role_match_features(requested_role, _norm_text(hit.get("role")))
+        parts.append((w_role, float(ro.get("score") or 0.0)))
+    if requested_seniority:
+        se = _seniority_match_features(
+            requested_seniority, _norm_text(hit.get("seniority")), _norm_text(hit.get("role"))
+        )
+        parts.append((w_seniority, float(se.get("score") or 0.0)))
+
+    total_weight = sum(w for w, _ in parts)
+    if total_weight <= 0:
+        return None
+    return sum(w * s for w, s in parts) / total_weight
+
+
 def rerank(
     hits: list[dict],
     query_skills: list[str] | None = None,
     query_role: str | None = None,
     query_location: str | None = None,
     top: int = 10,
+    query_seniority: str | None = None,
 ) -> list[dict]:
     """
-    Applica ranking puramente retrieval-oriented e ritorna i top N per score DESC.
+    Ranking ibrido: blocco retrieval (semantico/vettoriale/lessicale) + blocco
+    structured deterministico (skill/ruolo/seniority).
 
-    Formula:
-        score = semantic_score_norm * 0.70
-              + vec_score_norm      * 0.20
-              + lex_score_norm      * 0.10
-              + recency_boost (opzionale, < 6 mesi)
+    - Se il blocco retrieval ha segnale (semantico o vettoriale > 0):
+        score = retrieval * retrieval_weight + structured * structured_weight
+      lo structured fa da tie-breaker.
+    - Se il blocco retrieval NON ha segnale (query tutta strutturata, nessun
+      testo libero -> niente pass semantico/embedding): lo structured DIVENTA
+      il ranking. Fallback finale su lex se non c'e' nemmeno lo structured.
+    - recency_boost (< 6 mesi) sempre additivo.
 
-    Nota: query_skills/query_role/query_location sono mantenuti per backward-compatibility,
-    ma non influiscono piu' sul ranking.
+    query_location e' mantenuto per compatibilita' di firma.
     """
     now = datetime.now(timezone.utc)
     recb = settings.search_reranker_recency_boost
+    w_retrieval = settings.search_rerank_retrieval_weight
+    w_structured = settings.search_rerank_structured_weight
+    _ = query_location
 
-    _ = (query_skills, query_role, query_location)
+    requested_skills = _norm_list(query_skills)
+    requested_role = _norm_text(query_role)
+    requested_seniority = _norm_text(query_seniority)
+    # A rank word in the role ("QA lead") with no explicit seniority still
+    # carries a level preference — score it as senior (soft: ranking only).
+    if not requested_seniority and requested_role and MCFlashCandidatesClient._role_has_level_token(requested_role):
+        requested_seniority = "senior"
 
     def _norm_semantic(value: Any) -> float:
         # Azure semantic reranker score is commonly in [0,4].
@@ -118,13 +301,39 @@ def rerank(
         except Exception:
             return 0.0
 
+    def _raw_lex(value: Any) -> float:
+        try:
+            return max(0.0, float(value))
+        except Exception:
+            return 0.0
+
+    # Lexical (BM25) scores are unbounded (~0.5..15) and a hard clamp to [0,1]
+    # collapses almost every hit to 1.0 -> no discrimination. Normalise
+    # relative to the current batch instead.
+    max_lex = max((_raw_lex(h.get("lex_score", 0.0)) for h in hits), default=0.0)
+
     scored: list[dict] = []
     for hit in hits:
         semantic_norm = _norm_semantic(hit.get("semantic_score", 0.0))
         vec_norm = _norm_retrieval(hit.get("vec_score", 0.0))
-        lex_norm = _norm_retrieval(hit.get("lex_score", 0.0))
+        lex_norm = (_raw_lex(hit.get("lex_score", 0.0)) / max_lex) if max_lex > 0 else 0.0
 
-        s = semantic_norm * 0.70 + vec_norm * 0.20 + lex_norm * 0.10
+        retrieval = semantic_norm * 0.70 + vec_norm * 0.20 + lex_norm * 0.10
+        structured = _structured_rerank_score(
+            hit, requested_skills, requested_role, requested_seniority
+        )
+        has_retrieval_signal = semantic_norm > 0 or vec_norm > 0
+
+        if has_retrieval_signal:
+            if structured is not None:
+                s = retrieval * w_retrieval + structured * w_structured
+            else:
+                s = retrieval
+        else:
+            if structured is not None:
+                s = structured
+            else:
+                s = lex_norm
 
         # recency boost (< 6 months)
         months = _months_ago(hit.get("processed_at"), now)
@@ -259,12 +468,12 @@ def _skills_match_features(requested_skills: list[str], candidate_skills: list[s
             matched.append(req_skill)
             continue
 
+        # Only the generic->specific direction counts: requested "spring" is
+        # covered by candidate "spring boot" (req_skill in cs). The opposite
+        # (candidate "java" for requested "java 17") is NOT a match — a bare
+        # "java" says nothing about the version asked for.
         semantic_hit = next(
-            (
-                cs
-                for cs in candidate_skills
-                if req_skill in cs or cs in req_skill
-            ),
+            (cs for cs in candidate_skills if req_skill in cs),
             None,
         )
         if semantic_hit:
@@ -288,25 +497,35 @@ def _role_match_features(requested_role: str, candidate_role: str) -> dict[str, 
     if requested_role == candidate_role:
         return {"applicable": True, "score": 1.0, "match": "exact"}
 
-    if requested_role in candidate_role or candidate_role in requested_role:
+    if _phrase_in(requested_role, candidate_role) or _phrase_in(candidate_role, requested_role):
         return {"applicable": True, "score": 0.8, "match": "semantic"}
 
-    req_tokens = set(requested_role.split())
-    cand_tokens = set(candidate_role.split())
+    req_raw = _role_tokens(requested_role) - ROLE_NOISE
+    cand_raw = _role_tokens(candidate_role) - ROLE_NOISE
 
-    # Seniority is evaluated in a dedicated dimension, so exclude it from role similarity.
-    req_tokens -= ROLE_NOISE
-    cand_tokens -= ROLE_NOISE
-
-    # Keep acronym expansion in Search Layer only.
-    if "qa" in req_tokens:
-        req_tokens.update({"quality", "assurance"})
-    if "qa" in cand_tokens:
-        cand_tokens.update({"quality", "assurance"})
+    # Acronym expansion (SRE, BA, PM, ...). Search Layer only.
+    req_tokens = _expand_role_translations(_expand_role_acronyms(req_raw))
+    cand_tokens = _expand_role_translations(_expand_role_acronyms(cand_raw))
 
     overlap = len(req_tokens & cand_tokens) if req_tokens and cand_tokens else 0
     if overlap <= 0:
         return {"applicable": True, "score": 0.0, "match": "none"}
+
+    # The discipline must be what overlaps: if the request names a discipline
+    # that exists in the catalog ("qa" in "qa lead" -> {test, tester, ...}) and
+    # none of those tokens reach the candidate, a lone level-token overlap
+    # ("lead"/"manager" <-> "responsabile") is not a role match. Unknown-
+    # discipline requests ("Delivery Manager") keep scoring on "manager".
+    _vocab = MCFlashCandidatesClient._role_discipline_vocab()
+    domain_raw = {
+        t
+        for t in (req_raw - ROLE_LEVEL_TOKENS)
+        if _expand_role_acronyms({t}) & _vocab
+    }
+    if domain_raw:
+        domain_tokens = _expand_role_translations(_expand_role_acronyms(domain_raw))
+        if not (domain_tokens & cand_tokens):
+            return {"applicable": True, "score": 0.0, "match": "none"}
 
     score = overlap / max(1, len(req_tokens))
     if score >= 0.4:
@@ -343,14 +562,46 @@ def _language_match_features(requested_language: str, candidate_language: str) -
     return {"applicable": True, "score": 1.0 if is_match else 0.0, "match": bool(is_match)}
 
 
-def _seniority_match_features(requested_seniority: str, candidate_seniority: str) -> dict[str, Any]:
-    if not requested_seniority:
+_SENIORITY_RANK = {"junior": 0, "mid": 1, "senior": 2}
+
+
+def _seniority_match_features(
+    requested_seniority: str,
+    candidate_seniority: str,
+    candidate_role: str = "",
+) -> dict[str, Any]:
+    """Graded seniority match on the junior<mid<senior ladder.
+
+    - request and candidate values normalised through the MCFlash rules
+      (Medium->mid, Neo->junior, lead/manager/principal->senior);
+    - a leadership word in the candidate's job title ("Test Leader") satisfies
+      a senior/lead request whatever the Seniority field says;
+    - candidate with no seniority data and no title signal -> neutral 0.5,
+      not a zero (missing data must not sink an otherwise good hit).
+    """
+    req = MCFlashCandidatesClient._normalize_seniority_key(requested_seniority or "")
+    if not req:
         return {"applicable": False, "score": None, "match": "not_requested"}
-    if not candidate_seniority:
-        return {"applicable": True, "score": 0.0, "match": "none"}
-    if requested_seniority == candidate_seniority:
+
+    cand = MCFlashCandidatesClient._normalize_seniority_key(candidate_seniority or "")
+    if (
+        req == "senior"
+        and _SENIORITY_RANK.get(cand, -1) < 2
+        and MCFlashCandidatesClient._role_title_has_leadership(candidate_role or "")
+    ):
+        cand = "senior"
+
+    if not cand:
+        return {"applicable": True, "score": 0.5, "match": "unknown"}
+    if cand not in _SENIORITY_RANK or req not in _SENIORITY_RANK:
+        exact = cand == req
+        return {"applicable": True, "score": 1.0 if exact else 0.0, "match": "exact" if exact else "none"}
+
+    delta = abs(_SENIORITY_RANK[req] - _SENIORITY_RANK[cand])
+    if delta == 0:
         return {"applicable": True, "score": 1.0, "match": "exact"}
-    return {"applicable": True, "score": 0.0, "match": "none"}
+    score = max(0.0, 1.0 - delta / 2.0)
+    return {"applicable": True, "score": round(score, 4), "match": "partial" if score > 0 else "none"}
 
 
 def _coerce_availability_days(value: Any, *, parser) -> int | None:
@@ -417,7 +668,7 @@ def _canonicalize_match_features_contract(match_features: dict[str, Any]) -> dic
         language_match = "not_requested" if _norm_text(language_match_raw) == "not_requested" else False
 
     seniority_match = _norm_text(seniority.get("match"))
-    if seniority_match not in {"exact", "none", "not_requested"}:
+    if seniority_match not in {"exact", "partial", "unknown", "none", "not_requested"}:
         seniority_match = "none"
 
     availability_match = _norm_text(availability.get("match"))
@@ -487,6 +738,8 @@ def build_match_features(
     requested_language = _norm_text(query_language)
     candidate_language = _norm_text(candidate.get("language"))
     requested_seniority = _norm_text(query_seniority)
+    if not requested_seniority and requested_role and MCFlashCandidatesClient._role_has_level_token(requested_role):
+        requested_seniority = "senior"
     candidate_seniority = _norm_text(candidate.get("seniority"))
 
     # "availability_days" and "availability" both carry free-text formats in
@@ -512,7 +765,9 @@ def build_match_features(
         _norm_text(work_mode) or "unknown",
     )
     language_features = _language_match_features(requested_language, candidate_language)
-    seniority_features = _seniority_match_features(requested_seniority, candidate_seniority)
+    seniority_features = _seniority_match_features(
+        requested_seniority, candidate_seniority, candidate_role
+    )
     availability_features = _availability_match_features(
         bool(query_availability_required),
         candidate_availability_days,

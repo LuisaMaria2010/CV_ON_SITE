@@ -88,7 +88,9 @@ FOUNDRY_PROJECT   = _cfg("FOUNDRY_PROJECT",  "test-project")
 FOUNDRY_API_KEY   = _cfg("FOUNDRY_API_KEY",  "5Gum7Js3kot14QDeU2sbhi1THB83kVveBp9BkH635tV6JoGJIEPtJQQJ99CBACfhMk5XJ3w3AAAAACOGPvCI") or _cfg("AZURE_OPENAI_KEY", "")
 FOUNDRY_API_VER   = _cfg("FOUNDRY_API_VERSION", "2025-05-15-preview")
 AGENT_ID          = _cfg("CLASSIFIER_AGENT_ID", "mc-matcher")
-FOUNDRY_MODEL     = _cfg("FOUNDRY_MODEL", _cfg("AZURE_OPENAI_MODEL", "gpt-4.1-mini"))
+# Must match the model the mc-matcher agent pins — Foundry 400s on a mismatch.
+# Do NOT fall back to AZURE_OPENAI_MODEL (that's the judge's, e.g. gpt-4.1).
+FOUNDRY_MODEL     = _cfg("FOUNDRY_MODEL", "gpt-4.1-mini")
 
 if FOUNDRY_PROJECT:
     PROJECT_ENDPOINT = f"{FOUNDRY_ENDPOINT}/api/projects/{FOUNDRY_PROJECT}"
@@ -466,6 +468,30 @@ Principi fondamentali:
 - Per query vaghe (es. "Avete profili AI?"), un tentativo di ricerca con i segnali
   disponibili è preferibile al blocco immediato.
 - Sii determinista e restituisci solo JSON valido senza markdown.
+
+Come funziona il sistema di ricerca (per non penalizzare comportamenti corretti):
+- La ricerca è a due stadi. Prima un hard-select deterministico su MC Flash
+  (ruolo/seniority/sede/lingua/disponibilità/budget), poi retrieval su indice CV
+  + rerank. Se lo strict non riempie i 6 posti, la ricerca viene ALLARGATA
+  (skill rimosse, passaggio ibrido): questo è segnalato da search_meta.relaxed=true
+  e da match_type ≠ "strict" sui candidati. I risultati oltre i primi in una
+  ricerca allargata SONO match parziali attesi, non errori: se l'agente lo dichiara
+  ("ricerca allargata / match parziale / non copre tutti i vincoli") la gestione è
+  CORRETTA — search_relevance/candidate_quality non devono scendere sotto 3 solo
+  per questo.
+- Ruolo + livello: il sistema risolve in modo deterministico la disciplina e il
+  livello. "QA lead", "Test Manager", "Responsabile QA" → disciplina = QA/test,
+  livello = senior (o titolo di leadership). "Delivery/Program Manager" → resta
+  gestione manager. Quindi NON penalizzare classification_coherence se il campo
+  `role` non è canonico o `seniority` è vuoto: conta solo che la DISCIPLINA sia
+  giusta. Penalizza se la disciplina è sbagliata (es. Project Manager proposti
+  per "QA lead").
+- Una richiesta "lead/senior" in una disciplina che a catalogo ha solo profili
+  junior/mid porta legittimamente a 0 risultati strict + ricerca allargata: è
+  COHERENT_NO_RESULTS gestito bene, non un fallimento.
+- Richieste di "team / gruppo / squadra": il DB contiene profili singoli, non team
+  pre-assemblati. Un agente che lo dichiara e propone una composizione ad-hoc di
+  profili coerenti sta gestendo CORRETTAMENTE (non è INCOHERENT).
 """
 
 _JUDGE_PROMPT = """\
@@ -480,13 +506,26 @@ NON hai una ground truth. Valuta basandoti esclusivamente su:
 
 Se è presente SEARCH INDEX EVIDENCE, usala come fonte primaria per valutare
 search_relevance e candidate_quality. Il testo finale dell'agente è secondario.
+La evidenza contiene anche segnali del sistema di ricerca da usare così:
+- search_meta.relaxed = true  → la ricerca è stata ALLARGATA: i risultati oltre i
+  primi, e ogni hit con match_type ≠ "strict", sono match parziali ATTESI. Non
+  penalizzare se l'agente li presenta dichiarandolo.
+- verdict ("strong"/"partial"/"weak"/"none") → qualità globale già stimata dal
+  sistema. Un verdict "weak"/"none" gestito con disclaimer + domande di
+  chiarimento è comportamento corretto, non un errore.
+- clarifying_questions presenti → l'agente dovrebbe averle riportate.
 
 Classifica la risposta in esattamente uno di:
 - COHERENT_MATCH       : classificazione e candidati coerenti con la query
-- COHERENT_NO_RESULTS  : classificazione corretta ma nessun candidato trovato (DB vuoto su quel profilo)
+- COHERENT_NO_RESULTS  : classificazione corretta ma nessun candidato pienamente
+                         conforme (DB privo di quel profilo, o richiesta
+                         "lead/senior" in una disciplina che ha solo junior/mid):
+                         se l'agente lo dichiara e propone i profili più vicini
+                         come match parziali, è gestione CORRETTA
 - PARTIAL_MATCH        : classificazione parzialmente corretta o candidati solo parzialmente pertinenti
 - CLARIFICATION_ASKED  : agente ha chiesto chiarimenti (valuta se appropriato dato la query)
 - INCOHERENT           : classificazione o candidati non coerenti con la query
+                         (es. disciplina sbagliata: Project Manager per "QA lead")
 - AGENT_ERROR          : agente ha restituito errore o risposta vuota/incomprensibile
 
 Definizioni metriche:
@@ -495,24 +534,52 @@ classification_coherence (1-5):
   La classificazione strutturata interna (skills, ruolo, location, seniority, ecc.)
   rispecchia l'intento della query? Se non è visibile nella risposta, inferisci
   dalla risposta testuale se l'agente ha capito correttamente la richiesta.
-  5 = perfettamente coerente; 1 = completamente incoerente o assente.
+  Il sistema risolve a valle in modo deterministico disciplina + livello: NON
+  penalizzare se `role` non è canonico ("QA lead" invece di "QA Engineer") o se
+  `seniority` è vuoto quando il livello è già nella locuzione di ruolo. Conta che
+  la DISCIPLINA sia corretta.
+  5 = disciplina/intento colti; 1 = disciplina sbagliata o intento frainteso.
 
 field_completeness (1-5):
-  L'agente ha estratto e utilizzato tutti i campi estraibili dalla query?
-  Es. se la query menziona location, seniority, skill specifiche → sono state catturate?
-  Per query vaghe, è accettabile avere pochi campi valorizzati.
-  5 = tutti i campi estraibili catturati; 1 = campi ovvi mancanti.
+  Misura SOLO i campi ESPLICITAMENTE nominati nella query e non catturati.
+  - Se la query non nomina un campo (ruolo, seniority, location, lingua), la sua
+    assenza NON è una lacuna: query vaga / a una frase → pochi campi valorizzati
+    è normale, resta 4-5.
+  - Non contare come "mancante" un campo che il sistema deriva da solo
+    (seniority da "lead/manager" nel ruolo o da anni di esperienza).
+  - La mancata DERIVAZIONE di un ruolo da una frase-disciplina ("analisi
+    requisiti" → Business Analyst, "team su Java/Spring" → Java Developer) NON
+    va pesata qui: è un tema di classification_coherence / search_relevance.
+  Penalizza (max 3) SOLO se la query dice esplicitamente una seniority
+  ("middle", "senior", "3 anni"), una location, una lingua o una skill precisa
+  e l'agente non l'ha catturata.
+  5 = tutti i campi ESPLICITI catturati; 1 = campo esplicito ovvio ignorato.
 
 search_relevance (1-5):
-  I candidati presentati (se presenti) corrispondono ai requisiti della query?
-  Se nessun candidato è stato trovato: 3 (neutro, non imputabile all'agente).
-  Se candidati presentati ma palesemente incompatibili: 1-2.
+  I candidati presentati (usa la lista `presented_candidates` se c'è, altrimenti
+  `search_index_hits`) corrispondono ai requisiti della query?
+  - Nessun candidato / verdict "none": 3 (neutro, non imputabile all'agente).
+  - search_meta.relaxed = true e l'agente lo dichiara: non scendere sotto 3 per
+    il solo fatto che i match oltre i primi sono parziali. Giudica la DISCIPLINA
+    e l'onestà dell'etichettatura, non lo scarto di seniority già dichiarato.
+  - Il "non sotto 3" NON si applica se: (a) i candidati sono di disciplina/ruolo
+    sbagliato (es. Front End Developer, System Administrator o Software Tester
+    per una richiesta Java/Spring backend; PM per "QA lead"), oppure (b) i
+    candidati non coprono NESSUNA delle skill hard richieste — in questi casi
+    1-2 anche se l'agente ha messo un'etichetta "match parziale".
+  - verdict "weak/none" presentato come "Top 3" sicuro senza disclaimer: 1-2.
   5 = tutti i candidati altamente pertinenti.
 
 candidate_quality (1-5):
   I profili presentati hanno i requisiti tecnici richiesti dalla query?
-  Considera skills, ruolo, location, seniority menzionati nella risposta.
-  Se nessun candidato: 3 (neutro).
+  Considera skills, ruolo, location, seniority e i campi matched_skills /
+  missing_skills quando presenti.
+  - Nessun candidato / verdict "none": 3 (neutro).
+  - Match parziali dichiarati dopo una ricerca allargata: valuta la vicinanza
+    reale, non pretendere la perfezione; non sotto 3 se l'agente ha spiegato i
+    limiti — SALVO le due eccezioni di search_relevance (ruolo sbagliato, zero
+    skill hard coperte): lì 1-2.
+  - Profili duplicati o motivazioni inventate: penalizza.
   5 = profili con requisiti pienamente soddisfatti.
 
 handling_complexity (1-5):
@@ -721,7 +788,33 @@ def _extract_json_blocks(text: str) -> list[dict[str, Any]]:
     return results
 
 
-def _extract_search_index_evidence(response_dict: dict[str, Any]) -> dict[str, Any]:
+def _extract_candidates_trailer(text: str) -> list[dict[str, Any]]:
+    """Peel the <<<CANDIDATES_JSON>>> trailer off the agent's prose answer —
+    same anchoring as function_app._split_ai_matcher_answer (on the JSON object,
+    not the marker string). Returns the presented list or []."""
+    if not text:
+        return []
+    import re as _re
+    matches = list(_re.finditer(r'\{\s*"candidates"\s*:', text))
+    if not matches:
+        return []
+    tail = text[matches[-1].start():]
+    obj = None
+    try:
+        obj = json.loads(tail)
+    except json.JSONDecodeError:
+        s, e = tail.find("{"), tail.rfind("}")
+        if s != -1 and e > s:
+            try:
+                obj = json.loads(tail[s:e + 1])
+            except json.JSONDecodeError:
+                obj = None
+    if not isinstance(obj, dict) or not isinstance(obj.get("candidates"), list):
+        return []
+    return [x for x in obj["candidates"] if isinstance(x, dict)]
+
+
+def _extract_search_index_evidence(response_dict: dict[str, Any], response_text: str = "") -> dict[str, Any]:
     """Estrae evidenza search-index in modo robusto dal payload Responses API."""
     candidates: list[dict[str, Any]] = []
 
@@ -733,6 +826,19 @@ def _extract_search_index_evidence(response_dict: dict[str, Any]) -> dict[str, A
             for k in ("name", "full_name", "candidate_id", "skills", "role", "location", "nome", "ruolo")
         )
 
+    meta: dict[str, Any] = {}
+
+    def _capture_meta(mapping: dict[str, Any]) -> None:
+        sm = mapping.get("search_meta")
+        if isinstance(sm, dict):
+            for k in ("relaxed", "relaxed_criteria", "strict_candidates", "total_candidates"):
+                if k in sm and k not in meta:
+                    meta[k] = sm[k]
+        for k in ("verdict", "clarifying_questions"):
+            v = mapping.get(k)
+            if v not in (None, "", []) and k not in meta:
+                meta[k] = v
+
     def _normalize_candidate(item: dict[str, Any]) -> dict[str, Any]:
         return {
             "name": _text(
@@ -740,6 +846,8 @@ def _extract_search_index_evidence(response_dict: dict[str, Any]) -> dict[str, A
                 or item.get("candidate_id") or item.get("id_mcflash")
             ),
             "role": _text(item.get("role") or item.get("ruolo")),
+            "match_type": _text(item.get("match_type")),
+            "missing_skills": item.get("missing_skills") if isinstance(item.get("missing_skills"), list) else [],
             "location": _text(item.get("location")),
             # "skills" qui e' spesso solo un'anteprima compatta (v.
             # function_app._compact_skills_for_wrapper: se la query non estrae
@@ -773,18 +881,30 @@ def _extract_search_index_evidence(response_dict: dict[str, Any]) -> dict[str, A
             pass
         return None
 
+    presented: list[dict[str, Any]] = []  # from the <<<CANDIDATES_JSON>>> trailer
+
     def _walk(value: Any) -> None:
         mapping = _to_mapping(value)
         if mapping is not None and not isinstance(value, dict):
             value = mapping
 
         if isinstance(value, dict):
+            _capture_meta(value)
             for key in ("hits", "results"):
                 maybe_list = value.get(key)
                 if isinstance(maybe_list, list):
                     for obj in maybe_list:
                         if isinstance(obj, dict) and _looks_like_candidate(obj):
                             candidates.append(_normalize_candidate(obj))
+            # The trailer the agent actually presents: {"candidates":[{id_mcflash,trigramma}]}
+            trailer = value.get("candidates")
+            if isinstance(trailer, list) and trailer and all(isinstance(x, dict) for x in trailer):
+                if any(("id_mcflash" in x or "trigramma" in x) for x in trailer):
+                    presented[:] = [
+                        {"name": _text(x.get("trigramma") or x.get("id_mcflash")),
+                         "id_mcflash": x.get("id_mcflash")}
+                        for x in trailer
+                    ]
             for child in value.values():
                 _walk(child)
         elif isinstance(value, list):
@@ -801,6 +921,17 @@ def _extract_search_index_evidence(response_dict: dict[str, Any]) -> dict[str, A
 
     _walk(response_dict)
 
+    # The trailer usually lives at the tail of the plain-text answer, not as a
+    # parsed dict in the payload tree — recover it from response_text.
+    if not presented and response_text:
+        trailer = _extract_candidates_trailer(response_text)
+        if trailer:
+            presented[:] = [
+                {"name": _text(x.get("trigramma") or x.get("id_mcflash")),
+                 "id_mcflash": x.get("id_mcflash")}
+                for x in trailer
+            ]
+
     # Dedup by name+role+location
     deduped: list[dict[str, Any]] = []
     seen: set[str] = set()
@@ -816,15 +947,39 @@ def _extract_search_index_evidence(response_dict: dict[str, Any]) -> dict[str, A
         deduped.append(c)
 
     top = deduped[:20]
-    names = [str(c.get("name") or "") for c in top if str(c.get("name") or "")]
+
+    # The trailer list is what the agent actually put in front of the client —
+    # use it for the presented count/names; the search-index hits stay as the
+    # evidence context (with match_type / verdict / relaxed).
+    if presented:
+        presented_names = [c["name"] for c in presented if c.get("name")]
+        count = len(presented)
+        names = presented_names
+    else:
+        names = [str(c.get("name") or "") for c in top if str(c.get("name") or "")]
+        count = len(deduped)
+
     evidence_payload = {
-        "candidates_count": len(deduped),
-        "top_candidates": top,
+        "candidates_count": count,
+        "presented_candidates": [c["name"] for c in presented] if presented else None,
+        "search_index_hits": top,
+        "search_meta": {
+            "relaxed": meta.get("relaxed"),
+            "relaxed_criteria": meta.get("relaxed_criteria"),
+            "strict_candidates": meta.get("strict_candidates"),
+            "total_candidates": meta.get("total_candidates"),
+        },
+        "verdict": meta.get("verdict"),
+        "clarifying_questions": meta.get("clarifying_questions"),
     }
 
     return {
-        "candidates_count": len(deduped),
+        "candidates_count": count,
         "candidates_names": ", ".join(names[:5]),
+        "from_trailer": bool(presented),
+        "search_relaxed": bool(meta.get("relaxed")) if "relaxed" in meta else "",
+        "relaxed_criteria": ", ".join(str(x) for x in meta.get("relaxed_criteria", []) or []),
+        "verdict": _text(meta.get("verdict")),
         "search_index_evidence": json.dumps(evidence_payload, ensure_ascii=False),
     }
 
@@ -845,6 +1000,9 @@ def _parse_classifier_output(response_text: str, response_dict: dict[str, Any]) 
         "candidates_count":     0,
         "candidates_names":     "",
         "search_index_evidence": "",
+        "search_relaxed":       "",
+        "relaxed_criteria":     "",
+        "verdict":              "",
     }
 
     def _merge_structured_fields(source: dict[str, Any]) -> None:
@@ -964,21 +1122,26 @@ def _parse_classifier_output(response_text: str, response_dict: dict[str, Any]) 
         for block in blocks:
             _merge_structured_fields(block)
 
-    # Fallback robusto: estrae evidenza search-index da tutto il payload response
-    if result["candidates_count"] <= 0:
-        evidence = _extract_search_index_evidence(response_dict)
-        if evidence["candidates_count"] > 0:
-            result["candidates_count"] = evidence["candidates_count"]
-            result["candidates_names"] = evidence["candidates_names"]
-            result["search_index_evidence"] = evidence["search_index_evidence"]
-    else:
-        result["search_index_evidence"] = json.dumps(
-            {
-                "candidates_count": result["candidates_count"],
-                "top_candidates": result["candidates_names"],
-            },
-            ensure_ascii=False,
-        )
+    # Always pull the full evidence bundle: it carries the pipeline's own
+    # signals (search_meta.relaxed, verdict, per-hit match_type) and the
+    # <<<CANDIDATES_JSON>>> trailer, i.e. the list the agent actually presented.
+    # The judge needs these to tell a deliberate, disclosed partial match from
+    # an error.
+    evidence = _extract_search_index_evidence(response_dict, response_text)
+    result["search_relaxed"] = evidence.get("search_relaxed", "")
+    result["relaxed_criteria"] = evidence.get("relaxed_criteria", "")
+    result["verdict"] = evidence.get("verdict", "")
+    result["search_index_evidence"] = evidence["search_index_evidence"]
+    # The <<<CANDIDATES_JSON>>> trailer is the authoritative "presented" list —
+    # it wins over the raw searcher-wrapper hit count picked up above.
+    if evidence.get("from_trailer"):
+        result["candidates_count"] = evidence["candidates_count"]
+        result["candidates_names"] = evidence["candidates_names"]
+    elif evidence["candidates_count"] > 0 and result["candidates_count"] <= 0:
+        result["candidates_count"] = evidence["candidates_count"]
+        result["candidates_names"] = evidence["candidates_names"]
+    elif evidence.get("candidates_names") and not result["candidates_names"]:
+        result["candidates_names"] = evidence["candidates_names"]
 
     return result
 
@@ -1026,6 +1189,9 @@ def call_agent(query: str) -> dict[str, Any]:
             "candidates_count":     0,
             "candidates_names":     "",
             "search_index_evidence": "",
+            "search_relaxed":       "",
+            "relaxed_criteria":     "",
+            "verdict":              "",
         }
 
 
@@ -1215,6 +1381,7 @@ CSV_COLUMNS = [
     "classified_skills", "classified_role", "classified_location",
     "classified_seniority", "classified_language", "classified_work_mode",
     "candidates_count", "candidates_names",
+    "search_relaxed", "relaxed_criteria", "verdict",
     "search_index_evidence",
     # Punteggi judge
     "classification", "final_score",
@@ -1418,6 +1585,9 @@ try:
             "classified_work_mode": agent_result["classified_work_mode"],
             "candidates_count":     agent_result["candidates_count"],
             "candidates_names":     agent_result["candidates_names"],
+            "search_relaxed":       agent_result.get("search_relaxed", ""),
+            "relaxed_criteria":     agent_result.get("relaxed_criteria", ""),
+            "verdict":              agent_result.get("verdict", ""),
             "search_index_evidence": agent_result["search_index_evidence"],
             # timing
             "latency_seconds":       latency,

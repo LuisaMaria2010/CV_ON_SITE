@@ -47,6 +47,50 @@ def _clean_text(value: str | None) -> str:
     return text.strip()
 
 
+_CV_BOILERPLATE_MARKERS = (
+    "candidate profile",
+    "candidateprofile",
+    "curriculum vitae",
+    "data di nascita",
+    "informazioni personali",
+    "personal information",
+    "dati anagrafici",
+    "luogo di nascita",
+    "codice fiscale",
+    "recapiti",
+    "contatti",
+)
+
+
+def _looks_like_cv_boilerplate(text: str) -> bool:
+    """True for snippets that carry no matching signal: CV headers, table rows,
+    anagraphic lines, OCR-fragmented all-caps titles ("C ANDIDATE P ROFIL E").
+    Such captions used to end up verbatim in semantic_snippet."""
+    t = (text or "").strip()
+    if not t:
+        return True
+
+    lowered = t.lower()
+    if any(m in lowered for m in _CV_BOILERPLATE_MARKERS):
+        return True
+
+    letters = [c for c in t if c.isalpha()]
+    if len(letters) < 25:
+        return True
+
+    # Mostly table/markdown scaffolding (| --- # >) rather than prose.
+    scaffold = sum(t.count(ch) for ch in "|#>")
+    if scaffold >= 3 and scaffold * 6 >= len(t):
+        return True
+
+    # OCR-fragmented headers: almost no lowercase, many 1-2 char tokens.
+    lower_count = sum(1 for c in letters if c.islower())
+    if letters and lower_count / len(letters) < 0.25:
+        return True
+
+    return False
+
+
 def _build_semantic_evidence(
     *,
     caption: str | None,
@@ -55,7 +99,7 @@ def _build_semantic_evidence(
     parts: list[str] = []
 
     clean_caption = _clean_text(caption)
-    if clean_caption:
+    if clean_caption and not _looks_like_cv_boilerplate(clean_caption):
         parts.append(clean_caption)
 
     if isinstance(highlights, dict):
@@ -64,7 +108,7 @@ def _build_semantic_evidence(
                 continue
             for snippet in snippets:
                 clean_snippet = _clean_text(snippet)
-                if clean_snippet:
+                if clean_snippet and not _looks_like_cv_boilerplate(clean_snippet):
                     parts.append(clean_snippet)
                 if len(parts) >= 6:
                     break

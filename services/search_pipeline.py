@@ -7,7 +7,7 @@ from typing import Any
 from core.config import settings
 from core.errors import InvalidInputError
 from infra.mcflash_candidates import MCFlashApiError, MCFlashCandidatesClient
-from infra.search_service import SearchService
+from infra.search_service import SearchService, _looks_like_cv_boilerplate
 from services.search_handler import (
     build_odata_filter,
     build_odata_filter_relaxed,
@@ -57,6 +57,8 @@ def _aggregate_semantic_evidence(top_chunks: list[dict[str, Any]]) -> str | None
         key = item.lower()
         if key in seen:
             continue
+        if _looks_like_cv_boilerplate(item):
+            continue
         seen.add(key)
         deduped.append(item)
         if len(deduped) >= 8:
@@ -67,10 +69,39 @@ def _aggregate_semantic_evidence(top_chunks: list[dict[str, Any]]) -> str | None
     return " | ".join(deduped)
 
 
+def _order_skills_by_relevance(
+    skills: list[str],
+    query_skills: list[str] | None,
+    query_role: str | None,
+) -> list[str]:
+    """Keep the candidate's own ordering (usually most-relevant-first in a CV),
+    but float skills that share a token with a requested skill or with the role
+    to the front. No alphabetical sort — that surfaced the least informative
+    skills ("aks, asterisk pbx, aws")."""
+    ref_tokens: set[str] = set()
+    for s in (query_skills or []):
+        ref_tokens.update(t for t in _safe_str(s).lower().replace("-", " ").replace("/", " ").split() if t)
+    for t in _safe_str(query_role).lower().replace("-", " ").replace("/", " ").split():
+        ref_tokens.add(t)
+
+    def _relevant(skill: str) -> bool:
+        if not ref_tokens:
+            return False
+        toks = set(skill.replace("-", " ").replace("/", " ").split())
+        return bool(toks & ref_tokens)
+
+    relevant = [s for s in skills if _relevant(s)]
+    rest = [s for s in skills if not _relevant(s)]
+    return relevant + rest
+
+
 def _build_candidate_from_chunks(
     document_id: str,
     top_chunks: list[dict[str, Any]],
     all_chunks: list[dict[str, Any]],
+    *,
+    query_skills: list[str] | None = None,
+    query_role: str | None = None,
 ) -> dict[str, Any]:
     primary = top_chunks[0] if top_chunks else (all_chunks[0] if all_chunks else {})
 
@@ -80,7 +111,15 @@ def _build_candidate_from_chunks(
         all_skill_values.extend([_safe_str(v).lower() for v in (chunk.get("skills") or []) if _safe_str(v)])
         all_cert_values.extend([_safe_str(v) for v in (chunk.get("certifications") or []) if _safe_str(v)])
 
-    aggregated_skills = sorted(set(v for v in all_skill_values if v))
+    # Order-preserving dedup (first appearance across chunks), then float the
+    # skills relevant to the request to the front. No alphabetical sort.
+    seen_skill: set[str] = set()
+    ordered_skills: list[str] = []
+    for v in all_skill_values:
+        if v and v not in seen_skill:
+            seen_skill.add(v)
+            ordered_skills.append(v)
+    aggregated_skills = _order_skills_by_relevance(ordered_skills, query_skills, query_role)
     aggregated_certs = sorted(set(v for v in all_cert_values if v))
 
     semantic_score = max((_to_float(c.get("semantic_score"), 0.0) for c in top_chunks), default=0.0)
@@ -129,13 +168,22 @@ async def _aggregate_top_candidates(
     reranked_chunks: list[dict[str, Any]],
     index_name: str,
     candidate_top_k: int,
+    query_skills: list[str] | None = None,
+    query_role: str | None = None,
 ) -> list[dict[str, Any]]:
     chunks_by_doc: dict[str, list[dict[str, Any]]] = {}
+    doc_person: dict[str, str] = {}
     for chunk in reranked_chunks:
         doc_id = _safe_str(_first_non_empty(chunk.get("document_id"), chunk.get("id")))
         if not doc_id:
             continue
         chunks_by_doc.setdefault(doc_id, []).append(chunk)
+        if doc_id not in doc_person:
+            pkey = _normalise_person_key(
+                _first_non_empty(chunk.get("full_name"), chunk.get("name"))
+            )
+            if pkey:
+                doc_person[doc_id] = pkey
 
     if not chunks_by_doc:
         return []
@@ -143,13 +191,32 @@ async def _aggregate_top_candidates(
     for doc_chunks in chunks_by_doc.values():
         doc_chunks.sort(key=lambda c: _to_float(c.get("score"), 0.0), reverse=True)
 
-    ranked_docs = sorted(
-        chunks_by_doc.items(),
-        key=lambda it: _to_float(it[1][0].get("score"), 0.0),
+    # Group documents by person. `document_id` is derived from the CV filename
+    # (TextNormalizer.normalize_document_id), so the same candidate with several
+    # CV files yields several document_ids and would otherwise take one result
+    # slot per file. The anonymised code in full_name/name is stable per person
+    # and is already trusted for identity elsewhere (_is_hard_name_match).
+    group_docs: dict[str, list[str]] = {}
+    group_order: list[str] = []
+    for doc_id in chunks_by_doc:
+        gkey = doc_person.get(doc_id) or f"doc:{doc_id}"
+        if gkey not in group_docs:
+            group_docs[gkey] = []
+            group_order.append(gkey)
+        group_docs[gkey].append(doc_id)
+
+    def _doc_best_score(doc_id: str) -> float:
+        doc_chunks = chunks_by_doc.get(doc_id) or []
+        return _to_float(doc_chunks[0].get("score"), 0.0) if doc_chunks else 0.0
+
+    ranked_groups = sorted(
+        group_order,
+        key=lambda g: max(_doc_best_score(d) for d in group_docs[g]),
         reverse=True,
     )
+    top_groups = ranked_groups[:candidate_top_k]
 
-    top_doc_ids = [doc_id for doc_id, _ in ranked_docs[:candidate_top_k]]
+    top_doc_ids = [d for g in top_groups for d in group_docs[g]]
     all_chunks_by_doc = await search.load_chunks_for_candidates(
         top_doc_ids,
         index_name=index_name,
@@ -157,12 +224,32 @@ async def _aggregate_top_candidates(
     )
 
     aggregated: list[dict[str, Any]] = []
-    for doc_id in top_doc_ids:
-        top_chunks = chunks_by_doc.get(doc_id, [])
-        all_chunks = all_chunks_by_doc.get(doc_id, [])
-        aggregated.append(_build_candidate_from_chunks(doc_id, top_chunks, all_chunks))
+    for gkey in top_groups:
+        doc_ids = sorted(group_docs[gkey], key=_doc_best_score, reverse=True)
+        primary_doc_id = doc_ids[0]
+        top_chunks = [c for d in doc_ids for c in chunks_by_doc.get(d, [])]
+        top_chunks.sort(key=lambda c: _to_float(c.get("score"), 0.0), reverse=True)
+        all_chunks = [c for d in doc_ids for c in all_chunks_by_doc.get(d, [])]
+        aggregated.append(
+            _build_candidate_from_chunks(
+                primary_doc_id,
+                top_chunks,
+                all_chunks,
+                query_skills=query_skills,
+                query_role=query_role,
+            )
+        )
 
     return aggregated
+
+
+def _hit_group_key(hit: dict[str, Any]) -> str:
+    """Identity key for cross-pass dedup: person code when available, else the
+    document_id. Mirrors the grouping done in _aggregate_top_candidates so a
+    later (looser) pass cannot re-add a candidate already present under a
+    different CV file."""
+    pkey = _normalise_person_key(_first_non_empty(hit.get("full_name"), hit.get("name")))
+    return pkey or f"doc:{_safe_str(hit.get('document_id'))}"
 
 
 def _normalise_person_key(value: Any) -> str:
@@ -349,10 +436,31 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
     hard_selected_by_nome_key: dict[str, list[dict[str, Any]]] = {}
 
     client = get_mcflash_candidates_client()
+
+    hard_filters_present = any([
+        hard_role, hard_seniority, hard_sede, hard_work_mode,
+        hard_language, hard_disponibilita, hard_budget, hard_age,
+    ])
+
+    async def _scan_full_mcflash_archive() -> list[dict[str, Any]]:
+        collected: list[dict[str, Any]] = []
+        offset = 0
+        page_size = 1000
+        max_scan = 20000
+        while len(collected) < max_scan:
+            page = await client.fetch_page(limit=page_size, offset=offset)
+            if not page:
+                break
+            collected.extend(page)
+            if len(page) < page_size:
+                break
+            offset += len(page)
+        return collected[:max_scan]
+
     try:
         # Hard-select is always executed. Without filters we scan MCFlash pages and use
         # the full table (bounded by safety cap) as mandatory candidate universe.
-        if any([hard_role, hard_seniority, hard_sede, hard_work_mode, hard_language, hard_disponibilita, hard_budget, hard_age]):
+        if hard_filters_present:
             hard_selected = await client.filter_candidates(
                 limit=5000,
                 offset=0,
@@ -368,23 +476,27 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 return_all_matches=True,
             )
         else:
-            hard_selected = []
-            offset = 0
-            page_size = 1000
-            max_scan = 20000
-            while len(hard_selected) < max_scan:
-                page = await client.fetch_page(limit=page_size, offset=offset)
-                if not page:
-                    break
-                hard_selected.extend(page)
-                if len(page) < page_size:
-                    break
-                offset += len(page)
-            hard_selected = hard_selected[:max_scan]
+            hard_selected = await _scan_full_mcflash_archive()
     except MCFlashApiError as exc:
         raise InvalidInputError(f"MCFlash hard select failed: {exc}") from exc
 
     hard_selected_total = len(hard_selected)
+
+    # Fallback: the business filters (role/sede/seniority/language/budget/age)
+    # matched nobody in MCFlash, but the request still carries something the CV
+    # index can search on (skills, a role, or free-text intent). Don't stop here
+    # — widen the universe to the whole archive (same path as the no-filter
+    # case) and let the index search + rerank + semantic pass do the work.
+    # Flagged so the response can say the business constraints could not be
+    # honoured. Covers e.g. role acronyms MCFlash cannot resolve ("SRE").
+    hard_select_widened = False
+    if not hard_selected and hard_filters_present and (p["skills"] or p["role"] or p["query"]):
+        hard_select_widened = True
+        try:
+            hard_selected = await _scan_full_mcflash_archive()
+        except MCFlashApiError as exc:
+            raise InvalidInputError(f"MCFlash archive scan failed: {exc}") from exc
+
     if not hard_selected:
         return {
             "hits": [],
@@ -408,6 +520,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                     "budget": hard_budget,
                     "age": hard_age,
                     "matched_candidates": 0,
+                    "widened": hard_select_widened,
                 },
             },
             "suggestions": [],
@@ -458,6 +571,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                     "budget": hard_budget,
                     "age": hard_age,
                     "matched_candidates": hard_selected_total,
+                    "widened": hard_select_widened,
                 },
             },
             "suggestions": [],
@@ -553,6 +667,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         query_skills=p["skills"],
         query_role=p["role"],
         query_location=p["location"],
+        query_seniority=p["seniority"],
         top=chunk_top_k,
     )
     hits = await _aggregate_top_candidates(
@@ -560,6 +675,8 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         reranked_chunks=reranked_chunks,
         index_name=index_name,
         candidate_top_k=candidate_top_k,
+        query_skills=p["skills"],
+        query_role=p["role"],
     )
 
     # `_attach_mcflash_profile_by_nome` runs more than once on the same hit object
@@ -741,6 +858,16 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
     suggestions: list[str] = []
     fallback_min = 3
 
+    if hard_select_widened:
+        relaxed = True
+        if "hard_select_widened" not in relaxed_criteria:
+            relaxed_criteria.append("hard_select_widened")
+        suggestions.append(
+            "Nessun candidato MCFlash soddisfa i vincoli di business "
+            "(ruolo/sede/seniority/lingua/budget/eta): ricerca estesa a tutto "
+            "l'archivio e filtrata per skill."
+        )
+
     if len(hits) < fallback_min and p["skills"]:
         relaxed = True
         if "skills" not in relaxed_criteria:
@@ -780,6 +907,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             query_skills=p["skills"],
             query_role=p["role"],
             query_location=p["location"],
+            query_seniority=p["seniority"],
             top=chunk_top_k,
         )
         relaxed_candidates = await _aggregate_top_candidates(
@@ -787,33 +915,35 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             reranked_chunks=relaxed_reranked_chunks,
             index_name=index_name,
             candidate_top_k=candidate_top_k,
+            query_skills=p["skills"],
+            query_role=p["role"],
         )
-        existing_ids = {_safe_str(h.get("document_id")) for h in hits}
+        existing_keys = {_hit_group_key(h) for h in hits}
 
         candidate_pool: list[dict[str, Any]] = []
         for h in relaxed_candidates:
-            doc_id = _safe_str(h.get("document_id"))
-            if not doc_id or doc_id in existing_ids:
+            gkey = _hit_group_key(h)
+            if not gkey or gkey in existing_keys:
                 continue
 
             if _attach_mcflash_profile_by_nome(h):
                 candidate_pool.append(h)
 
         thresholds = _relaxed_skill_thresholds(len(p["skills"]))
-        selected_doc_ids: set[str] = set()
+        selected_keys: set[str] = set()
 
         for required_matches in thresholds:
             for candidate in candidate_pool:
-                doc_id = _safe_str(candidate.get("document_id"))
-                if not doc_id or doc_id in selected_doc_ids:
+                gkey = _hit_group_key(candidate)
+                if not gkey or gkey in selected_keys:
                     continue
                 if _skill_overlap_count(candidate.get("skills"), p["skills"]) < required_matches:
                     continue
 
                 candidate["is_relaxed_result"] = True
                 hits.append(candidate)
-                selected_doc_ids.add(doc_id)
-                existing_ids.add(doc_id)
+                selected_keys.add(gkey)
+                existing_keys.add(gkey)
 
                 if len(hits) >= candidate_top_k:
                     break
@@ -822,12 +952,12 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
 
         if len(hits) < fallback_min:
             for candidate in candidate_pool:
-                doc_id = _safe_str(candidate.get("document_id"))
-                if not doc_id or doc_id in existing_ids:
+                gkey = _hit_group_key(candidate)
+                if not gkey or gkey in existing_keys:
                     continue
                 candidate["is_relaxed_result"] = True
                 hits.append(candidate)
-                existing_ids.add(doc_id)
+                existing_keys.add(gkey)
                 if len(hits) >= candidate_top_k:
                     break
 
@@ -894,6 +1024,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             query_skills=p["skills"],
             query_role=p["role"],
             query_location=p["location"],
+            query_seniority=p["seniority"],
             top=max(chunk_top_k, target_min_candidates * 6),
         )
         second_pass_candidates = await _aggregate_top_candidates(
@@ -901,10 +1032,12 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             reranked_chunks=second_pass_reranked,
             index_name=index_name,
             candidate_top_k=max(candidate_top_k, target_min_candidates * 2),
+            query_skills=p["skills"],
+            query_role=p["role"],
         )
 
-        existing_doc_ids = {
-            _safe_str(h.get("document_id"))
+        existing_keys = {
+            _hit_group_key(h)
             for h in hits
             if isinstance(h, dict)
         }
@@ -915,8 +1048,8 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             if not isinstance(candidate, dict):
                 continue
 
-            doc_id = _safe_str(candidate.get("document_id"))
-            if not doc_id or doc_id in existing_doc_ids:
+            gkey = _hit_group_key(candidate)
+            if not gkey or gkey in existing_keys:
                 continue
 
             _attach_mcflash_profile_by_nome(candidate)
@@ -926,7 +1059,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 candidate["non_perfect_match"] = True
 
             hits.append(candidate)
-            existing_doc_ids.add(doc_id)
+            existing_keys.add(gkey)
 
         if len(hits) > len(strict_hits_final):
             relaxed = True
@@ -972,6 +1105,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 query_skills=p["skills"],
                 query_role=p["role"],
                 query_location=p["location"],
+                query_seniority=p["seniority"],
                 top=max(chunk_top_k, target_min_candidates * 8),
             )
             second_pass_relaxed_candidates = await _aggregate_top_candidates(
@@ -979,6 +1113,8 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 reranked_chunks=second_pass_relaxed_reranked,
                 index_name=index_name,
                 candidate_top_k=max(candidate_top_k, target_min_candidates * 3),
+                query_skills=p["skills"],
+                query_role=p["role"],
             )
 
             for candidate in second_pass_relaxed_candidates:
@@ -987,8 +1123,8 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 if not isinstance(candidate, dict):
                     continue
 
-                doc_id = _safe_str(candidate.get("document_id"))
-                if not doc_id or doc_id in existing_doc_ids:
+                gkey = _hit_group_key(candidate)
+                if not gkey or gkey in existing_keys:
                     continue
 
                 _attach_mcflash_profile_by_nome(candidate)
@@ -999,7 +1135,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                     candidate["non_perfect_match"] = True
 
                 hits.append(candidate)
-                existing_doc_ids.add(doc_id)
+                existing_keys.add(gkey)
 
             if len(hits) > len(strict_hits_final):
                 relaxed = True
@@ -1051,6 +1187,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 "budget": hard_budget,
                 "age": hard_age,
                 "matched_candidates": hard_selected_total,
+                "widened": hard_select_widened,
             },
         },
         "suggestions": suggestions,

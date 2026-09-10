@@ -381,6 +381,17 @@ class MCFlashCandidatesClient:
             return "mid"
         if value in {"staff", "expert"}:
             return "senior"
+        # MCFlash's 4th bucket, below Junior — fold into junior (no dedicated
+        # budget column / hard-select bucket for it).
+        if value in {"neo", "neolaureato"}:
+            return "junior"
+        # Rank/level words (lead, manager, principal, ...) are not seniority
+        # buckets on MCFlash (Junior/Medium/Senior/Neo only). When a request
+        # carries one — e.g. role "QA lead" resolved to seniority "Lead" — map
+        # it to the top real bucket so the exact-bucket hard-select still hits
+        # the Senior candidates.
+        if value in cls._ROLE_LEVEL_TOKENS:
+            return "senior"
         if value.startswith("senior"):
             return "senior"
         if value.startswith("junior"):
@@ -396,6 +407,174 @@ class MCFlashCandidatesClient:
             return set()
         return {tok for tok in normalized.split(" ") if len(tok) >= 2}
 
+    # Equivalences used only by _role_matches (the MCFlash hard-select gate),
+    # so a query for an acronym/EN role actually finds people in MCFlash's own
+    # `Ruolo` field instead of relying on a downstream rescue that only fires
+    # when the hard-select already came up empty. Mirrors (does not import,
+    # to avoid a circular dependency with services.search_handler, which
+    # already imports this module) the equivalences used in the Search Layer
+    # rerank — keep the two lists in sync when adding a new acronym/pair.
+    _ROLE_MATCH_ACRONYMS: dict[str, set[str]] = {
+        "qa": {"quality", "assurance", "test", "tester", "testing"},
+        "qe": {"quality", "test", "tester", "testing"},
+        "sre": {"site", "reliability", "devops", "infrastructure", "cloud"},
+        "ba": {"business", "analyst"},
+        "pm": {"project", "manager"},
+        "po": {"product", "owner"},
+        "pmo": {"project", "management", "office"},
+        "sm": {"scrum", "master"},
+        "dba": {"database", "administrator"},
+        "swe": {"software"},
+        "ml": {"machine", "learning"},
+        "ux": {"user", "experience"},
+        "ui": {"user", "interface"},
+        "bi": {"business", "intelligence"},
+    }
+    # Rank/level words that qualify a discipline ("QA lead", "QA manager",
+    # "principal SRE") rather than name a role on their own. They must never
+    # carry a role match by themselves: "lead"/"manager" translate to
+    # "responsabile" and would otherwise equate "QA lead" with every "* manager"
+    # title. Kept separate from role_noise (junior/senior/...) because those are
+    # dropped outright, while these still count toward coverage once the
+    # discipline is satisfied. The gate only fires when the requested discipline
+    # is one that actually exists in the catalog (see _role_discipline_vocab) —
+    # so "Delivery Manager" / "Program Manager", whose head noun has no catalog
+    # role, still fall back to matching on "manager".
+    _ROLE_LEVEL_TOKENS: frozenset[str] = frozenset(
+        {
+            "lead",
+            "principal",
+            "head",
+            "chief",
+            "manager",
+            "responsabile",
+            "director",
+            "direttore",
+            "capo",
+        }
+    )
+    # Words that, appearing in a candidate's job TITLE, mean the person already
+    # holds a lead/coordination role — so they satisfy a "lead / manager /
+    # senior" level requirement regardless of the Seniority field. Superset of
+    # _ROLE_LEVEL_TOKENS with the title-only forms ("team leader", "technical
+    # leader", "coordinatore").
+    _ROLE_LEADERSHIP_TITLE_TOKENS: frozenset[str] = _ROLE_LEVEL_TOKENS | frozenset(
+        {"leader", "coordinator", "coordinatore"}
+    )
+    _ROLE_DISCIPLINE_VOCAB: frozenset[str] | None = None
+    _ROLE_MATCH_TRANSLATIONS: dict[str, str] = {}
+    for _en, _it in [
+        ("consultant", "consulente"), ("consultants", "consulenti"),
+        ("developer", "sviluppatore"), ("engineer", "ingegnere"),
+        ("analyst", "analista"), ("manager", "responsabile"),
+        ("architect", "architetto"), ("administrator", "amministratore"),
+        ("specialist", "specialista"), ("support", "supporto"),
+        ("security", "sicurezza"), ("tester", "collaudatore"),
+        ("designer", "progettista"), ("coordinator", "coordinatore"),
+        ("director", "direttore"), ("owner", "responsabile"),
+        ("lead", "responsabile"), ("assistant", "assistente"),
+        ("technician", "tecnico"),
+    ]:
+        _ROLE_MATCH_TRANSLATIONS[_en] = _it
+        _ROLE_MATCH_TRANSLATIONS[_it] = _en
+
+    # Splits on / , & too (not just space): compound MCFlash/CV titles like
+    # "devops/cloud engineer" or "automation tester/python developer" would
+    # otherwise glue into one unmatchable token ("tester/python").
+    _ROLE_MATCH_SPLIT = re.compile(r"[\s/,&]+")
+
+    @classmethod
+    def _role_match_tokens_raw(cls, role: str) -> set[str]:
+        normalized = cls._normalize_role_text(role)
+        if not normalized:
+            return set()
+        return {t for t in cls._ROLE_MATCH_SPLIT.split(normalized) if len(t) >= 2}
+
+    @classmethod
+    def _role_has_level_token(cls, role: str) -> bool:
+        """The requested role carries a rank word ("QA lead", "Delivery
+        Manager") — the level requirement it implies is then evaluated as
+        seniority = senior."""
+        return bool(cls._role_match_tokens_raw(role) & cls._ROLE_LEVEL_TOKENS)
+
+    @classmethod
+    def _role_title_has_leadership(cls, role: str) -> bool:
+        """A candidate's job title already names a lead/coordination role
+        ("Test Leader", "QA Team Lead", "Coordinatore QA") — satisfies a
+        lead/senior level requirement whatever the Seniority field says."""
+        return bool(cls._role_match_tokens_raw(role) & cls._ROLE_LEADERSHIP_TITLE_TOKENS)
+
+    @classmethod
+    def _role_match_word_expansion(cls, token: str) -> set[str]:
+        """A single raw token -> itself + its acronym expansion + EN/IT
+        counterpart(s) of each. Used to check, per requested word, whether it
+        is satisfied by the candidate — see _role_matches."""
+        expanded = set(cls._ROLE_MATCH_ACRONYMS.get(token, {token}))
+        for tok in list(expanded):
+            translation = cls._ROLE_MATCH_TRANSLATIONS.get(tok)
+            if translation:
+                expanded.add(translation)
+        return expanded
+
+    @classmethod
+    def _role_discipline_vocab(cls) -> frozenset[str]:
+        """Every discipline word that actually appears in a real catalog role
+        title (from mcflash_budget_placeholders.json), minus the level and
+        seniority words. A requested token counts as a *recognised discipline*
+        when it — or its acronym expansion — intersects this set. Used by
+        _role_matches / _role_match_features to decide whether the "discipline
+        must be covered" gate applies: "QA lead" -> "qa" is recognised (it
+        expands to {test, tester, ...} which are in the catalog) -> gated;
+        "Delivery Manager" -> "delivery" is nowhere in the catalog -> not
+        gated, "manager" still carries the match.
+
+        Carries BOTH tokenisations of every catalog title: the raw words
+        ("front", "end", "developer", "engineer") and the _normalize_role_text
+        ones ("frontend", "dev", "eng"). The MCFlash hard-select compares
+        normalised tokens, the Search Layer mirror compares raw ones — a
+        requested "developer"/"frontend" from either layer must resolve."""
+        if cls._ROLE_DISCIPLINE_VOCAB is not None:
+            return cls._ROLE_DISCIPLINE_VOCAB
+        seniority_noise = {"junior", "mid", "middle", "senior", "staff", "jr", "sr"}
+        drop = seniority_noise | set(cls._ROLE_LEVEL_TOKENS)
+        vocab: set[str] = set()
+        try:
+            file_path = os.path.join(
+                os.path.dirname(__file__), "mcflash_budget_placeholders.json"
+            )
+            with open(file_path, "r", encoding="utf-8") as fh:
+                raw_keys = list(json.load(fh).keys())
+        except Exception:
+            raw_keys = []
+        for role_key in raw_keys:
+            low = str(role_key).strip().lower()
+            for variant in (low, cls._normalize_role_text(low)):
+                for tok in cls._ROLE_MATCH_SPLIT.split(variant):
+                    if len(tok) >= 2 and tok not in drop:
+                        vocab.add(tok)
+        # An acronym is a real discipline once its (non-level) expansion reaches
+        # the catalog vocab — then the acronym and every word it stands for are
+        # recognised too ("qa"/"quality"/"assurance" once "test"/"tester" are
+        # in). Level words in an expansion (pm -> {project, manager}) are never
+        # promoted, so "manager" stays a non-discipline.
+        for acr, words in cls._ROLE_MATCH_ACRONYMS.items():
+            payload = words - set(cls._ROLE_LEVEL_TOKENS)
+            if payload & vocab:
+                vocab.add(acr)
+                vocab |= payload
+        cls._ROLE_DISCIPLINE_VOCAB = frozenset(vocab)
+        return cls._ROLE_DISCIPLINE_VOCAB
+
+    @classmethod
+    def _role_phrase_in(cls, needle: str, haystack: str) -> bool:
+        """Whole-phrase containment bounded by whitespace/\"/,&\"/start-end —
+        a raw substring test let 2-letter acronyms match embedded inside
+        unrelated words ("po" inside "power platform developer")."""
+        if not needle:
+            return False
+        pattern = r"(?:^|[\s/,&])" + re.escape(needle) + r"(?:$|[\s/,&])"
+        return re.search(pattern, haystack) is not None
+
     @classmethod
     def _role_matches(cls, requested_role: str, candidate_role: str) -> bool:
         req = cls._normalize_role_text(requested_role or "")
@@ -405,11 +584,11 @@ class MCFlashCandidatesClient:
         if not cand:
             return False
 
-        if req in cand or cand in req:
+        if cls._role_phrase_in(req, cand) or cls._role_phrase_in(cand, req):
             return True
 
-        req_tokens = cls._role_token_set(req)
-        cand_tokens = cls._role_token_set(cand)
+        req_tokens = cls._role_match_tokens_raw(req)
+        cand_tokens = cls._role_match_tokens_raw(cand)
         if not req_tokens or not cand_tokens:
             return False
 
@@ -428,11 +607,41 @@ class MCFlashCandidatesClient:
         if not core_req_tokens:
             core_req_tokens = req_tokens
 
-        overlap = core_req_tokens & cand_tokens
-        if not overlap:
+        # Expand the candidate's own tokens once (acronym + EN/IT), then check
+        # each REQUESTED word for satisfaction (itself, or its expansion,
+        # overlapping the candidate). Coverage is measured against the raw
+        # request word count, not the expanded one: "qa" is one requirement —
+        # if any of its domain synonyms (test/tester/testing/...) shows up in
+        # the candidate, that single requirement is fully satisfied, not
+        # diluted across the 5 words it expands to.
+        cand_expanded: set[str] = set()
+        for tok in cand_tokens:
+            cand_expanded |= cls._role_match_word_expansion(tok)
+
+        def _tok_satisfied(tok: str) -> bool:
+            return bool(cls._role_match_word_expansion(tok) & cand_expanded)
+
+        # The discipline part of the request ("qa" in "qa lead") is the
+        # discriminant. When it names a discipline that actually exists in the
+        # catalog, at least one such token must be covered by the candidate: a
+        # pure level overlap ("lead"/"manager" <-> "responsabile") is not a
+        # role match. Level-only requests ("Lead") or unknown-discipline ones
+        # ("Delivery Manager") skip the gate and fall back to plain coverage.
+        vocab = cls._role_discipline_vocab()
+        domain_req_tokens = {
+            t
+            for t in core_req_tokens
+            if t not in cls._ROLE_LEVEL_TOKENS
+            and cls._role_match_word_expansion(t) & vocab
+        }
+        if domain_req_tokens and not any(_tok_satisfied(t) for t in domain_req_tokens):
             return False
 
-        coverage = len(overlap) / max(1, len(core_req_tokens))
+        satisfied = sum(1 for tok in core_req_tokens if _tok_satisfied(tok))
+        if satisfied == 0:
+            return False
+
+        coverage = satisfied / max(1, len(core_req_tokens))
         return coverage >= 0.34
 
     @staticmethod
@@ -828,6 +1037,10 @@ class MCFlashCandidatesClient:
         role_l = self._normalize_role_text(role or "")
         location_l = (sede or "").strip().lower()
         seniority_l = self._normalize_seniority_key(seniority or "")
+        # A rank word in the requested role ("QA lead", "Delivery Manager")
+        # implies seniority = senior, evaluated below with an OR on the
+        # candidate's own job title. An explicit seniority always wins.
+        req_seniority_l = seniority_l or ("senior" if self._role_has_level_token(role_l) else "")
         work_mode_l = (work_mode or "").strip().lower()
         language_l = (lingue or language or "").strip().lower()
         budget_l = (budget or "").strip().lower()
@@ -886,8 +1099,16 @@ class MCFlashCandidatesClient:
                 if not work_mode_match:
                     return False
             candidate_seniority = self._normalize_seniority_key(self._pick(candidate, "Seniority"))
-            if seniority_l and seniority_l != candidate_seniority:
-                return False
+            if req_seniority_l:
+                if req_seniority_l == "senior":
+                    # "lead / manager / senior" request: the candidate is a
+                    # senior OR already holds a lead role by job title.
+                    if candidate_seniority != "senior" and not self._role_title_has_leadership(
+                        self._pick(candidate, "Ruolo")
+                    ):
+                        return False
+                elif req_seniority_l != candidate_seniority:
+                    return False
             if language_l and not self._language_matches(language_l, self._pick(candidate, "Lingue")):
                 return False
             if budget_cap is not None:
