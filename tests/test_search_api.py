@@ -589,22 +589,8 @@ class _HomonymMCFlashClient:
         return matches[0] if matches else None
 
 
-_HOMONYM_XFAIL = pytest.mark.xfail(
-    reason=(
-        "Limite noto: _aggregate_top_candidates raggruppa per nome normalizzato "
-        "(_hit_group_key), quindi due OMONIMI distinti collassano in un solo "
-        "candidato prima che _select_mcflash_profile_for_hit possa distinguerli "
-        "per ruolo. La disambiguazione per ruolo sceglie solo QUALE record "
-        "MCFlash attaccare al candidato sopravvissuto, non riesce a farne "
-        "emergere due. Il secondo omonimo viene scartato silenziosamente."
-    ),
-    strict=False,
-)
-
-
 class TestHomonymDisambiguation:
 
-    @_HOMONYM_XFAIL
     def test_homonyms_disambiguated_by_role(self, monkeypatch):
         mcflash = _HomonymMCFlashClient([
             {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
@@ -647,7 +633,6 @@ class TestHomonymDisambiguation:
 
         assert data["hits"][0]["mcflash_name_ambiguous"] is True
 
-    @_HOMONYM_XFAIL
     def test_second_pass_extension_disambiguates_homonyms_by_role(self, monkeypatch):
         # Hard-select universe only contains an unrelated person, so the
         # "Mario Rossi" CVs miss the strict first-pass name match and fall
