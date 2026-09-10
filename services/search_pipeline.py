@@ -14,7 +14,6 @@ from services.search_handler import (
     enrich_hits_with_match_features,
     normalise_search_request,
     rerank,
-    resolve_index,
 )
 
 
@@ -508,7 +507,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 "hybrid": p["hybrid"],
                 "work_mode": p["work_mode"],
                 "ignored_constraints": [],
-                "index": resolve_index(p["subco"]),
+                "index": settings.document_search_index_name,
                 "hard_select": {
                     "enabled": True,
                     "role": hard_role,
@@ -559,7 +558,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 "hybrid": p["hybrid"],
                 "work_mode": p["work_mode"],
                 "ignored_constraints": [],
-                "index": resolve_index(p["subco"]),
+                "index": settings.document_search_index_name,
                 "hard_select": {
                     "enabled": True,
                     "role": hard_role,
@@ -577,7 +576,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             "suggestions": [],
         }
 
-    index_name = resolve_index(p["subco"])
+    index_name = settings.document_search_index_name
     search = SearchService()
 
     # Risolve l'universo hard-select (nomi/codici MCFlash) in document_id

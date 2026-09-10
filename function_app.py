@@ -20,7 +20,7 @@ from core.errors import InvalidInputError, FileTooLargeError
 
 from infra.blob_storage import StorageService
 from infra.backfill_enqueuer import BackfillEnqueuer
-from infra.mcflash_candidates import MCFlashApiError, MCFlashCandidatesClient
+from infra.mcflash_candidates import MCFlashCandidatesClient
 from infra.search_service import SearchService
 from extraction.cache import TextCache
 from db_data.pipeline import CVPipeline
@@ -31,7 +31,6 @@ from services.search_handler import (
     enrich_hits_with_match_features,
     rerank,
     normalise_search_request,
-    resolve_index,
 )
 from services.search_pipeline import run_search_pipeline
 
@@ -326,25 +325,6 @@ def _first_non_empty(*values: Any) -> Any:
             continue
         return value
     return None
-
-
-def _extract_coherence_evaluator_candidates(payload: dict) -> list[dict[str, Any]]:
-    """Candidates are passed through verbatim (same fixed searcher-wrapper
-    contract) — no field whitelist needed, the coherence evaluator never
-    rewrites candidate data, only reorders it."""
-    candidates = payload.get("candidates")
-    if isinstance(candidates, list):
-        return [c for c in candidates if isinstance(c, dict)]
-
-    search_response = payload.get("search_response")
-    if isinstance(search_response, dict):
-        if isinstance(search_response.get("hits"), list):
-            return [c for c in search_response["hits"] if isinstance(c, dict)]
-        data = search_response.get("data")
-        if isinstance(data, dict) and isinstance(data.get("hits"), list):
-            return [c for c in data["hits"] if isinstance(c, dict)]
-
-    return []
 
 
 def _mcflash_value(candidate: dict[str, Any], *keys: str) -> Any:
@@ -1267,7 +1247,7 @@ async def searcher_wrapper(req: func.HttpRequest):
                 "relaxed_criteria": [],
                 "hybrid": bool(search_request.get("hybrid", True)),
                 "work_mode": str(search_request.get("work_mode") or "unknown"),
-                "index": resolve_index(str(search_request.get("subco") or "").strip().lower() or None),
+                "index": settings.document_search_index_name,
                 "skipped": "availability_only",
             },
             "suggestions": [],
@@ -1354,111 +1334,6 @@ async def searcher_wrapper(req: func.HttpRequest):
         },
         "verdict": evaluation["verdict"],
         "clarifying_questions": evaluation["clarifying_questions"],
-    }
-
-
-@app.route(route="match-evaluator-wrapper", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
-@http_error_handler
-async def match_evaluator_wrapper(req: func.HttpRequest):
-    """
-    POST /api/match-evaluator-wrapper
-
-    Valutatore di coerenza candidati/richiesta (LLM), utilizzabile standalone:
-    - accetta original_request + candidates (o search_response.hits)
-    - riordina i candidati per coerenza (campi mai alterati, solo l'ordine)
-    - propone eventuali domande di chiarimento
-    - fallback: ordine originale, verdict "unknown", se l'LLM non e' disponibile
-
-    Nota: /api/searcher-wrapper chiama gia' questa stessa logica internamente
-    dopo ogni ricerca, quindi in genere non serve invocare questa route a parte.
-    """
-    payload = _body_params(req)
-    if not payload:
-        payload = _payload_from_query(req)
-    if not payload:
-        raise InvalidInputError("Missing or invalid JSON body")
-
-    original_request = _safe_str(
-        _first_non_empty(payload.get("original_request"), payload.get("query"))
-    )
-    candidates = _extract_coherence_evaluator_candidates(payload)
-
-    return await asyncio.to_thread(
-        _run_candidate_coherence_evaluator, original_request, candidates
-    )
-
-
-@app.route(route="mc-matcher-wrapper", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
-@http_error_handler
-async def mc_matcher_wrapper(req: func.HttpRequest):
-    """
-    POST /api/mc-matcher-wrapper
-
-    Wrapper riusabile per chiamare l'agente Foundry `mc-matcher` da sistemi esterni.
-    Pensato per essere consumato come tool OpenAPI da altri agenti.
-    """
-    payload = _body_params(req)
-    if not payload:
-        payload = _payload_from_query(req)
-    if not payload:
-        raise InvalidInputError("Missing or invalid JSON body")
-
-    user_request = _safe_str(payload.get("user_request"))
-    if not user_request:
-        user_request = _safe_str(_first_non_empty(payload.get("query"), payload.get("original_request")))
-    if not user_request:
-        raise InvalidInputError("'user_request' is required")
-
-    context = payload.get("context")
-    if context is None and isinstance(payload.get("search_request"), dict):
-        context = {"search_request": payload.get("search_request")}
-    if context is not None and not isinstance(context, dict):
-        raise InvalidInputError("'context' must be an object when provided")
-
-    model_name = _safe_str(payload.get("model")) or _settings_value(
-        "FOUNDRY_MODEL",
-        default="",
-    )
-    agent_name = _safe_str(payload.get("agent_name")) or _settings_value(
-        "MC_MATCHER_AGENT_NAME",
-        "MATCHER_AGENT_NAME",
-        default="mc-matcher",
-    )
-
-    agent_input = user_request
-    if context:
-        agent_input = f"{user_request}\n\nCONTEXT_JSON:\n{json.dumps(context, ensure_ascii=False)}"
-
-    previous_response_id = _safe_str(payload.get("previous_response_id")) or None
-
-    response = await asyncio.to_thread(
-        lambda: _run_foundry_agent(
-            agent_name=agent_name,
-            message=agent_input,
-            model_name=model_name,
-            previous_response_id=previous_response_id,
-        )
-    )
-
-    raw_response = _response_to_plain_dict(response)
-    output_text = _safe_str(getattr(response, "output_text", ""))
-    parsed_output = _extract_json_safe(output_text) if output_text else None
-
-    result_payload: dict[str, Any]
-    if isinstance(parsed_output, dict):
-        result_payload = parsed_output
-    else:
-        result_payload = {"raw_text": output_text}
-
-    return {
-        "agent": {
-            "name": agent_name,
-            "model": model_name or None,
-            "response_id": _safe_str(raw_response.get("id")),
-            "previous_response_id": previous_response_id,
-        },
-        "result": result_payload,
-        "raw_response": raw_response,
     }
 
 
@@ -1656,158 +1531,6 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
         response_payload["raw_response"] = raw_response
 
     return response_payload
-
-
-@app.route(route="mcflash/candidati", methods=["GET", "POST"])
-@http_error_handler
-async def mcflash_candidati(req: func.HttpRequest):
-    """
-    GET|POST /api/mcflash/candidati
-
-    Estrae candidati dal servizio MCFlash remoto.
-    Supporta anche filtri opzionali lato API wrapper.
-    Restituisce tutti i campi originali della risposta upstream.
-    """
-    payload = _body_params(req)
-    if not payload:
-        payload = _payload_from_query(req)
-
-    query = _safe_str(_first_non_empty(payload.get("q"), payload.get("query"), req.params.get("q")))
-    role = _safe_str(_first_non_empty(payload.get("role"), req.params.get("role"))) or None
-    # MCFlash returns and filters by "sede"; accept "location" only as input alias.
-    sede = _safe_str(
-        _first_non_empty(
-            payload.get("sede"),
-            payload.get("location"),
-            req.params.get("sede"),
-            req.params.get("location"),
-        )
-    ) or None
-    work_mode_raw = _safe_str(_first_non_empty(payload.get("work_mode"), req.params.get("work_mode"))).lower()
-    work_mode = work_mode_raw if work_mode_raw and work_mode_raw not in {"unknown", "any"} else None
-    seniority = _safe_str(_first_non_empty(payload.get("seniority"), req.params.get("seniority"))) or None
-    language = _safe_str(_first_non_empty(payload.get("language"), req.params.get("language"))) or None
-    lingue = _safe_str(_first_non_empty(payload.get("lingue"), req.params.get("lingue"), language)) or None
-    budget = _safe_str(_first_non_empty(payload.get("budget"), req.params.get("budget"))) or None
-    disponibilita = _safe_str(
-        _first_non_empty(
-            payload.get("disponibilita"),
-            payload.get("availability"),
-            req.params.get("disponibilita"),
-            req.params.get("availability"),
-        )
-    ) or None
-
-    limit = _parse_int(
-        _first_non_empty(payload.get("limit"), payload.get("max_items"), req.params.get("limit")),
-        default=100,
-    )
-    limit = min(limit, 1000)
-
-    offset_raw = _first_non_empty(payload.get("offset"), req.params.get("offset"))
-    try:
-        offset = int(str(offset_raw).strip()) if offset_raw is not None else 0
-    except Exception as exc:
-        raise InvalidInputError(f"Invalid integer value: {offset_raw}") from exc
-    if offset < 0:
-        raise InvalidInputError("offset must be >= 0")
-
-    client = _get_mcflash_candidates_client()
-    try:
-        if any([query, role, sede, work_mode, seniority, lingue, budget, disponibilita]):
-            items = await client.filter_candidates(
-                limit=limit,
-                offset=offset,
-                query=query or None,
-                role=role,
-                work_mode=work_mode,
-                language=language,
-                sede=sede,
-                seniority=seniority,
-                lingue=lingue,
-                budget=budget,
-                disponibilita=disponibilita,
-            )
-        else:
-            items = await client.fetch_candidates(limit=limit, offset=offset)
-    except MCFlashApiError as exc:
-        raise InvalidInputError(str(exc)) from exc
-
-    return {
-        "items": items,
-        "meta": {
-            "total": len(items),
-            "limit": limit,
-            "offset": offset,
-            "source": "mcflash_candidates_api",
-        },
-    }
-
-
-@app.route(route="mcflash/candidati/details", methods=["POST"])
-@http_error_handler
-async def mcflash_candidati_details(req: func.HttpRequest):
-    """
-    POST /api/mcflash/candidati/details
-
-    Recupera il dettaglio candidato da endpoint MCFlash partendo da Id
-    (con fallback su Nome/Nomi per compatibilita').
-    """
-    payload = _body_params(req)
-    if not payload:
-        payload = _payload_from_query(req)
-
-    match_key = _safe_str(
-        _first_non_empty(
-            payload.get("match_key"),
-            payload.get("candidate_id"),
-            payload.get("id"),
-            payload.get("email"),
-            req.params.get("match_key"),
-            req.params.get("candidate_id"),
-            req.params.get("id"),
-            req.params.get("email"),
-        )
-    ).lower()
-    if not match_key:
-        raise InvalidInputError("Missing required field: match_key|candidate_id|id")
-
-    client = _get_mcflash_candidates_client()
-    try:
-        candidate = await client.find_candidate(match_key)
-    except MCFlashApiError as exc:
-        raise InvalidInputError(str(exc)) from exc
-
-    return {
-        "found": candidate is not None,
-        "candidate": candidate,
-        "source": "mcflash_candidates_api",
-    }
-
-
-@app.route(route="mcflash/candidati/{match_key}", methods=["GET"])
-@http_error_handler
-async def mcflash_candidati_details_by_path(req: func.HttpRequest):
-    """
-    GET /api/mcflash/candidati/{match_key}
-
-    Variante REST del dettaglio candidato su endpoint MCFlash.
-    """
-    match_key = _safe_str(req.route_params.get("match_key")).lower()
-    if not match_key:
-        raise InvalidInputError("Missing route param: match_key")
-
-    client = _get_mcflash_candidates_client()
-    try:
-        candidate = await client.find_candidate(match_key)
-    except MCFlashApiError as exc:
-        raise InvalidInputError(str(exc)) from exc
-
-    return {
-        "found": candidate is not None,
-        "candidate": candidate,
-        "source": "mcflash_candidates_api",
-    }
 
 
 @app.route(route="backfill/incoming-cv", methods=["POST"])
