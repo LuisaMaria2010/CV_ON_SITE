@@ -8,6 +8,12 @@ from core.config import settings
 from core.errors import InvalidInputError
 from infra.mcflash_candidates import MCFlashApiError, MCFlashCandidatesClient
 from infra.search_service import SearchService, _looks_like_cv_boilerplate
+from utils.values import (
+    first_non_empty as _first_non_empty,
+    lower_list as _lower_list,
+    safe_str as _safe_str,
+    to_float as _to_float,
+)
 from services.search_handler import (
     build_odata_filter,
     build_odata_filter_relaxed,
@@ -15,13 +21,6 @@ from services.search_handler import (
     normalise_search_request,
     rerank,
 )
-
-
-def _to_float(value: Any, default: float = 0.0) -> float:
-    try:
-        return float(value)
-    except Exception:
-        return default
 
 
 def _extract_availability_days(value: Any) -> int | None:
@@ -1191,33 +1190,6 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         },
         "suggestions": suggestions,
     }
-
-def _safe_str(value: Any) -> str:
-    if value is None:
-        return ""
-    return str(value).strip()
-
-
-def _lower_list(value: Any) -> list[str]:
-    if value is None:
-        return []
-    if isinstance(value, list):
-        return [str(v).strip().lower() for v in value if str(v).strip()]
-    if isinstance(value, str):
-        parts = [p.strip().lower() for p in value.split(",")]
-        return [p for p in parts if p]
-    return []
-
-
-def _first_non_empty(*values: Any) -> Any:
-    for value in values:
-        if value is None:
-            continue
-        if isinstance(value, str) and not value.strip():
-            continue
-        return value
-    return None
-
 
 def _extract_budget_constraint(payload: dict[str, Any]) -> str | None:
     raw_budget = _first_non_empty(
