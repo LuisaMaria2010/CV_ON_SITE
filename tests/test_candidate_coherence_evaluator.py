@@ -13,6 +13,7 @@ import azure.functions as func
 import pytest
 
 import function_app as fa
+import services.coherence_evaluator as ce
 
 
 # =========================================================
@@ -77,7 +78,7 @@ class _FakeJudgeClient:
 class TestShortCircuits:
 
     def test_single_hit_skips_llm(self, monkeypatch):
-        monkeypatch.setattr(fa, "_get_judge_client", _unexpected_call)
+        monkeypatch.setattr(ce, "get_judge_client", _unexpected_call)
 
         hits = [_hit(1, "A")]
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
@@ -85,14 +86,14 @@ class TestShortCircuits:
         assert result == {"candidates": hits, "verdict": "unknown", "clarifying_questions": []}
 
     def test_empty_hits_skips_llm(self, monkeypatch):
-        monkeypatch.setattr(fa, "_get_judge_client", _unexpected_call)
+        monkeypatch.setattr(ce, "get_judge_client", _unexpected_call)
 
         result = fa._run_candidate_coherence_evaluator("cerco python dev", [])
 
         assert result == {"candidates": [], "verdict": "unknown", "clarifying_questions": []}
 
     def test_empty_original_request_skips_llm(self, monkeypatch):
-        monkeypatch.setattr(fa, "_get_judge_client", _unexpected_call)
+        monkeypatch.setattr(ce, "get_judge_client", _unexpected_call)
 
         hits = [_hit(1, "A"), _hit(2, "B")]
         result = fa._run_candidate_coherence_evaluator("", hits)
@@ -101,7 +102,7 @@ class TestShortCircuits:
         assert result["verdict"] == "unknown"
 
     def test_no_client_configured_falls_back(self, monkeypatch):
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: None)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: None)
 
         hits = [_hit(1, "A"), _hit(2, "B")]
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
@@ -123,7 +124,7 @@ class TestLLMPath:
             "ordered_idx": [2, 0, 1],
             "clarifying_questions": ["Serve full remote o ibrido?"],
         }))
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
 
@@ -143,7 +144,7 @@ class TestLLMPath:
             "nome": "HACKED",
             "clarifying_questions": [],
         }))
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
 
@@ -159,7 +160,7 @@ class TestLLMPath:
             "ordered_idx": [0, 1],
             "clarifying_questions": ["Puoi specificare il livello di seniority?"],
         }))
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
 
@@ -174,7 +175,7 @@ class TestLLMPath:
             "ordered_idx": [0, 0, 2],
             "clarifying_questions": [],
         }))
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
 
@@ -183,7 +184,7 @@ class TestLLMPath:
     def test_llm_exception_falls_back(self, monkeypatch):
         hits = [_hit(10, "A"), _hit(20, "B")]
         fake_client = _FakeJudgeClient(exc=RuntimeError("boom"))
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
 
@@ -193,7 +194,7 @@ class TestLLMPath:
     def test_malformed_json_falls_back(self, monkeypatch):
         hits = [_hit(10, "A"), _hit(20, "B")]
         fake_client = _FakeJudgeClient(content="not json at all")
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
 
@@ -207,7 +208,7 @@ class TestLLMPath:
             "ordered_idx": [0, 1],
             "clarifying_questions": [],
         }))
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
 
@@ -220,7 +221,7 @@ class TestLLMPath:
             "ordered_idx": [0, 1],
             "clarifying_questions": ["q1", "q2", "q3", "q4"],
         }))
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
 
@@ -252,7 +253,7 @@ class TestSearcherWrapperAutoEvaluates:
             "ordered_idx": [2, 1, 0],
             "clarifying_questions": ["Serve disponibilita' immediata?"],
         }))
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
+        monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
         req = _make_request(
             {"search_request": {"query": "cerco python dev", "top": 10}},
@@ -273,7 +274,7 @@ class TestSearcherWrapperAutoEvaluates:
 
         monkeypatch.setattr(fa, "_run_search_pipeline", fake_run_search_pipeline)
         monkeypatch.setattr(fa, "_build_minimal_search_hit", lambda hit, requested_skills: hit)
-        monkeypatch.setattr(fa, "_get_judge_client", _unexpected_call)
+        monkeypatch.setattr(ce, "get_judge_client", _unexpected_call)
 
         req = _make_request(
             {"search_request": {"query": "cerco python dev", "top": 10}},
