@@ -12,7 +12,7 @@ from typing import Any
 import azure.functions as func
 import pytest
 
-import function_app as fa
+import functions.search_api as search_api
 import services.coherence_evaluator as ce
 
 
@@ -81,14 +81,14 @@ class TestShortCircuits:
         monkeypatch.setattr(ce, "get_judge_client", _unexpected_call)
 
         hits = [_hit(1, "A")]
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result == {"candidates": hits, "verdict": "unknown", "clarifying_questions": []}
 
     def test_empty_hits_skips_llm(self, monkeypatch):
         monkeypatch.setattr(ce, "get_judge_client", _unexpected_call)
 
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", [])
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", [])
 
         assert result == {"candidates": [], "verdict": "unknown", "clarifying_questions": []}
 
@@ -96,7 +96,7 @@ class TestShortCircuits:
         monkeypatch.setattr(ce, "get_judge_client", _unexpected_call)
 
         hits = [_hit(1, "A"), _hit(2, "B")]
-        result = fa._run_candidate_coherence_evaluator("", hits)
+        result = ce.run_candidate_coherence_evaluator("", hits)
 
         assert result["candidates"] == hits
         assert result["verdict"] == "unknown"
@@ -105,7 +105,7 @@ class TestShortCircuits:
         monkeypatch.setattr(ce, "get_judge_client", lambda: None)
 
         hits = [_hit(1, "A"), _hit(2, "B")]
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result["candidates"] == hits
         assert result["verdict"] == "unknown"
@@ -126,7 +126,7 @@ class TestLLMPath:
         }))
         monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert [c["id_mcflash"] for c in result["candidates"]] == [30, 10, 20]
         assert result["verdict"] == "partial"
@@ -146,7 +146,7 @@ class TestLLMPath:
         }))
         monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result["candidates"][0] is hits[1]
         assert result["candidates"][1] is hits[0]
@@ -162,7 +162,7 @@ class TestLLMPath:
         }))
         monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result["candidates"] == hits
         assert result["verdict"] == "weak"
@@ -177,7 +177,7 @@ class TestLLMPath:
         }))
         monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result["candidates"] == hits
 
@@ -186,7 +186,7 @@ class TestLLMPath:
         fake_client = _FakeJudgeClient(exc=RuntimeError("boom"))
         monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result["candidates"] == hits
         assert result["verdict"] == "unknown"
@@ -196,7 +196,7 @@ class TestLLMPath:
         fake_client = _FakeJudgeClient(content="not json at all")
         monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result["candidates"] == hits
         assert result["verdict"] == "unknown"
@@ -210,7 +210,7 @@ class TestLLMPath:
         }))
         monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result["verdict"] == "unknown"
 
@@ -223,7 +223,7 @@ class TestLLMPath:
         }))
         monkeypatch.setattr(ce, "get_judge_client", lambda: fake_client)
 
-        result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
+        result = ce.run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result["clarifying_questions"] == ["q1", "q2", "q3"]
 
@@ -241,9 +241,9 @@ class TestSearcherWrapperAutoEvaluates:
         async def fake_run_search_pipeline(_payload):
             return {"hits": raw_hits, "meta": {}, "suggestions": []}
 
-        monkeypatch.setattr(fa, "_run_search_pipeline", fake_run_search_pipeline)
+        monkeypatch.setattr(search_api, "_run_search_pipeline", fake_run_search_pipeline)
         monkeypatch.setattr(
-            fa,
+            search_api,
             "_build_minimal_search_hit",
             lambda hit, requested_skills: hit,
         )
@@ -259,7 +259,7 @@ class TestSearcherWrapperAutoEvaluates:
             {"search_request": {"query": "cerco python dev", "top": 10}},
             url="/api/searcher-wrapper",
         )
-        data = _parse_response(await fa.searcher_wrapper(req))
+        data = _parse_response(await search_api.searcher_wrapper(req))
 
         assert [c["id_mcflash"] for c in data["search_response"]["hits"]] == [30, 20, 10]
         assert data["verdict"] == "partial"
@@ -272,15 +272,15 @@ class TestSearcherWrapperAutoEvaluates:
         async def fake_run_search_pipeline(_payload):
             return {"hits": raw_hits, "meta": {}, "suggestions": []}
 
-        monkeypatch.setattr(fa, "_run_search_pipeline", fake_run_search_pipeline)
-        monkeypatch.setattr(fa, "_build_minimal_search_hit", lambda hit, requested_skills: hit)
+        monkeypatch.setattr(search_api, "_run_search_pipeline", fake_run_search_pipeline)
+        monkeypatch.setattr(search_api, "_build_minimal_search_hit", lambda hit, requested_skills: hit)
         monkeypatch.setattr(ce, "get_judge_client", _unexpected_call)
 
         req = _make_request(
             {"search_request": {"query": "cerco python dev", "top": 10}},
             url="/api/searcher-wrapper",
         )
-        data = _parse_response(await fa.searcher_wrapper(req))
+        data = _parse_response(await search_api.searcher_wrapper(req))
 
         assert data["search_response"]["hits"] == raw_hits
         assert data["verdict"] == "unknown"

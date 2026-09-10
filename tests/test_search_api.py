@@ -1,8 +1,8 @@
 """
-Tests per POST /api/search handler in function_app.py (Phase F).
+Tests per POST /api/search (blueprint functions/search_api.py).
 
-Strategia: chiamiamo direttamente la funzione `search_candidates` importata da
-function_app, monkeypatchando SearchService e get_embedding_client per evitare
+Strategia: chiamiamo direttamente la funzione `search_candidates` importata dal
+blueprint, monkeypatchando SearchService e get_embedding_client per evitare
 dipendenze di rete/Azure.
 """
 from __future__ import annotations
@@ -15,6 +15,7 @@ import pytest
 import azure.functions as func
 
 import infra.search_service as search_mod
+import functions.search_api as search_api
 
 
 # =========================================================
@@ -215,9 +216,6 @@ async def _call_handler(req: func.HttpRequest, monkeypatch, fake_service: FakeSe
     """Wire fake SearchService and call the handler."""
     monkeypatch.setattr(search_mod, "SearchService", lambda: fake_service)
 
-    import function_app as fa
-    monkeypatch.setattr(fa, "SearchService", lambda: fake_service)
-
     import services.search_pipeline as pipeline_mod
     monkeypatch.setattr(pipeline_mod, "SearchService", lambda: fake_service)
 
@@ -238,7 +236,7 @@ async def _call_handler(req: func.HttpRequest, monkeypatch, fake_service: FakeSe
             _ = (limit, offset)
             return list(_default_rows)
 
-    monkeypatch.setattr(fa, "_get_mcflash_candidates_client", lambda: (mcflash_client or _FakeMCFlashClient()))
+    monkeypatch.setattr(search_api, "_get_mcflash_candidates_client", lambda: (mcflash_client or _FakeMCFlashClient()))
 
     # Disable embedding to keep tests fast and network-free
     async def fake_embed(text):
@@ -251,7 +249,7 @@ async def _call_handler(req: func.HttpRequest, monkeypatch, fake_service: FakeSe
     import infra.llm_client as llm_mod
     monkeypatch.setattr(llm_mod, "get_embedding_client", lambda: FakeEmbClient())
 
-    result = await fa.search_candidates(req)
+    result = await search_api.search_candidates(req)
     return result
 
 
