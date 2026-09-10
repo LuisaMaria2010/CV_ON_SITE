@@ -326,46 +326,6 @@ class TestSearchHappyPath:
 
 
 # =========================================================
-# Subco routing
-# =========================================================
-
-class TestSubcoRouting:
-
-    def test_subco_risorse_uses_correct_index(self, monkeypatch):
-        from core.config import settings
-        fake = FakeSearchService(hits_sequence=[[_make_fake_hit("doc1")]])
-        req = _make_request({"query": "senior developer", "subco": "risorse", "hybrid": False})
-
-        async def _run():
-            return await _call_handler(req, monkeypatch, fake)
-
-        asyncio.run(_run())
-        assert fake.calls[0]["index_name"] == settings.search_subco_risorse_index
-
-    def test_subco_candidati_uses_correct_index(self, monkeypatch):
-        from core.config import settings
-        fake = FakeSearchService(hits_sequence=[[_make_fake_hit("doc1")]])
-        req = _make_request({"query": "senior developer", "subco": "candidati", "hybrid": False})
-
-        async def _run():
-            return await _call_handler(req, monkeypatch, fake)
-
-        asyncio.run(_run())
-        assert fake.calls[0]["index_name"] == settings.search_subco_candidati_index
-
-    def test_no_subco_uses_default_index(self, monkeypatch):
-        from core.config import settings
-        fake = FakeSearchService(hits_sequence=[[_make_fake_hit("doc1")]])
-        req = _make_request({"query": "senior developer", "hybrid": False})
-
-        async def _run():
-            return await _call_handler(req, monkeypatch, fake)
-
-        asyncio.run(_run())
-        assert fake.calls[0]["index_name"] == settings.document_search_index_name
-
-
-# =========================================================
 # OData filter wiring
 # =========================================================
 

@@ -1,8 +1,6 @@
 """
-Tests per il nuovo candidate coherence evaluator (sostituisce il match evaluator
-deterministico e /api/response-judger):
+Tests per il candidate coherence evaluator:
 - _run_candidate_coherence_evaluator: riordino LLM con guardrail sugli indici
-- /api/match-evaluator-wrapper: route standalone
 - /api/searcher-wrapper: chiamata automatica dell'evaluator dopo la ricerca
 """
 from __future__ import annotations
@@ -21,7 +19,7 @@ import function_app as fa
 # Helpers
 # =========================================================
 
-def _make_request(body: dict, url: str = "/api/match-evaluator-wrapper") -> func.HttpRequest:
+def _make_request(body: dict, url: str = "/api/searcher-wrapper") -> func.HttpRequest:
     return func.HttpRequest(
         method="POST",
         url=url,
@@ -227,62 +225,6 @@ class TestLLMPath:
         result = fa._run_candidate_coherence_evaluator("cerco python dev", hits)
 
         assert result["clarifying_questions"] == ["q1", "q2", "q3"]
-
-
-# =========================================================
-# /api/match-evaluator-wrapper — standalone route
-# =========================================================
-
-class TestMatchEvaluatorWrapperRoute:
-
-    @pytest.mark.asyncio
-    async def test_reorders_candidates_from_search_response(self, monkeypatch):
-        hits = [_hit(10, "A"), _hit(20, "B")]
-        fake_client = _FakeJudgeClient(content=json.dumps({
-            "verdict": "strong",
-            "ordered_idx": [1, 0],
-            "clarifying_questions": [],
-        }))
-        monkeypatch.setattr(fa, "_get_judge_client", lambda: fake_client)
-
-        req = _make_request({
-            "original_request": "cerco python dev",
-            "search_response": {"hits": hits},
-        })
-        data = _parse_response(await fa.match_evaluator_wrapper(req))
-
-        assert [c["id_mcflash"] for c in data["candidates"]] == [20, 10]
-        assert data["verdict"] == "strong"
-
-    @pytest.mark.asyncio
-    async def test_accepts_candidates_key_directly(self, monkeypatch):
-        hits = [_hit(10, "A")]
-        monkeypatch.setattr(fa, "_get_judge_client", _unexpected_call)
-
-        req = _make_request({
-            "original_request": "cerco python dev",
-            "candidates": hits,
-        })
-        data = _parse_response(await fa.match_evaluator_wrapper(req))
-
-        # Single candidate -> short-circuit, no LLM call, unchanged.
-        assert data["candidates"] == hits
-        assert data["verdict"] == "unknown"
-
-    @pytest.mark.asyncio
-    async def test_missing_body_is_rejected(self, monkeypatch):
-        req = func.HttpRequest(
-            method="POST",
-            url="/api/match-evaluator-wrapper",
-            body=b"",
-            headers={"content-type": "application/json"},
-            params={},
-            route_params={},
-        )
-        envelope = await fa.match_evaluator_wrapper(req)
-        envelope = envelope if isinstance(envelope, dict) else json.loads(envelope.get_body().decode())
-        assert envelope["success"] is False
-        assert envelope["error"] is not None
 
 
 # =========================================================

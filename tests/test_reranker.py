@@ -4,7 +4,6 @@ Tests per services/search_handler.py (Phase F):
   - build_odata_filter_relaxed: skills rimossi, resto manttenuto
   - rerank: scoring formula, ordinamento, top-N
   - normalise_search_request: normalizzazione, clamp di top
-  - resolve_index: routing subco
   - _months_ago helper
 """
 from __future__ import annotations
@@ -22,7 +21,6 @@ from services.search_handler import (
     build_odata_filter_relaxed,
     normalise_search_request,
     rerank,
-    resolve_index,
 )
 
 
@@ -341,14 +339,6 @@ class TestNormaliseSearchRequest:
         p = normalise_search_request({"hybrid": False})
         assert p["hybrid"] is False
 
-    def test_subco_lowercased(self):
-        p = normalise_search_request({"subco": "Risorse"})
-        assert p["subco"] == "risorse"
-
-    def test_subco_none_when_missing(self):
-        p = normalise_search_request({})
-        assert p["subco"] is None
-
     def test_min_max_experience(self):
         p = normalise_search_request({"min_experience_years": "3", "max_experience_years": 8})
         assert p["min_experience_years"] == 3.0
@@ -508,20 +498,3 @@ class TestAvailabilityMatchFeatures:
         assert features["availability"]["match"] == "partial"
 
 
-# =========================================================
-# resolve_index
-# =========================================================
-
-class TestResolveIndex:
-
-    def test_none_returns_default(self):
-        assert resolve_index(None) == settings.document_search_index_name
-
-    def test_risorse_subco(self):
-        assert resolve_index("risorse") == settings.search_subco_risorse_index
-
-    def test_candidati_subco(self):
-        assert resolve_index("candidati") == settings.search_subco_candidati_index
-
-    def test_unknown_subco_returns_default(self):
-        assert resolve_index("unknown-value") == settings.document_search_index_name

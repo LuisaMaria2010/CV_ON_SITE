@@ -79,21 +79,21 @@ Note:
 - `-IncludePayload` aggiunge `payload_json` nella tabella di destinazione.
 - Nome tabella di default: `CandidatesSnapshot`.
 
-## Foundry agents
+## Foundry agent
 
-Per creare i tre agenti Foundry per MC Flash:
+L'agente di produzione e' `mc-matcher` (kind=prompt) nel progetto Foundry, gestito
+a mano dal portale. `scripts/create_foundry_agents.py` serve solo a ricrearlo /
+riportarlo a uno stato noto:
 
-- `mc-classifier`: classifica la query utente in un JSON strutturato e chiama il wrapper API del searcher per ottenere le risposte.
-- `mc-profile-search-agent`: usa la vostra `POST /api/search` tramite tool OpenAPI e applica la logica di rilassamento coerente con l'email di Kim.
-- `mc-search-evaluator-agent`: valuta la qualita' del `search_response` e restituisce un verdetto strutturato riutilizzabile dal classifier/orchestratore.
+- istruzioni caricate verbatim da `scripts/mc_matcher_agent_instructions.md`
+- model `gpt-4.1-mini`, temperature 0, tool_choice `required`
+- tool: `web_search` (built-in) + OpenAPI `invoke_searcher_wrapper` -> `POST /api/searcher-wrapper` (route anonima)
 
 Variabili richieste:
 
 - `AZURE_AI_PROJECT_ENDPOINT`: endpoint progetto Foundry, formato `https://<account>.services.ai.azure.com/api/projects/<project>`
-- `AZURE_AI_MODEL_DEPLOYMENT_NAME`: deployment model del progetto Foundry
-- `FOUNDRY_SEARCH_API_URL`: URL completo della vostra `POST /api/search`; puo' includere `?code=<function-key>`
-- `FOUNDRY_SEARCHER_WRAPPER_URL`: URL completo della `POST /api/searcher-wrapper`; puo' includere `?code=<function-key>`
-- `FOUNDRY_EVALUATOR_WRAPPER_URL`: URL completo della `POST /api/match-evaluator-wrapper`; puo' includere `?code=<function-key>`
+- `FOUNDRY_MODEL` (o `AZURE_AI_MODEL_DEPLOYMENT_NAME`): deployment model del progetto Foundry
+- `FOUNDRY_SEARCHER_WRAPPER_URL`: URL della `POST /api/searcher-wrapper` (l'eventuale `?code=` viene ignorato: la route e' anonima)
 
 Comando:
 
@@ -114,9 +114,7 @@ py -3.11 -m venv .foundry-agent-venv
 .foundry-agent-venv\Scripts\python scripts\create_foundry_agents.py
 ```
 
-- Se `FOUNDRY_SEARCH_API_URL` include la function key, lo script la inserisce nello schema OpenAPI del tool.
-- Se `FOUNDRY_SEARCHER_WRAPPER_URL` include la function key, lo script la inserisce nello schema OpenAPI del classifier.
-- Ogni esecuzione crea una nuova versione degli agenti con lo stesso nome logico.
+- Ogni esecuzione crea una nuova versione dell'agente con lo stesso nome logico (`mc-matcher`).
 
 ### Permessi Foundry -> Function App
 

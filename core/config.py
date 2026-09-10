@@ -112,10 +112,6 @@ class Settings(BaseSettings):
     azure_search_chunk_size: int = 2000
     azure_search_chunk_overlap: int = 200
 
-    # Subco-specific indexes (Phase E)
-    search_subco_risorse_index: str = "cv-doc-chunks"
-    search_subco_candidati_index: str = "cv-doc-chunks"
-
     # Reranker weights (Phase E)
     search_reranker_lex_weight: float = 0.40
     search_reranker_vec_weight: float = 0.60

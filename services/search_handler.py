@@ -862,7 +862,6 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
     location = str(payload.get("location") or "").strip() or None
     explicit_seniority = str(payload.get("seniority") or "").strip() or None
     language = str(payload.get("language") or "").strip() or None
-    subco = str(payload.get("subco") or "").strip().lower() or None
     work_mode = str(payload.get("work_mode") or "").strip().lower() or "unknown"
     if work_mode not in {"remote", "hybrid", "onsite", "unknown"}:
         work_mode = "unknown"
@@ -986,7 +985,6 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
         "seniority_explicit": _norm_text(explicit_seniority) or None,
         "seniority_inferred": seniority_inferred,
         "language": language,
-        "subco": subco,
         "top": top,
         "strict": strict,
         "relaxed_criteria": relaxed_criteria,
@@ -998,11 +996,3 @@ def normalise_search_request(payload: dict[str, Any]) -> dict[str, Any]:
         "availability_days": availability_days,
         "availability_required": availability_required,
     }
-
-
-# =========================================================
-# Index routing
-# =========================================================
-
-def resolve_index(subco: str | None) -> str:
-    return settings.document_search_index_name
