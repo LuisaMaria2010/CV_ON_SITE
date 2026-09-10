@@ -171,6 +171,7 @@ async def _aggregate_top_candidates(
 ) -> list[dict[str, Any]]:
     chunks_by_doc: dict[str, list[dict[str, Any]]] = {}
     doc_person: dict[str, str] = {}
+    doc_role: dict[str, str] = {}
     for chunk in reranked_chunks:
         doc_id = _safe_str(_first_non_empty(chunk.get("document_id"), chunk.get("id")))
         if not doc_id:
@@ -182,6 +183,8 @@ async def _aggregate_top_candidates(
             )
             if pkey:
                 doc_person[doc_id] = pkey
+        if doc_id not in doc_role:
+            doc_role[doc_id] = _safe_str(chunk.get("role"))
 
     if not chunks_by_doc:
         return []
@@ -189,32 +192,45 @@ async def _aggregate_top_candidates(
     for doc_chunks in chunks_by_doc.values():
         doc_chunks.sort(key=lambda c: _to_float(c.get("score"), 0.0), reverse=True)
 
-    # Group documents by person. `document_id` is derived from the CV filename
-    # (TextNormalizer.normalize_document_id), so the same candidate with several
-    # CV files yields several document_ids and would otherwise take one result
-    # slot per file. The anonymised code in full_name/name is stable per person
-    # and is already trusted for identity elsewhere (_is_hard_name_match).
-    group_docs: dict[str, list[str]] = {}
-    group_order: list[str] = []
+    # Group documents by person AND role. `document_id` is derived from the CV
+    # filename (TextNormalizer.normalize_document_id), so the same candidate with
+    # several CV files yields several document_ids and would otherwise take one
+    # result slot per file.
+    #
+    # Il nome da solo NON basta come identita': il codice anonimizzato in
+    # full_name non e' univoco in MCFlash (esistono omonimi), e raggruppare solo
+    # per nome faceva sparire silenziosamente il secondo omonimo. Il ruolo e' lo
+    # stesso discriminante gia' usato da _select_mcflash_profile_for_hit, con lo
+    # stesso matcher tollerante: "Java Developer" e "Java Backend Developer" sono
+    # la stessa persona, "Java Developer" e "Data Analyst" sono due persone.
+    groups: list[dict[str, Any]] = []  # {"person": str, "role": str, "docs": [str]}
     for doc_id in chunks_by_doc:
-        gkey = doc_person.get(doc_id) or f"doc:{doc_id}"
-        if gkey not in group_docs:
-            group_docs[gkey] = []
-            group_order.append(gkey)
-        group_docs[gkey].append(doc_id)
+        pkey = doc_person.get(doc_id)
+        role = doc_role.get(doc_id, "")
+        if not pkey:
+            groups.append({"person": f"doc:{doc_id}", "role": role, "docs": [doc_id]})
+            continue
+        for group in groups:
+            if group["person"] == pkey and _roles_same_person(group["role"], role):
+                group["docs"].append(doc_id)
+                if not group["role"]:
+                    group["role"] = role
+                break
+        else:
+            groups.append({"person": pkey, "role": role, "docs": [doc_id]})
 
     def _doc_best_score(doc_id: str) -> float:
         doc_chunks = chunks_by_doc.get(doc_id) or []
         return _to_float(doc_chunks[0].get("score"), 0.0) if doc_chunks else 0.0
 
     ranked_groups = sorted(
-        group_order,
-        key=lambda g: max(_doc_best_score(d) for d in group_docs[g]),
+        groups,
+        key=lambda g: max(_doc_best_score(d) for d in g["docs"]),
         reverse=True,
     )
     top_groups = ranked_groups[:candidate_top_k]
 
-    top_doc_ids = [d for g in top_groups for d in group_docs[g]]
+    top_doc_ids = [d for g in top_groups for d in g["docs"]]
     all_chunks_by_doc = await search.load_chunks_for_candidates(
         top_doc_ids,
         index_name=index_name,
@@ -222,8 +238,8 @@ async def _aggregate_top_candidates(
     )
 
     aggregated: list[dict[str, Any]] = []
-    for gkey in top_groups:
-        doc_ids = sorted(group_docs[gkey], key=_doc_best_score, reverse=True)
+    for group in top_groups:
+        doc_ids = sorted(group["docs"], key=_doc_best_score, reverse=True)
         primary_doc_id = doc_ids[0]
         top_chunks = [c for d in doc_ids for c in chunks_by_doc.get(d, [])]
         top_chunks.sort(key=lambda c: _to_float(c.get("score"), 0.0), reverse=True)
@@ -248,6 +264,80 @@ def _hit_group_key(hit: dict[str, Any]) -> str:
     different CV file."""
     pkey = _normalise_person_key(_first_non_empty(hit.get("full_name"), hit.get("name")))
     return pkey or f"doc:{_safe_str(hit.get('document_id'))}"
+
+
+def _roles_same_person(role_a: Any, role_b: Any) -> bool:
+    """Due ruoli appartengono alla stessa persona?
+
+    Match tollerante (sinonimi IT/EN, forme parziali, livelli) via
+    MCFlashCandidatesClient._role_matches: "Java Developer" ~ "Java Backend
+    Developer" -> stessa persona; "Java Developer" ~ "Data Analyst" -> due
+    omonimi distinti.
+
+    Quando uno dei due ruoli manca non possiamo distinguere: si assume la stessa
+    persona, cosi' il comportamento di deduplica resta quello storico e non si
+    creano duplicati per assenza di dato.
+    """
+    a, b = _safe_str(role_a), _safe_str(role_b)
+    if not a or not b:
+        return True
+    return MCFlashCandidatesClient._role_matches(a, b)
+
+
+def _mcflash_id(hit: dict[str, Any]) -> str:
+    """Id del record MCFlash gia' agganciato all'hit, se risolto."""
+    profile = hit.get("mcflash_profile")
+    if not isinstance(profile, dict):
+        return ""
+    return _safe_str(_first_non_empty(profile.get("id"), profile.get("Id")))
+
+
+def _is_same_candidate(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    """Stessa persona?
+
+    1. `id_mcflash` e' l'identita' AUTOREVOLE: stesso id -> stessa persona,
+       id diversi -> persone diverse (e' esattamente cosi' che
+       _select_mcflash_profile_for_hit distingue gli omonimi). Vince su tutto.
+    2. Solo quando l'id non e' disponibile su entrambi si ricade su
+       nome + ruolo, con match tollerante sul ruolo.
+
+    Il ruolo da solo NON basta come identita': lo stesso CV caricato piu' volte
+    con filename diversi produce piu' document_id, e l'estrazione LLM puo'
+    assegnare a ciascuno un ruolo diverso ("Software Developer", ".NET
+    Developer", "Help Desk/System Administrator" per la stessa persona).
+    """
+    ida, idb = _mcflash_id(a), _mcflash_id(b)
+    if ida and idb:
+        return ida == idb
+
+    ka, kb = _hit_group_key(a), _hit_group_key(b)
+    if not ka or not kb or ka != kb:
+        return False
+    return _roles_same_person(a.get("role"), b.get("role"))
+
+
+def _collapse_same_candidates(hits: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Rimuove le entry che rappresentano la stessa persona, tenendo la prima
+    (la meglio posizionata). Da applicare DOPO l'aggancio del profilo MCFlash,
+    quando l'identita' autorevole e' disponibile."""
+    collapsed: list[dict[str, Any]] = []
+    for hit in hits:
+        if not isinstance(hit, dict):
+            continue
+        if _already_present(hit, collapsed):
+            continue
+        collapsed.append(hit)
+    return collapsed
+
+
+def _already_present(candidate: dict[str, Any], hits: list[dict[str, Any]]) -> bool:
+    """Dedup cross-pass. Liste da 6-12 elementi: la scansione lineare non e' un
+    problema, e permette il confronto tollerante sul ruolo che una chiave di set
+    non potrebbe esprimere."""
+    return any(
+        isinstance(h, dict) and _is_same_candidate(candidate, h)
+        for h in hits
+    )
 
 
 def _normalise_person_key(value: Any) -> str:
@@ -849,7 +939,10 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         if _attach_mcflash_profile_by_nome(hit):
             strict_hits_initial.append(hit)
 
-    hits = strict_hits_initial[:candidate_top_k]
+    # Il profilo MCFlash e' ora agganciato: si puo' collassare sull'identita'
+    # autorevole (id_mcflash). Farlo QUI, prima delle fasi di riempimento, lascia
+    # alla pipeline lo spazio per ripescare altri candidati fino a quota.
+    hits = _collapse_same_candidates(strict_hits_initial)[:candidate_top_k]
 
     relaxed = False
     relaxed_criteria = list(p.get("relaxed_criteria") or [])
@@ -916,32 +1009,30 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             query_skills=p["skills"],
             query_role=p["role"],
         )
-        existing_keys = {_hit_group_key(h) for h in hits}
+        existing_hits: list[dict[str, Any]] = list(hits)
 
         candidate_pool: list[dict[str, Any]] = []
         for h in relaxed_candidates:
-            gkey = _hit_group_key(h)
-            if not gkey or gkey in existing_keys:
+            if _already_present(h, existing_hits):
                 continue
 
             if _attach_mcflash_profile_by_nome(h):
                 candidate_pool.append(h)
 
         thresholds = _relaxed_skill_thresholds(len(p["skills"]))
-        selected_keys: set[str] = set()
+        selected: list[dict[str, Any]] = []
 
         for required_matches in thresholds:
             for candidate in candidate_pool:
-                gkey = _hit_group_key(candidate)
-                if not gkey or gkey in selected_keys:
+                if _already_present(candidate, selected):
                     continue
                 if _skill_overlap_count(candidate.get("skills"), p["skills"]) < required_matches:
                     continue
 
                 candidate["is_relaxed_result"] = True
                 hits.append(candidate)
-                selected_keys.add(gkey)
-                existing_keys.add(gkey)
+                selected.append(candidate)
+                existing_hits.append(candidate)
 
                 if len(hits) >= candidate_top_k:
                     break
@@ -950,12 +1041,11 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
 
         if len(hits) < fallback_min:
             for candidate in candidate_pool:
-                gkey = _hit_group_key(candidate)
-                if not gkey or gkey in existing_keys:
+                if _already_present(candidate, existing_hits):
                     continue
                 candidate["is_relaxed_result"] = True
                 hits.append(candidate)
-                existing_keys.add(gkey)
+                existing_hits.append(candidate)
                 if len(hits) >= candidate_top_k:
                     break
 
@@ -975,7 +1065,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
 
         await _enrich_second_pass_from_mcflash(hit)
         strict_hits_final.append(hit)
-    hits = strict_hits_final[:candidate_top_k]
+    hits = _collapse_same_candidates(strict_hits_final)[:candidate_top_k]
 
     # Second pass (extension only): keep first-pass MCFlash logic unchanged.
     # If strict MCFlash-compatible candidates are fewer than 6, extend the list
@@ -1034,11 +1124,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             query_role=p["role"],
         )
 
-        existing_keys = {
-            _hit_group_key(h)
-            for h in hits
-            if isinstance(h, dict)
-        }
+        existing_hits = [h for h in hits if isinstance(h, dict)]
 
         for candidate in second_pass_candidates:
             if len(hits) >= target_min_candidates:
@@ -1046,18 +1132,21 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             if not isinstance(candidate, dict):
                 continue
 
-            gkey = _hit_group_key(candidate)
-            if not gkey or gkey in existing_keys:
-                continue
-
+            # Aggancia PRIMA di controllare i duplicati: senza mcflash_profile
+            # l'identita' autorevole (id_mcflash) non e' ancora disponibile e il
+            # confronto ricadrebbe su nome+ruolo, lasciando passare la stessa
+            # persona con un ruolo estratto diverso.
             _attach_mcflash_profile_by_nome(candidate)
             candidate["second_pass_extension"] = True
             await _enrich_second_pass_from_mcflash(candidate)
             if not candidate.get("strict_mcflash_name_match"):
                 candidate["non_perfect_match"] = True
 
+            if _already_present(candidate, existing_hits):
+                continue
+
             hits.append(candidate)
-            existing_keys.add(gkey)
+            existing_hits.append(candidate)
 
         if len(hits) > len(strict_hits_final):
             relaxed = True
@@ -1121,10 +1210,6 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 if not isinstance(candidate, dict):
                     continue
 
-                gkey = _hit_group_key(candidate)
-                if not gkey or gkey in existing_keys:
-                    continue
-
                 _attach_mcflash_profile_by_nome(candidate)
                 candidate["second_pass_extension"] = True
                 candidate["second_pass_skills_relaxed"] = True
@@ -1132,8 +1217,11 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 if not candidate.get("strict_mcflash_name_match"):
                     candidate["non_perfect_match"] = True
 
+                if _already_present(candidate, existing_hits):
+                    continue
+
                 hits.append(candidate)
-                existing_keys.add(gkey)
+                existing_hits.append(candidate)
 
             if len(hits) > len(strict_hits_final):
                 relaxed = True
@@ -1142,6 +1230,10 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 suggestions.append(
                     "Still below 6 candidates: relaxed skills in second-pass hybrid retrieval while keeping role/location/seniority/language keywords."
                 )
+
+    # Rete finale: nessuna persona puo' comparire due volte nel risultato,
+    # qualunque passo l'abbia aggiunta.
+    hits = _collapse_same_candidates(hits)
 
     hits = enrich_hits_with_match_features(
         hits,
