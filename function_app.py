@@ -355,11 +355,13 @@ def _mcflash_value(candidate: dict[str, Any], *keys: str) -> Any:
 
 
 def _build_minimal_search_hit(hit: dict[str, Any], requested_skills: list[str]) -> dict[str, Any]:
-    """Fixed 12-field contract, always present regardless of which search_request
-    fields were used: id_mcflash, nome, ruolo, eta, seniority, location, skills,
-    workmode, lingue, disponibilita, budget, semantic_snippet."""
+    """Fixed contract, always present regardless of which search_request fields
+    were used: id_mcflash, nome, ruolo, eta, seniority, location, skills,
+    matched_skills, missing_skills, match_type, workmode, lingue, disponibilita,
+    budget, semantic_snippet."""
     mcflash_profile = hit.get("mcflash_profile") if isinstance(hit.get("mcflash_profile"), dict) else {}
     compact_skills = _compact_skills_for_wrapper(hit.get("skills"), requested_skills)
+    matched_skills, missing_skills = _skill_coverage_for_wrapper(hit, requested_skills)
 
     return {
         # Real MCFlash record id only: null when no MCFlash profile was resolved
@@ -383,40 +385,88 @@ def _build_minimal_search_hit(hit: dict[str, Any], requested_skills: list[str]) 
         ),
         "budget": _mcflash_value(mcflash_profile, "budget", "max_budget", "budget_max"),
         "skills": compact_skills,
+        "matched_skills": matched_skills,
+        "missing_skills": missing_skills,
+        "match_type": _match_type_for_wrapper(hit),
         "semantic_snippet": hit.get("semantic_evidence"),
     }
+
+
+def _skill_present_in_candidate(skill: str, candidate: list[str], candidate_set: set[str]) -> bool:
+    """Exact match, or the candidate has a more specific variant of the
+    requested skill (requested "spring" covered by candidate "spring boot").
+    NOT the reverse: candidate "java" does not cover requested "java 17".
+    Same rule as search_handler._skills_match_features."""
+    if skill in candidate_set:
+        return True
+    return any(skill in cs for cs in candidate)
 
 
 def _compact_skills_for_wrapper(
     candidate_skills: Any,
     requested_skills: list[str],
     *,
-    max_extra: int = 3,
+    max_skills: int = 6,
 ) -> list[str]:
-    requested = [s for s in _lower_list(requested_skills) if s]
-    requested_set = set(requested)
+    """Skills shown for a candidate = the candidate's OWN skills, deduped and
+    capped. Already ordered by relevance to the request upstream
+    (_order_skills_by_relevance). The requested strings are never injected here:
+    doing so made a candidate with plain "java" look like it had "java 17".
+    Coverage vs the request is carried separately by matched_skills /
+    missing_skills. `requested_skills` is kept for signature stability."""
+    _ = requested_skills
     candidate = [s for s in _lower_list(candidate_skills) if s]
 
     selected: list[str] = []
     seen: set[str] = set()
-
-    for skill in requested:
+    for skill in candidate:
         if skill in seen:
             continue
         selected.append(skill)
         seen.add(skill)
-
-    extra_count = 0
-    for skill in candidate:
-        if skill in seen or skill in requested_set:
-            continue
-        selected.append(skill)
-        seen.add(skill)
-        extra_count += 1
-        if extra_count >= max_extra:
+        if len(selected) >= max_skills:
             break
 
     return selected
+
+
+def _skill_coverage_for_wrapper(
+    hit: dict[str, Any], requested_skills: list[str]
+) -> tuple[list[str], list[str]]:
+    """(matched, missing) requested skills for a candidate. Prefers the honest
+    figures already computed by search_handler.build_match_features
+    (`hit["match_features"]["skills"]`); falls back to a local check when the
+    pipeline did not enrich the hit."""
+    requested = [s for s in _lower_list(requested_skills) if s]
+    if not requested:
+        return [], []
+
+    matched: list[str] = []
+    mf = hit.get("match_features")
+    if isinstance(mf, dict) and isinstance(mf.get("skills"), dict):
+        sk = mf["skills"]
+        matched = [s for s in _lower_list(sk.get("matched")) + _lower_list(sk.get("semantic_matches")) if s]
+    else:
+        candidate = [s for s in _lower_list(hit.get("skills")) if s]
+        candidate_set = set(candidate)
+        matched = [s for s in requested if _skill_present_in_candidate(s, candidate, candidate_set)]
+
+    matched = list(dict.fromkeys(matched))
+    matched_set = set(matched)
+    missing = [s for s in requested if s not in matched_set]
+    return matched, missing
+
+
+def _match_type_for_wrapper(hit: dict[str, Any]) -> str:
+    """How this candidate entered the result set — so the agent can flag weak
+    matches instead of presenting all 6 as solid."""
+    if hit.get("second_pass_skills_relaxed"):
+        return "hybrid_no_skill_filter"
+    if hit.get("second_pass_extension"):
+        return "hybrid_extension"
+    if hit.get("is_relaxed_result"):
+        return "relaxed_skills"
+    return "strict"
 
 
 def _extract_json_safe(raw: str) -> dict[str, Any] | None:
@@ -434,6 +484,93 @@ def _extract_json_safe(raw: str) -> dict[str, Any] | None:
         return parsed if isinstance(parsed, dict) else None
     except json.JSONDecodeError:
         return None
+
+
+def _normalise_ai_matcher_candidates(raw: Any) -> list[dict[str, Any]]:
+    """Keep only id_mcflash + trigramma from each trailer entry, verbatim.
+
+    `trigramma` falls back to `nome` because that hit field carries the MCFlash
+    anonymised code (e.g. "ELO"), which is what the trailer is meant to expose.
+    """
+    if not isinstance(raw, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for entry in raw:
+        if not isinstance(entry, dict):
+            continue
+        out.append(
+            {
+                "id_mcflash": entry.get("id_mcflash"),
+                "trigramma": _first_non_empty(entry.get("trigramma"), entry.get("nome")),
+            }
+        )
+    return out
+
+
+def _split_ai_matcher_answer(output_text: str) -> tuple[str, list[dict[str, Any]]]:
+    """Peel the machine-readable candidates trailer off the agent's prose answer.
+
+    The agent appends, after the natural-language answer, a marker line followed
+    by a single JSON object: {"candidates":[{"id_mcflash":..,"trigramma":..}, ...]}.
+    Parsing is anchored on that JSON object, so it is independent of the exact
+    marker string. Returns (prose_answer, candidates). When the agent instead
+    returns the whole turn as one JSON object, prose comes from its answer field.
+    """
+    text = _safe_str(output_text)
+    if not text:
+        return "", []
+
+    # Case 1: the entire output is a JSON object carrying both answer + candidates.
+    whole = _extract_json_safe(text) if text.lstrip().startswith("{") else None
+    if isinstance(whole, dict) and "candidates" in whole:
+        prose = _safe_str(
+            _first_non_empty(
+                whole.get("answer"),
+                whole.get("final_answer"),
+                whole.get("response"),
+                whole.get("raw_text"),
+            )
+        )
+        return prose, _normalise_ai_matcher_candidates(whole.get("candidates"))
+
+    # Case 2: prose followed by a trailing {"candidates": [...]} object.
+    matches = list(re.finditer(r'\{\s*"candidates"\s*:', text))
+    if not matches:
+        return text.strip(), []
+
+    trailer_start = matches[-1].start()
+    trailer = _extract_json_safe(text[trailer_start:])
+    if not isinstance(trailer, dict) or "candidates" not in trailer:
+        return text.strip(), []
+
+    prose_lines = text[:trailer_start].rstrip().splitlines()
+    # Drop trailing lines that are the trailer's marker rather than prose:
+    # "<<<CANDIDATES_JSON>>>", "CANDIDATI:", an opening ```json fence, a rule of
+    # dashes, etc. Anything short that names JSON/candidates or is pure punctuation.
+    def _is_marker_line(line: str) -> bool:
+        stripped = line.strip()
+        if not stripped:
+            return True
+        # Pure punctuation / rule / bracket line, or a ```json fence opener.
+        if re.fullmatch(r"[`~<>=\-_*#:\s]+", stripped):
+            return True
+        if re.fullmatch(r"`{3,}\s*json\s*", stripped, flags=re.IGNORECASE):
+            return True
+        # A bracketed / label-style marker: no lowercase letters (so real prose
+        # like "Ecco i candidati:" is never stripped), short, names json/candidat.
+        if (
+            len(stripped) <= 40
+            and not re.search(r"[a-zà-ÿ]", stripped)
+            and re.search(r"JSON|CANDIDAT", stripped, flags=re.IGNORECASE)
+        ):
+            return True
+        return False
+
+    while prose_lines and _is_marker_line(prose_lines[-1]):
+        prose_lines.pop()
+    prose = "\n".join(prose_lines).rstrip()
+
+    return prose, _normalise_ai_matcher_candidates(trailer.get("candidates"))
 
 
 def _settings_value(*keys: str, default: str = "") -> str:
@@ -1143,7 +1280,32 @@ async def searcher_wrapper(req: func.HttpRequest):
         )
 
     requested_skills = _lower_list(search_request.get("skills")) if isinstance(search_request, dict) else []
+    requested_role = _safe_str(search_request.get("role")) if isinstance(search_request, dict) else ""
     raw_hits = search_response.get("hits") if isinstance(search_response.get("hits"), list) else []
+
+    pipeline_meta = search_response.get("meta") if isinstance(search_response.get("meta"), dict) else {}
+    hard_select_meta = pipeline_meta.get("hard_select") if isinstance(pipeline_meta.get("hard_select"), dict) else {}
+    hard_select_widened = bool(hard_select_meta.get("widened"))
+
+    # When MCFlash's business filters matched nobody and we widened to the
+    # whole archive with only a role (no skills) to go on, the index has no
+    # hard constraint left to discriminate on — role/seniority keywords alone
+    # can surface completely unrelated CVs (e.g. "junior QA" -> a Front End
+    # Developer, "consulente" -> a COBOL developer). Trim to candidates whose
+    # role actually matches at least a little; if none do, show none rather
+    # than padding the answer with 6 unrelated profiles.
+    if hard_select_widened and not requested_skills and requested_role:
+        def _has_role_signal(hit: Any) -> bool:
+            mf = hit.get("match_features") if isinstance(hit, dict) else None
+            role_mf = mf.get("role") if isinstance(mf, dict) else None
+            score = role_mf.get("score") if isinstance(role_mf, dict) else None
+            try:
+                return score is not None and float(score) > 0
+            except (TypeError, ValueError):
+                return False
+
+        raw_hits = [h for h in raw_hits if isinstance(h, dict) and _has_role_signal(h)]
+
     minimal_hits: list[dict[str, Any]] = []
     for hit in raw_hits:
         if not isinstance(hit, dict):
@@ -1163,11 +1325,32 @@ async def searcher_wrapper(req: func.HttpRequest):
         _run_candidate_coherence_evaluator, original_request, minimal_hits
     )
 
+    # Surface retrieval diagnostics so the agent knows when the search was
+    # widened (skills filter dropped, hybrid extension) and does not present
+    # relaxed / second-pass candidates as strict matches.
+    pipeline_suggestions = search_response.get("suggestions") if isinstance(search_response.get("suggestions"), list) else []
+    if hard_select_widened and not requested_skills:
+        # Nothing was actually hard-filtered (business filters matched nobody,
+        # no skills to filter the index on) — "strict" would overstate how
+        # solid these matches are, even for the ones that survived the role
+        # trim above.
+        strict_count = 0
+    else:
+        strict_count = sum(1 for h in minimal_hits if h.get("match_type") == "strict")
+
     return {
         "original_request": original_request,
         "interpreted_request": search_request,
         "search_response": {
             "hits": evaluation["candidates"],
+        },
+        "search_meta": {
+            "relaxed": bool(pipeline_meta.get("relaxed")),
+            "relaxed_criteria": pipeline_meta.get("relaxed_criteria") or [],
+            "total_candidates": pipeline_meta.get("total", len(minimal_hits)),
+            "strict_candidates": strict_count,
+            "hard_select_matched": hard_select_meta.get("matched_candidates"),
+            "suggestions": pipeline_suggestions,
         },
         "verdict": evaluation["verdict"],
         "clarifying_questions": evaluation["clarifying_questions"],
@@ -1394,18 +1577,25 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
 
     raw_response = _response_to_plain_dict(response)
     output_text = _safe_str(getattr(response, "output_text", ""))
-    parsed_output = _extract_json_safe(output_text) if output_text else None
+
+    # The agent appends a machine-readable trailer after its prose answer:
+    #   <<<CANDIDATES_JSON>>>
+    #   {"candidates":[{"id_mcflash":..,"trigramma":..}, ...]}
+    # Keep `answer` pure natural language and surface the trailer as `candidates`.
+    answer_body, proposed_candidates = _split_ai_matcher_answer(output_text)
+    effective_text = answer_body or output_text
+    parsed_output = _extract_json_safe(effective_text) if effective_text else None
 
     result_payload: dict[str, Any]
     if isinstance(parsed_output, dict):
         result_payload = parsed_output
     else:
-        result_payload = {"raw_text": output_text}
+        result_payload = {"raw_text": effective_text}
 
     response_id = _safe_str(raw_response.get("id")) or None
-    assistant_response_text = output_text if output_text else json.dumps(result_payload, ensure_ascii=False)
+    assistant_response_text = effective_text if effective_text else json.dumps(result_payload, ensure_ascii=False)
 
-    answer_text = _safe_str(output_text)
+    answer_text = _safe_str(effective_text)
     if not answer_text and isinstance(result_payload, dict):
         answer_text = _safe_str(
             _first_non_empty(
@@ -1457,6 +1647,7 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
         },
         "conversation": history_status,
         "answer": answer_text,
+        "candidates": proposed_candidates,
     }
 
     if include_result:

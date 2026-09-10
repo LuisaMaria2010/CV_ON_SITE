@@ -9,7 +9,7 @@ Tests per services/search_handler.py (Phase F):
 """
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -172,10 +172,20 @@ def _make_hit(
 class TestRerank:
 
     def test_base_score_formula(self):
+        # No semantic/vec signal and no structured request -> ranking falls back
+        # to batch-relative lex. With a single hit that is its own max -> 1.0.
         hit = _make_hit(semantic_score=0.0, lex_score=1.0, vec_score=0.0)
         ranked = rerank([hit], top=1)
-        # retrieval-only: 0.0*0.70 + 0.0*0.20 + 1.0*0.10 = 0.10
-        assert abs(ranked[0]["score"] - 0.10) < 0.001
+        assert abs(ranked[0]["score"] - 1.0) < 0.001
+
+    def test_lex_fallback_is_batch_relative(self):
+        # No semantic/vec/structured signal: order by lex, normalised to batch max.
+        h_low = _make_hit(document_id="low", semantic_score=0.0, lex_score=2.0, vec_score=0.0)
+        h_high = _make_hit(document_id="high", semantic_score=0.0, lex_score=10.0, vec_score=0.0)
+        ranked = rerank([h_low, h_high], top=2)
+        assert ranked[0]["document_id"] == "high"
+        assert abs(ranked[0]["score"] - 1.0) < 0.001
+        assert abs(ranked[1]["score"] - 0.2) < 0.001
 
     def test_vec_weight(self):
         hit = _make_hit(semantic_score=0.0, lex_score=0.0, vec_score=1.0)
@@ -192,13 +202,40 @@ class TestRerank:
         ranked = rerank([hit], top=1)
         assert abs(ranked[0]["score"] - 0.70) < 0.001
 
-    def test_query_business_params_do_not_change_score(self):
+    def test_structured_score_ranks_when_no_retrieval_signal(self):
+        # No semantic/vec signal: the structured skill/role score becomes the
+        # ranking. Full skill coverage -> score 1.0 (single dimension requested).
         hit = _make_hit(lex_score=0.0, vec_score=0.0, skills=["python", "azure", "docker"])
         ranked = rerank([hit], query_skills=["python", "azure"], top=1)
-        assert ranked[0]["score"] == 0.0
+        assert abs(ranked[0]["score"] - 1.0) < 0.001
+
+    def test_structured_score_orders_by_skill_overlap(self):
+        # Fully structured query (no free text -> no semantic pass): the
+        # candidate with more of the requested skills must rank first.
+        full = _make_hit(document_id="full", lex_score=0.0, vec_score=0.0,
+                         skills=["python", "azure", "kafka"])
+        partial = _make_hit(document_id="partial", lex_score=0.0, vec_score=0.0,
+                            skills=["python", "php"])
+        none = _make_hit(document_id="none", lex_score=0.0, vec_score=0.0,
+                         skills=["cobol"])
+        ranked = rerank([none, partial, full], query_skills=["python", "azure", "kafka"], top=3)
+        assert [h["document_id"] for h in ranked] == ["full", "partial", "none"]
+
+    def test_structured_is_only_tiebreaker_when_semantic_present(self):
+        # Same strong semantic score, different skill coverage: semantic still
+        # dominates but the better skill match wins the tie.
+        good = _make_hit(document_id="good", semantic_score=4.0, lex_score=0.0, vec_score=0.0,
+                         skills=["python", "azure"])
+        weak = _make_hit(document_id="weak", semantic_score=4.0, lex_score=0.0, vec_score=0.0,
+                         skills=["cobol"])
+        ranked = rerank([weak, good], query_skills=["python", "azure"], top=2)
+        assert ranked[0]["document_id"] == "good"
+        # semantic block (0.70) still contributes the bulk of the score
+        assert ranked[0]["score"] > 0.70
 
     def test_recency_boost_recent(self):
-        recent_date = "2026-03-01T00:00:00+00:00"  # ~2 months ago from April 2026
+        # ~2 months ago relative to now, so the < 6 months boost applies.
+        recent_date = (datetime.now(timezone.utc) - timedelta(days=60)).isoformat()
         hit = _make_hit(lex_score=0.0, vec_score=0.0, processed_at=recent_date)
         ranked = rerank([hit], top=1)
         assert abs(ranked[0]["score"] - settings.search_reranker_recency_boost) < 0.001
@@ -238,7 +275,7 @@ class TestRerank:
         assert ranked[0]["full_name"] == "Test User"
 
     def test_all_boosts_combined(self):
-        recent = "2026-04-01T00:00:00+00:00"
+        recent = "2026-08-01T00:00:00+00:00"
         hit = _make_hit(
             semantic_score=4.0,
             lex_score=1.0, vec_score=1.0,
@@ -247,13 +284,22 @@ class TestRerank:
             location="Milano",
             processed_at=recent,
         )
-        ranked = rerank([hit], query_skills=["python", "azure"], query_role="developer", query_location="milano")
-        expected = (
-            0.70
-            + 0.20
-            + 0.10
-            + settings.search_reranker_recency_boost
+        ranked = rerank(
+            [hit],
+            query_skills=["python", "azure"],
+            query_role="developer",
+            query_seniority=None,
+            query_location="milano",
         )
+        w_r = settings.search_rerank_retrieval_weight
+        w_s = settings.search_rerank_structured_weight
+        retrieval = 1.0 * 0.70 + 1.0 * 0.20 + 1.0 * 0.10  # sem+vec+lex all maxed
+        # structured: skills fully matched (1.0), role substring match (0.8)
+        structured = (
+            settings.search_rerank_w_skill * 1.0
+            + settings.search_rerank_w_role * 0.8
+        ) / (settings.search_rerank_w_skill + settings.search_rerank_w_role)
+        expected = retrieval * w_r + structured * w_s + settings.search_reranker_recency_boost
         assert abs(ranked[0]["score"] - expected) < 0.001
 
 

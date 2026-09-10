@@ -1,0 +1,501 @@
+﻿query,title,response,agent_error,classified_skills,classified_role,classified_location,classified_seniority,classified_language,classified_work_mode,candidates_count,candidates_names,search_relaxed,relaxed_criteria,verdict,search_index_evidence,classification,final_score,classification_coherence,field_completeness,search_relevance,candidate_quality,handling_complexity,reasoning_classification_coherence,reasoning_field_completeness,reasoning_search_relevance,reasoning_candidate_quality,reasoning_handling_complexity,classifier_strengths,classifier_weaknesses,improvement_suggestion,query_clarity,query_complexity,query_specificity,query_extractability,query_root_cause,query_eval_notes,latency_seconds,judge_latency_seconds,response_id
+Cerco uno sviluppatore Java senior con esperienza Spring Boot e microservizi per progetto bancario a Milano.,Java,"Ho trovato alcuni sviluppatori Java senior con esperienza in Spring Boot e microservizi, rilevanti per un progetto bancario. La ricerca è stata allargata per includere anche candidati con match parziale, dato che non ci sono profili con tutti i requisiti stretti.
+
+Ecco i top 3 candidati:
+
+1. GAP - Java Developer, senior, disponibile immediatamente, lavora in remoto
+   - Competenze: java, microservizi, spring boot (tutte presenti)
+   - Esperienza in contesti complessi del settore bancario e finanziario, sviluppo e integrazione di sistemi, metodologie Agile.
+   
+2. EPI - Java Developer, senior, disponibile immediatamente, lavora in remoto
+   - Competenze: java, microservizi, spring boot (tutte presenti)
+   - Ha lavorato su sviluppo software e piattaforme middleware per cliente del settore bancario.
+   
+3. IZI - Java Full Stack Developer, senior, località Bergamo, non disponibile al momento
+   - Competenze: java, microservizi, spring boot (tutte presenti)
+   - Ha sviluppato applicazioni web e native per gestione conti bancari e operazioni finanziarie.
+
+Potrebbero interessarti anche:
+
+4. C ANDIDATE P ROFIL E - Java Developer, principal, Torino, non disponibile
+   - Competenze: java, microservizi, spring boot (tutte presenti)
+   
+5. MMO - Java Developer, senior, Pescara, non disponibile
+   - Competenze: java, microservizi, spring boot (tutte presenti)
+   
+6. AMO - Mobile Developer, medium, Treviso/remoto, disponibile immediatamente
+   - Competenze: java, microservizi, spring boot (tutte presenti)
+   - Livello di seniority inferiore rispetto alla richiesta.
+
+Domande per migliorare la ricerca:
+- La posizione è esclusivamente onsite a Milano o è possibile lavoro remoto o ibrido?
+- Qual è il livello di esperienza minimo richiesto per la seniority?
+- È indispensabile esperienza specifica nel settore bancario o è sufficiente esperienza in progetti simili?
+
+La ricerca ha incluso anche candidati con match parziale per garantire un numero sufficiente di profili. Se vuoi, possiamo provare a rilassare qualche requisito per trovare più candidati.
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1855,""trigramma"":""GAP""},{""id_mcflash"":1620,""trigramma"":""EPI""},{""id_mcflash"":null,""trigramma"":""IZI""},{""id_mcflash"":null,""trigramma"":""C ANDIDATE P ROFIL E""},{""id_mcflash"":null,""trigramma"":""MMO""},{""id_mcflash"":1711,""trigramma"":""AMO  ""}]}}",,"java, spring boot, microservizi",sviluppatore Java,Milano,senior,,,6,"GAP, EPI, IZI, C ANDIDATE P ROFIL E, MMO",True,"skills, second_pass_hybrid",partial,"{""candidates_count"": 6, ""presented_candidates"": null, ""search_index_hits"": [{""name"": ""GAP"", ""role"": ""Java Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""microservizi"", ""spring boot"", ""spring mvc"", ""ajax"", ""apache tomcat""], ""semantic_snippet"": ""Ha operato in contesti complessi, prevalentemente nel settore bancario e finanziario, con attività di sviluppo, manutenzione evolutiva e integrazione di sistemi. | Esperienza nell’implementazione di servizi REST, microservizi e workflow, con conoscenza di design pattern e metodologie Agile (Scrum/Kanban)."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""EPI"", ""role"": ""Java Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""microservizi"", ""spring"", ""spring boot"", ""azure devops"", ""css""], ""semantic_snippet"": ""Per cliente del settore bancario , ha svolto le seguenti attività: • Sviluppo di software e di piattaforme middleware service-oriented e disaccoppiate utilizzando Java per lo sviluppo back-end e front-end."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""IZI"", ""role"": ""Java Full Stack Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Bergamo"", ""skills"": [""java"", ""microservizi"", ""spring"", ""spring boot"", ""angular"", ""aws (ec2)""], ""semantic_snippet"": ""# 04/2019 - 01/2022 LYNX SPA Fullstack Developer Progetto ELM(KPMG) Ha sviluppato ELM, un’applicazione web progettata per consentire al cliente di gestire in modo efficiente contratti e documenti. | Durante questa esperienza , ha approfondito le mie competenze sia nello sviluppo frontend con React, sia nello sviluppo backend con Spring. | Progetto WEBANK/YOUAPP Ha sviluppato weBank e youApp, due applicazioni native progettate per consentire ai clienti di gestire i propri conti bancari, effettuare trasferimenti di fondi e svolgere tutte le principali operazioni bancarie. | Progetto Eugenio Frontend Developer Ha sviluppato Eugenio, un’applicazione ibrida realizzata con Cordova che consente agli utenti di gestire da remoto la domotica della propria abitazione."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""C ANDIDATE P ROFIL E"", ""role"": ""Java Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Torino"", ""skills"": [""java"", ""microservizi"", ""spring"", ""spring boot"", ""spring mvc"", ""spring security rest""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""MMO"", ""role"": ""Java Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Pescara"", ""skills"": [""java"", ""microservizi"", ""spring boot"", ""api rest"", ""eclipse"", ""git""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""AMO"", ""role"": ""Mobile Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Treviso/remoto"", ""skills"": [""java"", ""microservizi"", ""spring boot"", ""angular"", ""api rest"", ""git""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": true, ""relaxed_criteria"": [""skills"", ""second_pass_hybrid""], ""strict_candidates"": 0, ""total_candidates"": 6}, ""verdict"": ""partial"", ""clarifying_questions"": [""La posizione è esclusivamente onsite a Milano o è possibile lavoro remoto o ibrido?"", ""Qual è il livello di esperienza minimo richiesto per la seniority?"", ""È indispensabile esperienza specifica nel settore bancario o è sufficiente esperienza in progetti simili?""]}",COHERENT_NO_RESULTS,4.6,5,5,4,4,5,"La classificazione strutturata estratta è pienamente coerente con la query: ruolo, seniority, skills (java, spring boot, microservizi), location (Milano) sono tutti correttamente identificati. L'agente ha compreso che si cerca uno sviluppatore Java senior per progetto bancario a Milano.","Tutti i campi estraibili dalla query sono stati catturati: skills, ruolo, location, seniority. La lingua e il work_mode non erano specificati nella query, ma l'agente ha chiesto chiarimenti pertinenti su questi aspetti.","I candidati presentati sono tutti Java Developer con esperienza in Spring Boot e microservizi, e in contesti bancari o finanziari. Tuttavia, nessuno è localizzato a Milano o disponibile onsite, e la ricerca è stata allargata (match_type: hybrid_extension, search_meta.relaxed=true). L'agente lo dichiara chiaramente e propone i profili più vicini, quindi la pertinenza è buona ma non perfetta.","I profili presentati hanno tutte le skill tecniche richieste e seniority adeguata, ma la location non è perfettamente allineata (remoto, Bergamo, Torino, Pescara, Treviso). L'agente segnala la mancanza di candidati perfettamente aderenti e motiva la scelta dei profili proposti.","Gestione eccellente: l'agente dichiara la ricerca allargata, spiega i limiti dei risultati, propone domande di chiarimento mirate e suggerisce come rilassare i vincoli per ampliare la ricerca. Ottima trasparenza e proattività.",Ottima comprensione della query e classificazione strutturata; trasparenza nella presentazione dei risultati; domande di chiarimento pertinenti; gestione corretta della ricerca allargata e dei match parziali.,"Non vengono proposti candidati localizzati a Milano o disponibili onsite, ma questo è dovuto all'assenza nel DB e non a un errore dell'agente. La presentazione dei candidati potrebbe enfatizzare maggiormente la distanza dalla location richiesta.","Evidenziare ancora di più la mancanza di candidati onsite a Milano e, se possibile, proporre soluzioni alternative (es. supporto per relocation, disponibilità a trasferte, ecc.).",5,MODERATE,HIGH,5,AGENT,"La query è chiara, specifica e strutturabile: ruolo, tecnologia, seniority, contesto e location sono espliciti. Un agente competente dovrebbe rispondere correttamente.",25.354,6.425,resp_0cc6f069b998c4ce006aa141ca86c88194a78b74e7c174b0b2
+Avete profili Java disponibili da settembre in full remote?,Java,"Ho trovato diversi profili di Java Developer disponibili da subito in full remote, che possono essere considerati per una disponibilità da settembre. Ecco i primi 3 candidati più rilevanti:
+
+1. SGR
+   - Ruolo: Java Developer
+   - Località: remoto
+   - Seniority: Medium
+   - Disponibilità: Immediata
+   - Competenze: java, eclipse, git, hibernate, jenkins, jpa
+
+2. GAP
+   - Ruolo: Java Developer
+   - Località: remoto
+   - Seniority: Senior
+   - Disponibilità: Immediata
+   - Competenze: java, sql developer, ajax, apache tomcat, css, docker
+
+3. GRU
+   - Ruolo: Java Developer
+   - Località: remoto
+   - Seniority: Senior
+   - Disponibilità: Immediata
+   - Competenze: java, azure devops, ejb, jenkins, junit, microservices
+
+Potrebbero interessarti anche:
+
+4. SSC
+   - Ruolo: Java Developer
+   - Località: remoto
+   - Seniority: Senior
+   - Disponibilità: Immediata
+   - Competenze: java, angular.js, apache velocity, aws, backbone.js, bootstrap
+
+5. CMA
+   - Ruolo: Java Developer
+   - Località: Roma/remoto
+   - Seniority: Medium
+   - Disponibilità: Immediata
+   - Competenze: java, bootstrap, css, github, html, postgresql
+
+6. FCO
+   - Ruolo: Analista Programmatore Java
+   - Località: Torino/remoto
+   - Seniority: Senior
+   - Disponibilità: Immediata
+   - Competenze: java, java ee (ejb, jms), ajax, asp.net core, bootstrap, c#
+
+Tutti i profili sono match stretti con la richiesta e disponibili in modalità remota.
+
+Per migliorare la ricerca, potresti chiarire:
+- La disponibilità da settembre è flessibile o va bene anche immediata?
+- Il full remote è obbligatorio o è accettabile anche una modalità ibrida?
+- Qual è il livello di seniority preferito?
+
+Fammi sapere se vuoi approfondire uno o più profili o se preferisci affinare la ricerca.
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1933,""trigramma"":""SGR""},{""id_mcflash"":1855,""trigramma"":""GAP""},{""id_mcflash"":1900,""trigramma"":""GRU""},{""id_mcflash"":1929,""trigramma"":""SSC""},{""id_mcflash"":1863,""trigramma"":""CMA""},{""id_mcflash"":1897,""trigramma"":""FCO""}]}",,,Java Developer,,,,remote,6,"SGR, GAP, GRU, SSC, CMA",False,,partial,"{""candidates_count"": 6, ""presented_candidates"": [""SGR"", ""GAP"", ""GRU"", ""SSC"", ""CMA"", ""FCO""], ""search_index_hits"": [{""name"": ""SGR"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""eclipse"", ""git"", ""hibernate"", ""jenkins"", ""jpa""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""GAP"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""sql developer"", ""ajax"", ""apache tomcat"", ""css"", ""docker""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""GRU"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""azure devops"", ""ejb"", ""jenkins"", ""junit"", ""microservices""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""SSC"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""angular.js"", ""apache velocity"", ""aws"", ""backbone.js"", ""bootstrap""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""CMA"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Roma/remoto"", ""skills"": [""java"", ""bootstrap"", ""css"", ""github"", ""html"", ""postgresql""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""FCO"", ""role"": ""Analista Programmatore Java"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Torino/remoto"", ""skills"": [""java"", ""java ee (ejb, jms)"", ""ajax"", ""asp.net core"", ""bootstrap"", ""c#""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": false, ""relaxed_criteria"": [], ""strict_candidates"": 6, ""total_candidates"": 6}, ""verdict"": ""partial"", ""clarifying_questions"": [""La disponibilità da settembre è flessibile o immediata va bene?"", ""Il full remote è obbligatorio o è accettabile anche una modalità ibrida?"", ""Qual è il livello di seniority preferito?""]}",COHERENT_MATCH,4.8,5,4,5,5,5,"La classificazione strutturata ha colto correttamente la disciplina (Java Developer), la modalità di lavoro (remote) e la richiesta di disponibilità da settembre è stata gestita con una nota esplicita nella risposta. La disciplina e l'intento della query sono stati pienamente compresi.","Tutti i campi chiave sono stati estratti: ruolo (Java Developer), work_mode (remote). La skill 'java' è implicita nel ruolo e nei candidati. La location non è specificata nella query, quindi è corretto lasciarla vuota. Unico piccolo margine: la seniority non è valorizzata nella classificazione strutturata, ma viene gestita nella risposta e nelle domande di chiarimento.","Tutti i candidati presentati sono Java Developer o Analista Programmatore Java, con esperienza e competenze pertinenti, disponibili in remoto. Il match_type è 'strict' per tutti, quindi la pertinenza è massima rispetto alla query.","I profili presentati hanno tutte le competenze tecniche richieste (Java e stack correlato), sono disponibili in remoto e la disponibilità immediata è gestita con una nota sulla possibilità di considerare la partenza da settembre. Nessun profilo è fuori disciplina o con skill mancanti rilevanti.","La query è chiara ma lascia aperti alcuni dettagli (disponibilità esatta, seniority, accettazione di ibrido). L'agente risponde in modo proattivo, presenta i candidati più vicini e chiede chiarimenti mirati su tutti i punti ambigui, gestendo perfettamente la complessità residua.",Ottima comprensione della disciplina e dell'intento della query. Presentazione trasparente dei candidati più pertinenti. Gestione proattiva delle ambiguità con domande di chiarimento mirate. Nessun errore di disciplina o di presentazione dei profili.,"La classificazione strutturata non valorizza la seniority, che però viene gestita nella risposta testuale. Le skill non sono esplicitate nel campo strutturato, ma sono comunque coperte dal ruolo e dai profili presentati.","Valorizzare la seniority nella classificazione strutturata quando possibile, anche se non esplicitamente richiesta, per migliorare la tracciabilità. Inserire 'java' come skill nel campo strutturato per maggiore completezza.",4,SIMPLE,MEDIUM,3,QUESTION,"La query è chiara ma poco specifica: manca il livello di seniority, i framework Java richiesti e altri dettagli tecnici. La richiesta di disponibilità e remote è esplicita, ma la genericità può portare a risultati poco mirati.",12.047,6.349,resp_0a25970a62786820006aa141eb8d488190b8d35c0ed6723a4c
+"Mi serve un backend developer con Kafka e Kubernetes, almeno 4 anni di esperienza.",Java,"Ho trovato alcuni profili di backend developer con esperienza in Kafka e Kubernetes, con almeno 4 anni di esperienza o seniority adeguata. La ricerca è stata allargata per includere anche risultati parziali, quindi alcuni candidati potrebbero non coprire tutti i requisiti richiesti.
+
+Ecco i top 3 candidati:
+
+1. NBI - Back End Developer (Senior, 37 anni, remoto)
+   - Competenze: Kafka, Kubernetes, Angular, AWS, Chargebee, Docker
+   - Disponibilità: dal 02/01
+   - Match parziale (hybrid_extension), ma copre Kafka e Kubernetes
+
+2. CMA - Java Developer (Medium, 29 anni, Roma/remoto)
+   - Competenze: Kafka, Kubernetes, Docker, Elasticsearch, Hibernate, Java
+   - Disponibilità: immediata
+   - Match parziale (hybrid_extension), copre Kafka e Kubernetes
+
+3. BPA - Full Stack Developer (Lead, Bergamo)
+   - Competenze: Kafka, Kubernetes, Angular, AWS, Docker, Java
+   - Non disponibile al momento
+   - Match parziale (hybrid_extension), copre Kafka e Kubernetes
+
+Potrebbero interessarti anche:
+
+4. RSO - Software Developer (Lead, Parma)
+   - Competenze: Kafka, Kubernetes, Apache Kafka, Adobe AEM, Alfresco, Angular
+   - Non disponibile al momento
+   - Match parziale (hybrid_extension), copre Kafka e Kubernetes
+
+5. ABI - Back End Developer (Medium, 28 anni, Torino/remoto)
+   - Competenze: Java, JavaScript, MySQL, PHP, PostgreSQL, Python
+   - Disponibilità: immediata
+   - Non copre Kafka e Kubernetes (relaxed_skills)
+
+6. JCJ - Back End Developer (Medium, 29 anni, Milano/remoto)
+   - Competenze: AWS, FastAPI, Git, GitHub, Insomnia, Java 17
+   - Disponibilità: immediata
+   - Non copre Kafka e Kubernetes (relaxed_skills)
+
+Domande di chiarimento per migliorare la ricerca:
+- Qual è il livello minimo di esperienza richiesto in anni?
+- È indispensabile che il candidato abbia esperienza specifica con Kafka e Kubernetes o sono preferenze?
+- Il ruolo deve essere esclusivamente backend o sono accettati full stack e altri ruoli simili?
+
+La ricerca è stata allargata soprattutto sulle skill Kafka e Kubernetes per raggiungere un numero sufficiente di candidati. Se vuoi, possiamo provare a rilassare qualche requisito per avere più risultati.
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1807,""trigramma"":""NBI""},{""id_mcflash"":1863,""trigramma"":""CMA""},{""id_mcflash"":null,""trigramma"":""BPA""},{""id_mcflash"":null,""trigramma"":""RSO""},{""id_mcflash"":1887,""trigramma"":""ABI""},{""id_mcflash"":1830,""trigramma"":""JCJ""}]}",,"kafka, kubernetes",backend developer,,,,,6,"NBI, CMA, BPA, RSO, ABI",True,"skills, second_pass_hybrid",partial,"{""candidates_count"": 6, ""presented_candidates"": [""NBI"", ""CMA"", ""BPA"", ""RSO"", ""ABI"", ""JCJ""], ""search_index_hits"": [{""name"": ""NBI"", ""role"": ""Back End Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""kafka"", ""kubernetes"", ""angular"", ""aws"", ""chargebee"", ""docker""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""CMA"", ""role"": ""Java Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Roma/remoto"", ""skills"": [""kafka"", ""kubernetes"", ""docker"", ""elasticsearch"", ""hibernate"", ""java""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""BPA"", ""role"": ""Full Stack Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Bergamo"", ""skills"": [""kafka"", ""kubernetes"", ""angular"", ""aws"", ""docker"", ""java""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""RSO"", ""role"": ""Software Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Parma"", ""skills"": [""apache kafka"", ""kafka"", ""kubernetes"", ""adobe aem"", ""alfresco"", ""angular""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""ABI"", ""role"": ""Back End Developer"", ""match_type"": ""relaxed_skills"", ""missing_skills"": [""kafka"", ""kubernetes""], ""location"": ""Torino/remoto"", ""skills"": [""java"", ""javascript"", ""mysql"", ""php"", ""postgresql"", ""python""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""JCJ"", ""role"": ""Back End Developer"", ""match_type"": ""relaxed_skills"", ""missing_skills"": [""kafka"", ""kubernetes""], ""location"": ""Milano/remoto"", ""skills"": [""aws"", ""fastapi"", ""git"", ""github"", ""insomnia"", ""java 17""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": true, ""relaxed_criteria"": [""skills"", ""second_pass_hybrid""], ""strict_candidates"": 0, ""total_candidates"": 6}, ""verdict"": ""partial"", ""clarifying_questions"": [""Qual è il livello minimo di esperienza richiesto in anni?"", ""È indispensabile che il candidato abbia esperienza specifica con Kafka e Kubernetes o sono preferenze?"", ""Il ruolo deve essere esclusivamente backend o sono accettati full stack e altri ruoli simili?""]}",COHERENT_MATCH,4.6,5,5,4,4,5,"La classificazione strutturata estratta (skills: kafka, kubernetes; role: backend developer) è perfettamente coerente con la query originale. L'agente ha colto l'intento di ricerca di un backend developer con Kafka e Kubernetes, e la seniority è stata gestita tramite la verifica dell'esperienza nei profili presentati.","Tutti i campi estraibili dalla query sono stati catturati: skills (kafka, kubernetes), ruolo (backend developer), e la richiesta di almeno 4 anni di esperienza è stata considerata nella selezione dei candidati. La location e altre preferenze non erano specificate nella query, quindi la loro assenza è corretta.","I candidati presentati sono pertinenti: i primi quattro coprono sia Kafka che Kubernetes, anche se la ricerca è stata allargata (match_type: hybrid_extension). L'agente ha dichiarato correttamente la natura parziale dei match e ha separato i candidati che non coprono le skill richieste (ABI, JCJ).","I profili presentati nei primi posti hanno le skill richieste e una seniority adeguata. Alcuni candidati non sono disponibili, ma la qualità tecnica rispetto ai requisiti è elevata. I candidati con skill mancanti sono stati correttamente etichettati come non pienamente conformi.","La query era chiara ma con possibili ambiguità (anni di esperienza, accettabilità di full stack). L'agente ha gestito bene la complessità: ha dichiarato la ricerca allargata, ha posto domande di chiarimento pertinenti e ha spiegato i limiti dei risultati.",Ottima coerenza tra query e classificazione; gestione trasparente della ricerca allargata; presentazione chiara dei candidati con motivazioni; domande di chiarimento mirate e utili.,"Alcuni candidati non sono immediatamente disponibili, e la distinzione tra livelli di seniority nei profili presentati potrebbe essere esplicitata meglio. La motivazione sulla seniority è un po' generica.","Esplicitare per ogni candidato gli anni di esperienza effettivi quando disponibili, per allinearsi meglio alla richiesta di almeno 4 anni. Evidenziare la disponibilità immediata come criterio di priorità nella presentazione dei candidati.",5,MODERATE,HIGH,5,AGENT,"La query è chiara, specifica e strutturabile: ruolo, tecnologie e seniority sono espliciti. Un agente competente dovrebbe rispondere correttamente.",13.942,6.396,resp_0776b645689f19a0006aa14200193c819087d2a2dece3fd818
+Cerchiamo un Java developer che abbia lavorato su architetture event driven.,Java,"Ho trovato diversi Java developer che corrispondono alla tua richiesta di competenze Java e hanno esperienza in architetture correlate come microservizi, che possono essere parzialmente rilevanti per architetture event driven.
+
+Ecco i top 3 candidati:
+
+1. GRU
+   - Ruolo: Java Developer
+   - Località: remoto
+   - Seniority: Senior
+   - Disponibilità: Immediata
+   - Competenze rilevanti: java, azure devops, ejb, jenkins, junit, microservices
+   - Nessuna skill mancante segnalata
+
+2. MVI
+   - Ruolo: Java Developer
+   - Località: Torino/remoto
+   - Seniority: Senior
+   - Disponibilità: Immediata
+   - Competenze rilevanti: java, azure ad, docker, extjs, git, javascript
+   - Nessuna skill mancante segnalata
+   - Evidenza: esperienza su architetture a microservizi e ambienti cloud, sviluppo backend con Java 17, Spring Boot, REST API
+
+3. MZI
+   - Ruolo: Java Developer
+   - Località: Milano/remoto
+   - Seniority: Junior
+   - Disponibilità: entro 20 giorni
+   - Competenze rilevanti: java, angular, docker, git, google cloud platform, javascript
+   - Nessuna skill mancante segnalata
+   - Evidenza: opera su architetture a microservizi sviluppando API REST e logiche backend
+
+Potrebbero interessarti anche:
+
+4. GAP
+   - Ruolo: Java Developer
+   - Località: remoto
+   - Seniority: Senior
+   - Disponibilità: Immediata
+   - Competenze rilevanti: java, sql developer, ajax, apache tomcat, css, docker
+   - Nessuna skill mancante segnalata
+
+5. SGR
+   - Ruolo: Java Developer
+   - Località: remoto
+   - Seniority: Medium
+   - Disponibilità: Immediata
+   - Competenze rilevanti: java, eclipse, git, hibernate, jenkins, jpa
+   - Nessuna skill mancante segnalata
+
+6. SPA
+   - Ruolo: Java Developer
+   - Località: remoto
+   - Seniority: Junior
+   - Disponibilità: entro 15 giorni
+   - Competenze rilevanti: java, css, dbeaver, git, hibernate, html
+   - Nessuna skill mancante segnalata
+
+La ricerca ha prodotto risultati parziali, perché non tutti i candidati hanno esperienza esplicita su architetture event driven, ma molti hanno esperienza su microservizi, che potrebbe essere rilevante.
+
+Per migliorare la ricerca, potresti chiarire:
+- Se serve esperienza specifica su architetture event driven o va bene anche esperienza su microservizi.
+- Quali tecnologie event driven sono richieste o preferite.
+- Se considerare esperienza in microservizi come parzialmente rilevante.
+
+Se vuoi, posso aiutarti a raffinare la ricerca in base a queste informazioni.
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1900,""trigramma"":""GRU""},{""id_mcflash"":1886,""trigramma"":""MVI""},{""id_mcflash"":1871,""trigramma"":""MZI""},{""id_mcflash"":1855,""trigramma"":""GAP""},{""id_mcflash"":1933,""trigramma"":""SGR""},{""id_mcflash"":1605,""trigramma"":""SPA""}]}",,java,Java developer,,,,,6,"GRU, MVI, MZI, GAP, SGR",False,,partial,"{""candidates_count"": 6, ""presented_candidates"": [""GRU"", ""MVI"", ""MZI"", ""GAP"", ""SGR"", ""SPA""], ""search_index_hits"": [{""name"": ""GRU"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""azure devops"", ""ejb"", ""jenkins"", ""junit"", ""microservices""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""MVI"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Torino/remoto"", ""skills"": [""java"", ""azure ad"", ""docker"", ""extjs"", ""git"", ""javascript""], ""semantic_snippet"": ""Specializzata nello sviluppo backend con Java 17, Spring Boot, Spring JPA e REST API, operando su architetture a microservizi e ambienti cloud. | # 1998 Laurea in Scienze dell’Informazione, Università degli Studi di Torino (110/110) Nov 2002 – Apr 2025 Openwave Java Fullstack Developer Progettazione e sviluppo di API REST per la gestione utenti e domini Integrazione con CRM per automazione del provisioning utenti Sviluppo backend su architetture cloud a microservizi Realizzazione interfacce web di delega amministrativa con SSO Implementazione autenticazione tramite Azure AD e SAML Sviluppo e customizzazione di webmail whitelabel per clienti Telco Refactoring completo di piattaforme legacy da ASP a Java Integrazione di servizi PEC conformi ai requisiti ministeriali Introduzione di 2FA e modernizzazione architetturale Collaborazione con team globali e supporto ai rilasci CI/CD Tecnologie utilizzate:Java 17, Spring Boot, Spring JPA, REST API, Tomcat, Swagger, LDAP, JavaScript, ExtJS, React, Redux, SCSS, Azure AD, SAML, SOAP, Oracle, SQL, Docker, Git, Jira, Bitbucket, Bamboo Atos (Engineering) Gen 1999 – Ott 2002 Java Developer Svil | # 1998 Laurea in Scienze dell’Informazione, Università degli Studi di Torino (110/110) WORK EXPERIENCES Nov 2002 – Apr 2025 Openwave Java Fullstack Developer Progettazione e sviluppo di API REST per la gestione utenti e domini Integrazione con CRM per automazione del provisioning utenti Sviluppo backend su architetture cloud a microservizi Realizzazione interfacce web di delega amministrativa con SSO Implementazione autenticazione tramite Azure AD e SAML Sviluppo e customizzazione di webmail whitelabel per clienti Telco Refactoring completo di piattaforme legacy da ASP a Java Integrazione di servizi PEC conformi ai requisiti ministeriali Introduzione di 2FA e modernizzazione architetturale Collaborazione con team globali e supporto ai rilasci CI/CD Tecnologie utilizzate:Java 17, Spring Boot, Spring JPA, REST API, Tomcat, Swagger, LDAP, JavaScript, ExtJS, React, Redux, SCSS, Azure AD, SAML, SOAP, Oracle, SQL, Docker, Git, Jira, Bitbucket, Bamboo Atos (Engineering) Gen 1999 – Ott 2002 Ja"", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""MZI"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Milano/remoto"", ""skills"": [""java"", ""angular"", ""docker"", ""git"", ""google cloud platform"", ""javascript""], ""semantic_snippet"": ""Opera su architetture a microservizi sviluppando API REST, logiche backend."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""GAP"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""sql developer"", ""ajax"", ""apache tomcat"", ""css"", ""docker""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""SGR"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""eclipse"", ""git"", ""hibernate"", ""jenkins"", ""jpa""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""SPA"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""css"", ""dbeaver"", ""git"", ""hibernate"", ""html""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": false, ""relaxed_criteria"": [], ""strict_candidates"": 6, ""total_candidates"": 6}, ""verdict"": ""partial"", ""clarifying_questions"": [""Il candidato ha esperienza specifica con architetture event driven o solo microservizi?"", ""Quali tecnologie event driven sono richieste o preferite per il ruolo?"", ""È possibile considerare esperienza in microservizi come parzialmente rilevante per architetture event driven?""]}",COHERENT_NO_RESULTS,4.4,5,4,4,4,5,"La classificazione strutturata ha colto correttamente la disciplina (Java developer) e la skill principale (java). L'agente ha compreso che la richiesta verte su esperienza in architetture event driven, anche se questa non è stata esplicitamente estratta come skill strutturata, ma è stata gestita nella motivazione e nelle domande di chiarimento.","Sono stati estratti i campi principali (skills, ruolo). Manca la valorizzazione esplicita di 'architetture event driven' come skill, ma l'agente la gestisce a livello di motivazione e domande. Location, seniority, language e work_mode sono vuoti, ma non erano specificati nella query, quindi la copertura è buona.","Tutti i candidati presentati sono Java developer, con esperienza su microservizi e architetture moderne, che sono parzialmente rilevanti per la richiesta. L'agente dichiara correttamente che nessuno ha esperienza esplicita su architetture event driven, ma che l'esperienza su microservizi può essere affine.","I profili sono tecnicamente solidi per la parte Java e microservizi, che è la competenza più vicina disponibile nel DB. L'agente non presenta candidati palesemente incompatibili e segnala l'assenza di esperienza specifica su event driven.","Gestione eccellente di una query con requisito difficile da trovare (event driven). L'agente spiega il limite dei risultati, propone match parziali e formula domande di chiarimento mirate per raffinare la ricerca.","Ottima gestione della mancanza di candidati perfettamente aderenti, con disclaimer chiaro e domande di chiarimento. Classificazione della disciplina corretta. Presentazione trasparente dei limiti dei profili trovati.","La skill 'architetture event driven' non è stata estratta come campo strutturato, ma solo gestita a livello testuale. Un campo 'event driven' valorizzato avrebbe migliorato la precisione della ricerca e la tracciabilità.","Integrare la capacità di estrarre e valorizzare come skill strutturata la richiesta di esperienza su 'architetture event driven', anche se non presente come keyword standard, per migliorare la precisione e la trasparenza della classificazione.",5,MODERATE,HIGH,4,AGENT,"La query è chiara, specifica sia sul linguaggio che sull'esperienza richiesta (event driven). Un agente competente dovrebbe rispondere correttamente.",16.963,6.458,resp_0a95bc75ac725b72006aa14215ba208190b65441ff1ba33ac8
+Profilo Java + Angular full stack zona Torino ibrido.,Java,"Ho trovato alcuni profili di Full Stack Developer con competenze Java e Angular, in modalità ibrida o con disponibilità remota, anche se nessuno è localizzato esattamente a Torino in modalità ibrida. La ricerca è stata allargata per includere candidati con modalità di lavoro simili.
+
+Ecco i top 3 candidati:
+
+1. ACA
+   - Ruolo: Full Stack Developer
+   - Località: Napoli/remoto
+   - Seniority: Senior
+   - Competenze: Java, Angular (matched skills)
+   - Disponibilità: circa 45 giorni
+   - Note: profilo con competenze aggiuntive come Android Studio, Azure DevOps, C#, Git
+
+2. BFE
+   - Ruolo: Full Stack Developer
+   - Località: remoto
+   - Seniority: Senior
+   - Competenze: Java, Angular (matched skills)
+   - Disponibilità: immediata
+   - Lingua: Inglese avanzato
+
+3. AKY
+   - Ruolo: Full Stack Developer
+   - Località: remoto
+   - Seniority: Senior
+   - Competenze: Java, Angular (matched skills)
+   - Disponibilità: immediata
+   - Lingua: Inglese intermedio
+
+Potrebbero interessarti anche:
+
+4. MMA
+   - Ruolo: Full Stack Developer
+   - Località: remoto
+   - Seniority: Senior
+   - Competenze: Java, Angular (matched skills)
+   - Disponibilità: immediata
+
+5. DBU
+   - Ruolo: Full Stack Developer
+   - Località: Roma/remoto
+   - Seniority: Senior
+   - Competenze: Java, Angular (matched skills)
+   - Disponibilità: circa 30 giorni
+
+6. RFE
+   - Ruolo: Full Stack Developer
+   - Località: Caserta
+   - Seniority: Senior
+   - Competenze: Java, Angular (matched skills)
+   - Disponibilità: non disponibile
+   - Nota: match parziale — non copre tutti i vincoli richiesti
+
+Domande per migliorare la ricerca:
+- La zona Torino è vincolante o è possibile considerare candidati in remoto o in altre città con modalità ibrida?
+- Il workmode ibrido è obbligatorio o è accettabile anche remoto o presenza totale?
+- Qual è la priorità tra competenze tecniche e localizzazione?
+
+Se vuoi, posso aiutarti a rilassare qualche requisito per trovare più candidati.
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1753,""trigramma"":""ACA""},{""id_mcflash"":1744,""trigramma"":""BFE""},{""id_mcflash"":1745,""trigramma"":""AKY""},{""id_mcflash"":1857,""trigramma"":""MMA""},{""id_mcflash"":1754,""trigramma"":""DBU""},{""id_mcflash"":null,""trigramma"":""RFE""}]}",,"java, angular",full stack developer,Torino,,,hybrid,6,"ACA, BFE, AKY, MMA, DBU",True,second_pass_hybrid,partial,"{""candidates_count"": 6, ""presented_candidates"": [""ACA"", ""BFE"", ""AKY"", ""MMA"", ""DBU"", ""RFE""], ""search_index_hits"": [{""name"": ""ACA"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Napoli/remoto"", ""skills"": [""angular"", ""java"", ""android studio"", ""azure devops"", ""c#"", ""git""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""BFE"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""android java"", ""angular"", ""angular 18"", ""angular js"", ""angular material"", ""java""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""AKY"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""angular"", ""java"", ""java ee"", ""apache"", ""bitbucket"", ""confluence""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""MMA"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""angular"", ""angular material"", ""java"", ""ant design"", ""api"", ""autodesk 3ds max""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""DBU"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Roma/remoto"", ""skills"": [""angular"", ""java"", ""angular 8"", ""azure"", ""bootstrap"", ""css""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""RFE"", ""role"": ""Full Stack Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Caserta"", ""skills"": [""angular"", ""angular material"", ""angular signals"", ""java"", ""azure devops"", ""azure service bus""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": true, ""relaxed_criteria"": [""second_pass_hybrid""], ""strict_candidates"": 5, ""total_candidates"": 6}, ""verdict"": ""partial"", ""clarifying_questions"": [""La zona Torino è vincolante o è possibile considerare candidati in remoto o in altre città con modalità ibrida?"", ""Il workmode ibrido è obbligatorio o è accettabile anche remoto o presenza totale?"", ""Qual è la priorità tra competenze tecniche e localizzazione?""]}",COHERENT_NO_RESULTS,4.6,5,5,4,4,5,"La classificazione strutturata è perfettamente coerente con la query: skills (java, angular), ruolo (full stack developer), location (Torino), work_mode (hybrid). L'agente ha compreso l'intento della richiesta (full stack Java+Angular in zona Torino, ibrido).","Tutti i campi estraibili dalla query sono stati correttamente popolati: skills, ruolo, location, work_mode. La seniority e la lingua non erano specificate nella query e sono state lasciate vuote, come appropriato.","I candidati presentati sono tutti Full Stack Developer con Java e Angular, ma nessuno è esattamente su Torino in modalità ibrida. L'agente dichiara correttamente che la ricerca è stata allargata e che i profili sono i più vicini disponibili. I candidati sono comunque pertinenti per disciplina e skill, anche se la location non è perfetta.","Tutti i profili presentati hanno le skill richieste e sono senior, come tipicamente richiesto per questo tipo di ricerca. La location non è perfetta, ma l'agente lo dichiara e non presenta candidati palesemente incompatibili.","Gestione eccellente di una query con vincolo geografico difficile: l'agente spiega la situazione, propone match parziali, dichiara la ricerca allargata e pone domande di chiarimento mirate per sbloccare la ricerca. Comportamento ottimale.",Ottima comprensione della query e dei vincoli; estrazione completa dei campi; trasparenza nella presentazione dei limiti della ricerca; domande di chiarimento pertinenti; nessun candidato incoerente proposto.,"Nessuna debolezza significativa: l'unico limite è l'assenza di candidati perfettamente in linea con la location, ma questo è dovuto al DB e non all'agente.","Se disponibile, evidenziare eventuali candidati che potrebbero valutare un trasferimento o una presenza parziale a Torino, oppure proporre esplicitamente una ricerca su profili relocalizzabili. Continuare a porre domande di chiarimento per sbloccare ricerche con vincoli stringenti.",4,MODERATE,HIGH,4,AGENT,"La query è chiara e specifica: cerca un profilo full stack con competenze Java e Angular, localizzato a Torino con modalità ibrida. Tutti i campi principali sono espliciti; eventuali errori sono probabilmente dovuti all'agente.",17.371,5.778,resp_09b8ad5b1723cc88006aa1422eb6e08197b8393e0c74b3965e
+Avete qualcuno con esperienza Quarkus?,Java,"Ho trovato diversi candidati con esperienza in Quarkus. Ecco una selezione dei migliori:
+
+Top 3 candidati con esperienza Quarkus:
+
+1. CMA - Java Developer, 29 anni, seniority media, disponibile immediatamente, località Roma/remoto
+   - Competenze rilevanti: quarkus, docker, elasticsearch, hibernate, java, jenkins / ci/cd
+   - Nessuna skill mancante
+
+2. DBE - Angular Developer, 26 anni, seniority media, disponibile in 20 giorni, località Torino/remoto
+   - Competenze rilevanti: quarkus, angular, ci/cd, git, github, gradle
+   - Nessuna skill mancante
+
+3. RTA - Full Stack Developer, 31 anni, seniority senior, disponibile in 20 giorni, località remoto
+   - Competenze rilevanti: quarkus, .net core, bun, c#, go, htmx
+   - Nessuna skill mancante
+
+Potrebbero interessarti anche:
+
+4. GCO - Full Stack Developer, 25 anni, seniority media, disponibile immediatamente, località remoto
+   - Competenze rilevanti: quarkus, ajax, angular 10, angular 11, angular 16, angular 5
+   - Nessuna skill mancante
+
+5. MMA - Full Stack Developer, 31 anni, seniority senior, disponibile immediatamente, località remoto
+   - Competenze rilevanti: quarkus, api rest, camunda, confluence, db2, express
+   - Nessuna skill mancante
+
+6. EBO - Java Developer, senior, località Vicenza, non disponibile al momento
+   - Competenze rilevanti: quarkus, aws, aws cdk, bitbucket, dynamodb, elasticsearch
+   - Nessuna skill mancante
+   - Match parziale — non copre tutti i vincoli richiesti
+
+Se vuoi posso aiutarti a valutare meglio uno di questi profili o a cercare candidati con requisiti più specifici.
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1863,""trigramma"":""CMA""},{""id_mcflash"":1734,""trigramma"":""DBE""},{""id_mcflash"":1915,""trigramma"":""RTA""},{""id_mcflash"":1781,""trigramma"":""GCO""},{""id_mcflash"":1857,""trigramma"":""MMA""},{""id_mcflash"":null,""trigramma"":""EBO""}]}",,quarkus,,,,,,6,"CMA, DBE, RTA, GCO, MMA",True,second_pass_hybrid,strong,"{""candidates_count"": 6, ""presented_candidates"": [""CMA"", ""DBE"", ""RTA"", ""GCO"", ""MMA"", ""EBO""], ""search_index_hits"": [{""name"": ""CMA"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Roma/remoto"", ""skills"": [""quarkus"", ""docker"", ""elasticsearch"", ""hibernate"", ""java"", ""jenkins / ci/cd""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""DBE"", ""role"": ""Angular Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Torino/remoto"", ""skills"": [""quarkus"", ""angular"", ""ci/cd"", ""git"", ""github"", ""gradle""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""RTA"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""quarkus"", "".net core"", ""bun"", ""c#"", ""go"", ""htmx""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""GCO"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""quarkus"", ""ajax"", ""angular 10"", ""angular 11"", ""angular 16"", ""angular 5""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""MMA"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""quarkus"", ""api rest"", ""camunda"", ""confluence"", ""db2"", ""express""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""EBO"", ""role"": ""Java Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Vicenza"", ""skills"": [""quarkus"", ""aws"", ""aws cdk"", ""bitbucket"", ""dynamodb"", ""elasticsearch""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": true, ""relaxed_criteria"": [""second_pass_hybrid""], ""strict_candidates"": 5, ""total_candidates"": 6}, ""verdict"": ""strong"", ""clarifying_questions"": null}",COHERENT_MATCH,5.0,5,5,5,5,5,"La query chiedeva candidati con esperienza Quarkus. La classificazione strutturata ha estratto correttamente la skill 'quarkus' come unico vincolo, senza forzare ruolo, location o seniority che non erano specificati. L'agente ha compreso perfettamente l'intento della richiesta.","Tutti i campi estraibili dalla query sono stati correttamente valorizzati: la skill Quarkus è stata estratta, mentre gli altri campi sono lasciati vuoti in modo appropriato dato che la query non li specificava.","Tutti i candidati presentati hanno Quarkus tra le competenze, come richiesto. I match sono 'strict' tranne uno (EBO) che è 'hybrid_extension' e viene correttamente presentato come match parziale. La disciplina (Java/Full Stack) è coerente con l'ecosistema Quarkus.","I profili presentati hanno tutti esperienza con Quarkus e, dove specificato, anche competenze Java o full stack, che sono coerenti con l'utilizzo di Quarkus. Non ci sono profili palesemente fuori contesto o con skill mancanti.","La query era semplice ma aperta (nessun altro vincolo oltre Quarkus). L'agente ha risposto in modo esaustivo, presentando una selezione ordinata e offrendo supporto per eventuali ricerche più specifiche. La gestione è eccellente.","Estrazione precisa della skill richiesta, presentazione chiara e ordinata dei candidati, corretta gestione dei match parziali, nessuna forzatura su campi non specificati.",Nessuna debolezza rilevante in questo scenario; la risposta è completa e ben calibrata rispetto alla query.,"Per domande così generiche, si potrebbe aggiungere una breve nota su eventuali skill/ruoli tipici associati a Quarkus per aiutare il cliente a raffinare la ricerca, ma la risposta attuale è già ottimale.",4,SIMPLE,MEDIUM,3,QUESTION,"La query è chiara ma poco strutturata: manca il ruolo, la seniority e altri dettagli tecnici. È facile capire che serve esperienza su Quarkus, ma non è specificato altro.",18.852,5.414,resp_0c7e7ca155804398006aa14247c7608194a5f03b44e7fc8528
+Cerco uno sviluppatore backend con Java 17 e Docker.,Java,"Ho trovato alcuni sviluppatori backend con competenze in Java 17 e Docker, anche se nessuno soddisfa entrambi i requisiti in modo completo; la ricerca è stata allargata per mostrare i profili più rilevanti.
+
+Ecco i top 3 candidati:
+
+1. JCJ - Back End Developer, Milano/remoto
+   - Disponibilità: Immediata
+   - Seniority: Medium
+   - Competenze rilevanti: java 17
+   - Competenze mancanti: docker
+   - Lingue: Inglese Intermedio
+
+2. NBI - Back End Developer, remoto
+   - Disponibilità: dal 02/01
+   - Seniority: Senior
+   - Competenze rilevanti: docker
+   - Competenze mancanti: java 17
+   - Lingue: Inglese Buono
+
+3. ABI - Back End Developer, Torino/remoto
+   - Disponibilità: Immediata
+   - Seniority: Medium
+   - Competenze rilevanti: nessuna delle due richieste
+   - Competenze mancanti: java 17, docker
+   - Lingue: Inglese Intermedio
+
+Potrebbero interessarti anche:
+
+4. SCO - Back End/Fullstack Developer, remoto
+   - Disponibilità: Immediata
+   - Seniority: Junior
+   - Competenze rilevanti: nessuna delle due richieste
+   - Competenze mancanti: java 17, docker
+   - Lingue: Inglese Intermedio
+
+5. VTO - Developer COBOL/Backend, Milano/remoto
+   - Disponibilità: Immediata
+   - Seniority: Senior
+   - Competenze rilevanti: nessuna delle due richieste
+   - Competenze mancanti: java 17, docker
+   - Lingue: Inglese Base
+
+6. LCU - Backend Developer Rust, Napoli/remoto
+   - Disponibilità: Immediata
+   - Seniority: Junior
+   - Competenze rilevanti: nessuna delle due richieste
+   - Competenze mancanti: java 17, docker
+   - Lingue: Inglese Intermedio
+
+Domande per migliorare la ricerca:
+- È indispensabile che il candidato abbia esperienza specifica con Java 17 o è sufficiente una conoscenza generica di Java?
+- Quanto è importante la conoscenza di Docker rispetto a Java 17?
+- Il ruolo deve essere esclusivamente backend o sono accettati profili fullstack o con altre specializzazioni?
+
+La ricerca è stata allargata perché non sono stati trovati candidati che soddisfano entrambi i requisiti Java 17 e Docker in modo stretto. Se vuoi, possiamo provare a rilassare qualche requisito per trovare più candidati adatti.
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1830,""trigramma"":""JCJ""},{""id_mcflash"":1807,""trigramma"":""NBI""},{""id_mcflash"":1887,""trigramma"":""ABI""},{""id_mcflash"":1688,""trigramma"":""SCO""},{""id_mcflash"":1770,""trigramma"":""VTO""},{""id_mcflash"":1670,""trigramma"":""LCU""}]}",,"java 17, docker",sviluppatore backend,,,,,6,"JCJ, NBI, ABI, SCO, VTO",True,skills,partial,"{""candidates_count"": 6, ""presented_candidates"": [""JCJ"", ""NBI"", ""ABI"", ""SCO"", ""VTO"", ""LCU""], ""search_index_hits"": [{""name"": ""JCJ"", ""role"": ""Back End Developer"", ""match_type"": ""relaxed_skills"", ""missing_skills"": [""docker""], ""location"": ""Milano/remoto"", ""skills"": [""java 17"", ""java"", ""aws"", ""fastapi"", ""git"", ""github""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""NBI"", ""role"": ""Back End Developer"", ""match_type"": ""relaxed_skills"", ""missing_skills"": [""java 17""], ""location"": ""remoto"", ""skills"": [""docker"", ""java"", ""angular"", ""aws"", ""chargebee"", ""electroneek""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""ABI"", ""role"": ""Back End Developer"", ""match_type"": ""relaxed_skills"", ""missing_skills"": [""java 17"", ""docker""], ""location"": ""Torino/remoto"", ""skills"": [""java"", ""javascript"", ""mysql"", ""php"", ""postgresql"", ""python""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""SCO"", ""role"": ""Back End/Fullstack Developer"", ""match_type"": ""relaxed_skills"", ""missing_skills"": [""java 17"", ""docker""], ""location"": ""remoto"", ""skills"": [""java"", ""bootstrap"", ""c#"", ""css3"", ""express"", ""gcc""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""VTO"", ""role"": ""Developer COBOL/Backend"", ""match_type"": ""relaxed_skills"", ""missing_skills"": [""java 17"", ""docker""], ""location"": ""Milano/remoto"", ""skills"": [""actuate reporting"", ""bi qlik"", ""cobol"", ""crystal report"", ""css"", ""delphi""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""LCU"", ""role"": ""Backend Developer Rust"", ""match_type"": ""relaxed_skills"", ""missing_skills"": [""java 17"", ""docker""], ""location"": ""Napoli/remoto"", ""skills"": [""axum"", ""deno"", ""express.js"", ""grpc"", ""javascript"", ""lettre""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": true, ""relaxed_criteria"": [""skills""], ""strict_candidates"": 0, ""total_candidates"": 6}, ""verdict"": ""partial"", ""clarifying_questions"": [""È indispensabile che il candidato abbia esperienza specifica con Java 17 o è sufficiente una conoscenza generica di Java?"", ""Quanto è importante la conoscenza di Docker rispetto a Java 17?"", ""Il ruolo deve essere esclusivamente backend o sono accettati profili fullstack o con altre specializzazioni?""]}",COHERENT_NO_RESULTS,4.6,5,5,4,4,5,"La classificazione strutturata riflette perfettamente la query: ruolo backend, skills Java 17 e Docker. L'agente ha compreso l'intento e la disciplina richiesta.","Tutti i campi estraibili dalla query sono stati correttamente popolati: skills, ruolo. Location, seniority, lingua e work_mode non erano specificati nella query e sono lasciati vuoti, come appropriato.","I candidati presentati sono tutti backend developer, coerenti con la disciplina richiesta. Nessuno soddisfa entrambi i requisiti (Java 17 e Docker) ma i primi due coprono almeno uno dei due. L'agente dichiara correttamente la ricerca allargata e la mancanza di match perfetti.","I profili presentati sono i più vicini disponibili nel DB: JCJ ha Java 17 ma non Docker, NBI ha Docker ma non Java 17. Gli altri sono più distanti ma sono presentati come opzioni aggiuntive. La qualità è la migliore ottenibile dato il DB.","Gestione eccellente di una situazione di assenza di match perfetti: l'agente spiega la ricerca allargata, presenta i candidati più vicini, fornisce disclaimer e propone domande di chiarimento per migliorare la ricerca.",Ottima comprensione della query e della disciplina richiesta. Gestione trasparente della mancanza di match perfetti. Presentazione chiara dei candidati con evidenza delle competenze mancanti. Domande di chiarimento pertinenti.,"Nessuna debolezza significativa; la presentazione dei candidati che non hanno nessuna delle due skill richieste potrebbe essere omessa o ulteriormente declassata, ma è comunque dichiarata come opzione aggiuntiva.","Potrebbe essere utile ordinare i candidati in base alla copertura delle skill richieste e separare chiaramente i profili che non hanno nessuna delle due competenze, per evitare confusione. Eventualmente, suggerire esplicitamente di ampliare la ricerca a Java generico o altri stack backend se il cliente è flessibile.",5,SIMPLE,HIGH,5,AGENT,"La query è chiara, specifica e facilmente strutturabile (ruolo, skill, versione Java, Docker). Un agente competente dovrebbe rispondere senza problemi.",15.672,6.13,resp_0223639c30fd200a006aa1426176448196abc68d2c6047e657
+Team già formato su stack Java/Spring?,Java,"Hai richiesto un team già formato su stack Java/Spring. Attualmente il sistema non trova team completi ma propone candidati singoli con esperienza consolidata in Java e Spring, molti dei quali hanno lavorato in team Agile/Scrum e con metodologie di sviluppo collaborative.
+
+Ecco i primi 3 candidati più rilevanti:
+
+1. MMA - Full Stack Developer, Senior, disponibile immediatamente, remoto
+   - Competenze: java, spring, spring data, spring mvc, spring web, spring boot
+   - Evidenza: Ha collaborato in team cross-funzionali Agile/Scrum, sviluppando e mantenendo applicativi per la pubblica amministrazione.
+   
+2. FDC - Full Stack Developer, Senior, disponibile immediatamente, remoto
+   - Competenze: java, spring, angular, coremedia, dbeaver, docker
+   - Evidenza: Ha lavorato in team su una webapp a microservizi con metodologia Agile Scrum e gestione ticketing Jira.
+   
+3. ABI - Back End Developer, Medium, disponibile immediatamente, Torino/remoto
+   - Competenze: java, spring, javascript, mysql, php, postgresql
+   - Evidenza: Inserito nel Core Backend Team, ha sviluppato funzionalità backend in architettura a microservizi con Java e Spring in contesti ad alta scalabilità.
+
+Potrebbero interessarti anche:
+
+4. TLA - Front End Developer, Junior, disponibile immediatamente, Torino/remoto
+   - Competenze: java, spring, spring boot, apache camel, as400, jenkins
+   - Evidenza: Dimostra capacità di problem solving e collaborazione in team Agile.
+   
+5. ECA - System Administrator/Cloud Engineer, Senior, disponibile immediatamente, remoto
+   - Competenze: java, spring, angular, bootstrap, c++, ci/cd
+   - Evidenza: Ha collaborato con team per nuove feature e manutenzione, con esperienza full-stack.
+   
+6. LAC - Software Tester, Medium, disponibile immediatamente, Torino/remoto
+   - Competenze: java, spring, c#, css, excel, html
+   - Evidenza: Ha lavorato in team di sviluppo per garantire la qualità del software su vari progetti.
+
+La ricerca ha prodotto risultati parziali, focalizzati su singoli candidati con esperienza in team, ma non su team già formati.
+
+Per migliorare la ricerca, potresti chiarire:
+- Il team deve essere già formato o può andare bene anche un candidato singolo con esperienza in team?
+- È importante che il candidato abbia esperienza specifica con metodologie Agile/Scrum nel contesto Java/Spring?
+- Si richiede esperienza anche in frontend o solo backend Java/Spring?
+
+Fammi sapere come preferisci procedere!
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1857,""trigramma"":""MMA""},{""id_mcflash"":1750,""trigramma"":""FDC""},{""id_mcflash"":1887,""trigramma"":""ABI""},{""id_mcflash"":1908,""trigramma"":""TLA""},{""id_mcflash"":1866,""trigramma"":""ECA""},{""id_mcflash"":1742,""trigramma"":""LAC""}]}",,"java, spring",,,,,,6,"MMA, FDC, ABI, TLA, ECA",False,,partial,"{""candidates_count"": 6, ""presented_candidates"": [""MMA"", ""FDC"", ""ABI"", ""TLA"", ""ECA"", ""LAC""], ""search_index_hits"": [{""name"": ""MMA"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""spring"", ""spring data"", ""spring mvc"", ""spring web"", ""spring boot""], ""semantic_snippet"": ""Collaborazione con il team su integrazioni REST API tra microservizi. | Lavoro in team cross-funzionale secondo metodologia Agile/Scrum. 06/2023 – 05/2025 Sistemi Informativi, an IBM company Full Stack Developer Full remote Sviluppo di nuove funzionalità e mantenimento di grandi applicativi nel settore della pubblica amministrazione, in particolare per il Comune di Milano. | Sviluppo e manutenzione backend con Spring Boot e JPA, integrazione REST API e collaborazione in team Agile/Scrum. | Caratterizzata da un forte orientamento all’apprendimento e alla crescita tecnica, ha mostrato ottime capacità di collaborazione in ambienti Agile, dimostrando spirito di iniziativa, affidabilità e un’eccellente attitudine al lavoro in team ."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""FDC"", ""role"": ""Full Stack Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""spring"", ""angular"", ""coremedia"", ""dbeaver"", ""docker""], ""semantic_snippet"": ""Dal 1/2023 al 10/2023 Contrader Full Stack Developer Attività: Sviluppo in team di una webapp a microservizi che consente di gestire | Per il versioning del codice Github, il tutto gestito con la metodologia Agile Scrum e ticketing di Jira."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""ABI"", ""role"": ""Back End Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Torino/remoto"", ""skills"": [""java"", ""spring"", ""javascript"", ""mysql"", ""php"", ""postgresql""], ""semantic_snippet"": ""# 2024 Laurea Triennale in Ingegneria Informatica ed Elettronica, Università degli Studi di Pavia WORK EXPERIENCES Set 2025 – Nov 2025 Satispay Backend Engineer Inserimento nel Core Backend Team nell’area notifiche Estensione e manutenzione di API RESTful Sviluppo di funzionalità backend in architettura a microservizi Utilizzo di Java e Spring in contesti ad alta scalabilità Partecipazione a code review e attività di testing Lavoro in team Agile/Scrum con standup e refinement Tecnologie utilizzate: Java, Spring, REST API, Microservizi, Git, Agile/Scrum Feb 2021 – Ago 2025 Sipal S.p.A. | # 2024 Laurea Triennale in Ingegneria Informatica ed Elettronica, Università degli Studi di Pavia Set 2025 – Nov 2025 Satispay Backend Engineer Inserimento nel Core Backend Team nell’area notifiche Estensione e manutenzione di API RESTful Sviluppo di funzionalità backend in architettura a microservizi Utilizzo di Java e Spring in contesti ad alta scalabilità Partecipazione a code review e attività di testing Lavoro in team Agile/Scrum con standup e refinement Tecnologie utilizzate: Java, Spring, REST API, Microservizi, Git, Agile/Scrum Feb 2021 – Ago 2025 Sipal S.p.A."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""TLA"", ""role"": ""Front End Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Torino/remoto"", ""skills"": [""java"", ""spring"", ""spring boot"", ""apache camel"", ""as400"", ""jenkins""], ""semantic_snippet"": ""Dimostra capacità di problem solving, mentoring e collaborazione in team Agile, con attenzione alla qualità del codice e alla scalabilità delle soluzioni."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""ECA"", ""role"": ""System Administrator/Cloud Engineer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""spring"", ""angular"", ""bootstrap"", ""c++"", ""ci/cd""], ""semantic_snippet"": ""con Angular, TypeScript, SCSS e HTML Creazione componenti riutilizzabili Ottimizzazione performance frontend Collaborazione con team per nuove feature e manutenzione Tecnologie Utilizzate:Angular, TypeScript, SCSS, HTML Gen 2022- Giu 2024 Riservato Full-Stack Developer Sviluppo applicazioni web con JavaScript/TypeScript + NodeJS/Express Realizzazione siti web con Flask, Bootstrap, SQLite Progetti in React e Angular per sperimentazione librerie e pattern Tecnologie Utilizzate:NodeJS, Express, Flask, Bootstrap, SQLite, React, Angular ."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""LAC"", ""role"": ""Software Tester"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Torino/remoto"", ""skills"": [""java"", ""spring"", ""c#"", ""css"", ""excel"", ""html""], ""semantic_snippet"": ""Ha collaborato con team di sviluppo per garantire la qualità del software e ha lavorato su progetti legati a dispositivi IoT, registratori di cassa, colonnine di ricarica elettrica e piattaforme di ticketing. | # 2014 Diploma di Specializzazione in Informatica, Istituto Camillo Olivetti Apr 2022 – Gen 2025 LavoroPiù Progetto Core Informatica Software Tester Pianificazione, progettazione, esecuzione e automazione dei test Scrittura e manutenzione dei casi di test con TestRail e Kiwi Automazione test con Katalon (GUI), Postman (API), JMeter (stress test), Python (basi dati) Collaborazione con team di sviluppo per requisiti e qualità Test su macchine fiscali e registratori di cassa Test su dispositivi IoT per monitoraggio ambientale Test su piattaforme online per meter acqua e ricarica auto elettriche Test su piattaforma ticketing integrata con Jira Tecnologie Utilizzate:TestRail, Kiwi, Katalon, Postman, JMeter, Python, Jira | MC ENGINEERING S.R.L TORINO(Sede Legale) Strada Torino, 43 – 10043 Orbassano (T"", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": false, ""relaxed_criteria"": [], ""strict_candidates"": 6, ""total_candidates"": 6}, ""verdict"": ""partial"", ""clarifying_questions"": [""Il team deve essere già formato o si può considerare anche un candidato singolo con esperienza in team?"", ""È importante che il candidato abbia esperienza specifica con metodologie Agile/Scrum nel contesto Java/Spring?"", ""Si richiede esperienza anche in frontend o solo backend Java/Spring?""]}",COHERENT_NO_RESULTS,4.6,5,5,4,4,5,"L'agente ha compreso correttamente la richiesta: il cliente cerca un team già formato su stack Java/Spring. L'agente esplicita che il database non contiene team pre-assemblati, ma solo profili singoli, e propone candidati con esperienza in team e nello stack richiesto. La disciplina (Java/Spring) è perfettamente centrata.","Tutti i campi estraibili dalla query sono stati catturati: skills (java, spring) sono estratti, e la mancanza di altri dettagli (ruolo, location, seniority, ecc.) è coerente con la vaghezza della query. L'agente inoltre propone domande di chiarimento per raccogliere ulteriori dettagli.","I candidati presentati sono tutti con esperienza Java/Spring e hanno lavorato in team, come richiesto. L'agente dichiara correttamente che si tratta di profili singoli e non di team già formati. La pertinenza è alta rispetto ai vincoli estraibili dalla query.","I profili proposti hanno competenze tecniche in Java/Spring e comprovata esperienza di lavoro in team, spesso in contesti Agile/Scrum. Non sono team già formati, ma i candidati sono i più vicini possibili alla richiesta, come dichiarato.","Gestione eccellente di una query edge case: l'agente spiega il limite strutturale del database, propone la soluzione più vicina possibile e formula domande di chiarimento mirate per indirizzare meglio la ricerca.","Ottima comprensione dell'intento della query, trasparenza sui limiti del database, presentazione di candidati altamente pertinenti, domande di chiarimento mirate e utili.","Non vengono proposte soluzioni di composizione team (ad esempio suggerire la possibilità di assemblare un team con i profili presentati), ma questo è un dettaglio minore dato il comportamento già corretto.","Potrebbe essere utile esplicitare la possibilità di comporre un team ad hoc con i profili presentati, offrendo al cliente una soluzione concreta anche in assenza di team già formati.",2,SIMPLE,MEDIUM,2,QUESTION,"La query è breve e poco strutturata; non specifica ruoli, seniority, né dettagli tecnici oltre lo stack. Ambiguità sul significato di 'team già formato'.",21.825,6.028,resp_0ce97ac86ec16013006aa14278e69881939b15ba1246222d76
+Mi servirebbe una figura middle Java con inglese fluente per cliente estero.,Java,"Per la tua richiesta di una figura middle Java con inglese fluente per cliente estero, ho trovato alcuni profili interessanti. La ricerca ha incluso anche candidati con seniority e livello di inglese leggermente diversi per ampliare le possibilità.
+
+Ecco i top 3 candidati:
+
+1. GRU - Java Developer
+   - Disponibilità: Immediata
+   - Seniority: Senior
+   - Skills: java, azure devops, ejb, jenkins, junit, microservices
+   - Lingua: Inglese fluente (avanzato)
+   - Location: remoto
+
+2. SMA - Java Developer
+   - Disponibilità: Immediata
+   - Seniority: Junior
+   - Skills: java, angular, docker, git, hibernate, j2ee
+   - Lingua: Inglese fluente (avanzato)
+   - Location: Roma/remoto
+
+3. ABA - Business Intelligence Analyst (match parziale)
+   - Disponibilità: entro 20 giorni
+   - Seniority: Medium
+   - Skills: java, angularjs, ant, aws, azure, ci/cd
+   - Lingua: Inglese fluente (avanzato)
+   - Location: Napoli/remoto
+   - Nota: match parziale, non copre tutti i vincoli richiesti
+
+Potrebbero interessarti anche:
+
+4. SPA - Java Developer (match parziale)
+   - Disponibilità: entro 15 giorni
+   - Seniority: Junior
+   - Skills: java, css, dbeaver, git, hibernate, html
+   - Lingua: Inglese intermedio
+   - Location: remoto
+
+5. TPI - Java Developer (match parziale)
+   - Disponibilità: non disponibile
+   - Seniority: mid
+   - Skills: java, .net, css3, hibernate, javascript, jsp
+   - Lingua: Italiano
+   - Location: Torino
+
+6. ATR - Java Developer (match parziale)
+   - Disponibilità: non disponibile
+   - Seniority: senior
+   - Skills: java, apache ant, bata-batch, db2, docker, git
+   - Lingua: Italiano
+   - Location: Palermo
+
+La ricerca è stata allargata per includere anche candidati con skill o seniority leggermente diverse.
+
+Per migliorare la ricerca, potresti chiarire:
+- La seniority middle è flessibile o deve essere rigorosamente middle?
+- L'inglese deve essere fluente o è sufficiente un livello avanzato?
+- Il lavoro è esclusivamente remoto o è possibile anche presenza in sede?
+
+Attendo un tuo riscontro per affinare la ricerca o procedere con i profili trovati.
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1900,""trigramma"":""GRU""},{""id_mcflash"":1912,""trigramma"":""SMA""},{""id_mcflash"":1758,""trigramma"":""ABA""},{""id_mcflash"":1605,""trigramma"":""SPA""},{""id_mcflash"":null,""trigramma"":""TPI""},{""id_mcflash"":null,""trigramma"":""ATR""}]}",,java,Java Developer,,,Inglese: Avanzato,,6,"GRU, SMA, ABA, SPA, TPI",True,"skills, second_pass_hybrid",partial,"{""candidates_count"": 6, ""presented_candidates"": [""GRU"", ""SMA"", ""ABA"", ""SPA"", ""TPI"", ""ATR""], ""search_index_hits"": [{""name"": ""GRU"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""azure devops"", ""ejb"", ""jenkins"", ""junit"", ""microservices""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""SMA"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Roma/remoto"", ""skills"": [""java"", ""angular"", ""docker"", ""git"", ""hibernate"", ""j2ee""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""ABA"", ""role"": ""Business Intelligence Analyst"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Napoli/remoto"", ""skills"": [""java"", ""angularjs"", ""ant"", ""aws"", ""azure"", ""ci/cd""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""SPA"", ""role"": ""Java Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""css"", ""dbeaver"", ""git"", ""hibernate"", ""html""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""TPI"", ""role"": ""Java Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Torino"", ""skills"": [""java"", "".net"", ""css3"", ""hibernate"", ""javascript"", ""jsp""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""ATR"", ""role"": ""Java Developer"", ""match_type"": ""hybrid_extension"", ""missing_skills"": [], ""location"": ""Palermo"", ""skills"": [""java"", ""apache ant"", ""bata-batch"", ""db2"", ""docker"", ""git""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": true, ""relaxed_criteria"": [""skills"", ""second_pass_hybrid""], ""strict_candidates"": 2, ""total_candidates"": 6}, ""verdict"": ""partial"", ""clarifying_questions"": [""La seniority middle è flessibile o deve essere rigorosamente middle?"", ""L'inglese deve essere fluente o è sufficiente un livello avanzato?"", ""Il lavoro è esclusivamente remoto o è possibile anche presenza in sede?""]}",COHERENT_MATCH,4.6,5,5,4,4,5,"La classificazione strutturata estratta riflette perfettamente la query: ruolo Java Developer, skill Java, lingua inglese avanzato (che copre 'fluente'), e la seniority middle è stata interpretata correttamente come vincolo principale. L'agente ha anche esplicitato la necessità di chiarire la flessibilità su seniority e livello di inglese.","Tutti i campi estraibili dalla query sono stati catturati: skill (Java), ruolo (Java Developer), lingua (inglese fluente/avanzato), e la seniority (middle) è stata gestita sia in classificazione che nelle domande di chiarimento. La location non era specificata nella query e quindi è correttamente vuota.","I candidati presentati sono tutti Java Developer o profili molto vicini, con match_type e motivazioni correttamente dichiarate. I primi due sono strict match (anche se la seniority non è esattamente 'middle', l'agente lo dichiara e chiede chiarimenti), mentre i successivi sono match parziali, come da search_meta.relaxed=true. Nessun candidato è palesemente fuori disciplina.","I profili presentati hanno tutti Java come skill principale e un livello di inglese almeno avanzato per i primi tre. La seniority non è sempre perfettamente 'middle', ma l'agente lo dichiara e motiva la scelta. I match parziali sono etichettati come tali e non vengono presentati come perfetti.","La query è chiara ma con possibili ambiguità su seniority e livello di inglese. L'agente gestisce perfettamente la complessità: amplia la ricerca in modo trasparente, dichiara i limiti dei match, e pone domande di chiarimento mirate e pertinenti.",Ottima coerenza tra query e classificazione; gestione trasparente dei match parziali; domande di chiarimento precise; nessun errore di disciplina; motivazioni chiare per ogni candidato.,"La seniority dei candidati non è sempre perfettamente allineata al requisito 'middle', ma questo è dichiarato e gestito correttamente. Alcuni candidati hanno inglese solo avanzato (non esplicitamente 'fluente'), ma l'agente lo segnala.","Se possibile, evidenziare ancora meglio nei profili la distanza rispetto al requisito 'middle' (ad esempio, specificando anni di esperienza) e distinguere tra 'inglese avanzato' e 'fluente' se il dato è disponibile. In caso di match parziali, proporre in modo più visibile i candidati strict come prioritari.",3,SIMPLE,MEDIUM,3,QUESTION,"La query è comprensibile ma manca di dettagli tecnici (skills Java specifici, location, contesto). Un agente potrebbe interpretare in modo diverso il livello 'middle' e le competenze richieste.",17.52,7.158,resp_0accb34f8a15ac3b006aa142a1c12881948b028812b84c9b65
+Java developer con esperienza settore assicurativo.,Java,"Ho trovato alcuni profili di Java developer con esperienza che potrebbe essere rilevante per il settore assicurativo, anche se la corrispondenza specifica con l'esperienza assicurativa non è sempre esplicitata nei dettagli.
+
+Ecco i primi 3 candidati più rilevanti:
+
+1. FCO - Analista Programmatore Java, Senior, disponibile immediatamente, località Torino/remoto
+   - Competenze: java, java ee (ejb, jms), ajax, asp.net core, bootstrap, c#
+   - Evidenza: esperienza consolidata in ambienti enterprise con strumenti di versionamento, CI/CD e testing.
+   - Nessuna skill mancante
+2. GBE - Java Developer, Junior, disponibile immediatamente, località Torino/remoto
+   - Competenze: java, android, angular, bootstrap, c, css
+   - Evidenza: esperienza su progetti a carattere gestionale e data-driven, con modellazione dati e gestione informazioni.
+   - Nessuna skill mancante
+3. SMA - Java Developer, Junior, disponibile immediatamente, località Roma/remoto
+   - Competenze: java, angular, docker, git, hibernate, j2ee
+   - Evidenza: esperienza anche frontend con Angular, React, Next.js e TypeScript.
+   - Nessuna skill mancante
+
+Potrebbero interessarti anche:
+
+4. AMA - Java Developer, Medium, disponibile in 20 giorni, remoto
+   - Competenze: java, azure devops, docker, eclipse, git, jenkins
+   - Evidenza: esperienza con database relazionali e NoSQL, pipeline CI/CD e deploy servizi.
+   - Nessuna skill mancante
+5. SGR - Java Developer, Medium, disponibile immediatamente, remoto
+   - Competenze: java, eclipse, git, hibernate, jenkins, jpa
+   - Nessuna skill mancante
+6. DDF - Java Developer, Medium, disponibile in 20 giorni, remoto
+   - Competenze: java, aws, css, dbeaver, docker, docusign
+   - Nessuna skill mancante
+
+La ricerca ha prodotto risultati con match ""weak"" perché non è chiaro quali esperienze specifiche nel settore assicurativo abbiano i candidati. Per migliorare la ricerca, sarebbe utile sapere:
+
+- Quali esperienze assicurative specifiche sono richieste?
+- Se è importante il livello di seniority o la localizzazione?
+- Quali competenze tecniche specifiche oltre a Java sono necessarie nel contesto assicurativo?
+
+Posso aiutarti a raffinare la ricerca con queste informazioni.
+
+<<<CANDIDATES_JSON>>>
+{""candidates"":[{""id_mcflash"":1897,""trigramma"":""FCO""},{""id_mcflash"":1910,""trigramma"":""GBE""},{""id_mcflash"":1912,""trigramma"":""SMA""},{""id_mcflash"":1868,""trigramma"":""AMA""},{""id_mcflash"":1933,""trigramma"":""SGR""},{""id_mcflash"":1834,""trigramma"":""DDF""}]}",,java,Java developer,,,,,6,"FCO, GBE, SMA, AMA, SGR",False,,weak,"{""candidates_count"": 6, ""presented_candidates"": [""FCO"", ""GBE"", ""SMA"", ""AMA"", ""SGR"", ""DDF""], ""search_index_hits"": [{""name"": ""FCO"", ""role"": ""Analista Programmatore Java"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Torino/remoto"", ""skills"": [""java"", ""java ee (ejb, jms)"", ""ajax"", ""asp.net core"", ""bootstrap"", ""c#""], ""semantic_snippet"": ""Esperienza consolidata in ambienti enterprise con strumenti di versionamento, CI/CD e testing."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""GBE"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Torino/remoto"", ""skills"": [""java"", ""android"", ""angular"", ""bootstrap"", ""c"", ""css""], ""semantic_snippet"": ""Ha maturato esperienza su progetti a carattere gestionale e data-driven, occupandosi di modellazione dei dati, CRUD e gestione delle informazioni."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""SMA"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""Roma/remoto"", ""skills"": [""java"", ""angular"", ""docker"", ""git"", ""hibernate"", ""j2ee""], ""semantic_snippet"": ""Durante la sua prima esperienza ha visto anche la parte frontend con Angular, React, Next.js e TypeScript."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""AMA"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""azure devops"", ""docker"", ""eclipse"", ""git"", ""jenkins""], ""semantic_snippet"": ""Ha esperienza nell’interazione con database relazionali e NoSQL, nella gestione di pipeline CI/CD e nell’utilizzo di piattaforme per l’orchestrazione e il deploy dei servizi."", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""SGR"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""eclipse"", ""git"", ""hibernate"", ""jenkins"", ""jpa""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}, {""name"": ""DDF"", ""role"": ""Java Developer"", ""match_type"": ""strict"", ""missing_skills"": [], ""location"": ""remoto"", ""skills"": [""java"", ""aws"", ""css"", ""dbeaver"", ""docker"", ""docusign""], ""semantic_snippet"": """", ""retrieval_score"": null, ""source_path"": """"}], ""search_meta"": {""relaxed"": false, ""relaxed_criteria"": [], ""strict_candidates"": 6, ""total_candidates"": 6}, ""verdict"": ""weak"", ""clarifying_questions"": [""La richiesta riguarda esperienza specifica nel settore assicurativo: quali esperienze assicurative hanno i candidati?"", ""È importante il livello di seniority o la localizzazione per la posizione?"", ""Quali competenze specifiche oltre a Java sono richieste nel settore assicurativo?""]}",COHERENT_NO_RESULTS,4.4,5,4,4,4,5,"La classificazione strutturata ha colto correttamente la disciplina (Java developer) e la skill principale (java). La query chiedeva esperienza nel settore assicurativo, che non è un campo strutturato ma un filtro semantico: l'agente ha riconosciuto la mancanza di questo dato nei profili e lo ha dichiarato esplicitamente.","Tutti i campi estraibili dalla query sono stati catturati, tranne il settore assicurativo che non è presente come campo strutturato nel DB. L'agente ha comunque evidenziato la mancanza e chiesto chiarimenti. Location, seniority e altre skills non erano specificate nella query, quindi la classificazione è completa rispetto all'input.","Tutti i candidati presentati sono Java developer con skill coerenti e nessuna skill mancante. Il match_type è 'strict' per tutti, ma il verdict è 'weak' perché manca l'evidenza di esperienza assicurativa. L'agente ha correttamente dichiarato questo limite.","I profili sono tecnicamente in linea con la richiesta di Java developer, ma non è garantita l'esperienza assicurativa. L'agente non ha inventato motivazioni e ha presentato i candidati in modo trasparente.","Gestione eccellente di una query con filtro semantico non strutturato: l'agente ha presentato i migliori candidati disponibili, dichiarato il limite e posto domande di chiarimento mirate per raffinare la ricerca.",Ottima trasparenza nella comunicazione dei limiti del DB rispetto alla richiesta. Classificazione precisa e presentazione onesta dei candidati. Domande di chiarimento pertinenti e utili.,"Non ha tentato una ricerca semantica più approfondita (ad esempio, cercare nel testo dei CV riferimenti a progetti assicurativi), ma questo è un limite del dato più che dell'agente.","Se tecnicamente possibile, suggerire una ricerca semantica nei CV per individuare eventuali esperienze assicurative non strutturate. In alternativa, proporre una breve sintesi dei settori di provenienza dei candidati per aiutare il cliente a valutare la pertinenza.",4,MODERATE,MEDIUM,3,QUESTION,"La query è abbastanza chiara ma manca di dettagli tecnici (versione Java, stack, anni di esperienza, tecnologie specifiche). L'estrazione dei campi è parziale; l'ambiguità sul livello di seniority e sulle competenze specifiche può causare errori di matching.",11.276,7.874,resp_0811de91035dde3e006aa142bd10088193853b1710acb42fe5
