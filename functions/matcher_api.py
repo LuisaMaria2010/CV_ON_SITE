@@ -38,8 +38,8 @@ from utils.http_params import payload_from_query as _payload_from_query
 from utils.values import extract_json_safe as _extract_json_safe
 from utils.values import first_non_empty as _first_non_empty
 from utils.values import safe_str as _safe_str
-from utils.visibility import resolve_user_scope as _resolve_user_scope
-from utils.visibility import user_permissions as _user_permissions
+from utils.visibility import resolve_user_type as _resolve_user_type
+from utils.visibility import can_view_non_mcflash as _can_view_non_mcflash
 
 logger = logging.getLogger(__name__)
 
@@ -95,16 +95,16 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
     if context is not None and not isinstance(context, dict):
         raise InvalidInputError("'context' must be an object when provided")
 
-    # Permessi dell'utente, trasportati all'agente dentro CONTEXT_JSON: e'
-    # l'agente a decidere cosa mostrare in base a `can_view_non_mcflash`.
-    # Default fail-closed (external) quando lo scope non e' determinabile.
-    user_scope = _resolve_user_scope(payload)
+    # `user_type` arriva dal frontend e viene inoltrato all'agente dentro
+    # CONTEXT_JSON, che lo ripassa a invoke_searcher_wrapper. Il FILTRO sui
+    # candidati e' applicato lato server da /api/searcher-wrapper: l'agente
+    # trasporta il valore, non decide cosa mostrare.
+    user_type = _resolve_user_type(payload)
 
     session_context = {
         "user_id": user_id,
         "chat_id": chat_id,
-        "scope": user_scope,
-        "permissions": _user_permissions(user_scope),
+        "user_type": user_type,
     }
     if context:
         context = {
@@ -112,12 +112,10 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
             "session": {
                 **session_context,
                 **(context.get("session") if isinstance(context.get("session"), dict) else {}),
-                # Scope e permessi sono calcolati qui e vincono sempre: un
-                # `context.session` fornito dal chiamante non deve poterli
-                # rialzare (il resto del blocco session mantiene la precedenza
-                # al chiamante, come prima).
-                "scope": user_scope,
-                "permissions": _user_permissions(user_scope),
+                # `user_type` e' risolto qui e vince sempre: un `context.session`
+                # fornito dal chiamante non deve poterlo sostituire (il resto del
+                # blocco session mantiene la precedenza al chiamante, come prima).
+                "user_type": user_type,
             },
         }
     else:
@@ -240,8 +238,8 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
         "session": {
             "user_id": user_id,
             "chat_id": chat_id,
-            "scope": user_scope,
-            "permissions": _user_permissions(user_scope),
+            "user_type": user_type,
+            "can_view_non_mcflash": _can_view_non_mcflash(user_type),
         },
         "conversation": history_status,
         "answer": answer_text,
