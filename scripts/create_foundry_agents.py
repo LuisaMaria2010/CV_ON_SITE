@@ -133,6 +133,15 @@ def _searcher_wrapper_openapi_spec(wrapper_url: str) -> dict[str, Any]:
                             "description": "Richiesta strutturata da inoltrare al motore search.",
                             "additionalProperties": True,
                         },
+                        "user_type": {
+                            "type": "string",
+                            "description": (
+                                "Valore presente in CONTEXT_JSON.session.user_type ('internal' o "
+                                "'external'). Va inoltrato VERBATIM a ogni chiamata, senza "
+                                "interpretarlo ne' modificarlo. Se omesso, il servizio applica la "
+                                "visibilita' piu' ristretta e alcuni candidati non verranno restituiti."
+                            ),
+                        },
                         "original_request": {
                             "type": "string",
                             "description": (

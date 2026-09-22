@@ -20,6 +20,7 @@ from services.search_pipeline import run_search_pipeline
 from utils.http_errors import http_error_handler
 from utils.http_params import body_params as _body_params, payload_from_query as _payload_from_query
 from utils.values import first_non_empty as _first_non_empty, lower_list as _lower_list, safe_str as _safe_str
+from utils.visibility import can_view_non_mcflash as _can_view_non_mcflash
 
 logger = logging.getLogger(__name__)
 
@@ -383,6 +384,27 @@ async def searcher_wrapper(req: func.HttpRequest):
             continue
         minimal_hits.append(_build_minimal_search_hit(hit, requested_skills))
 
+    # Visibilita': solo un utente `internal` vede i candidati senza profilo
+    # MCFlash risolto. `user_type` arriva da ai-matcher-wrapper attraverso
+    # l'agente; qualsiasi valore diverso da internal -- campo assente incluso --
+    # significa filtro. Cosi' l'agente non puo' causare una fuga dimenticando o
+    # sbagliando il campo: il caso peggiore e' un interno che vede meno.
+    #
+    # Il filtro sta QUI, prima del valutatore di coerenza, cosi' i candidati
+    # scartati non entrano nel suo prompt ne' in quello dell'agente. Filtrarli
+    # piu' a valle li avrebbe comunque fatti uscire dalla Function.
+    user_type = _safe_str(_first_non_empty(payload.get("user_type"), payload.get("userType")))
+    hidden_non_mcflash = 0
+    if not _can_view_non_mcflash(user_type):
+        visible_hits = [h for h in minimal_hits if h.get("id_mcflash") is not None]
+        hidden_non_mcflash = len(minimal_hits) - len(visible_hits)
+        minimal_hits = visible_hits
+
+    logger.info(
+        "visibility user_type=%r hidden_non_mcflash=%s visible=%s",
+        user_type, hidden_non_mcflash, len(minimal_hits),
+    )
+
     original_request = _safe_str(
         _first_non_empty(payload.get("original_request"), payload.get("query"), search_request.get("query"))
     )
@@ -418,7 +440,9 @@ async def searcher_wrapper(req: func.HttpRequest):
         "search_meta": {
             "relaxed": bool(pipeline_meta.get("relaxed")),
             "relaxed_criteria": pipeline_meta.get("relaxed_criteria") or [],
-            "total_candidates": pipeline_meta.get("total", len(minimal_hits)),
+            # Dopo il filtro di visibilita': l'agente non deve annunciare
+            # "ho trovato 12 candidati" per poi elencarne 4.
+            "total_candidates": len(minimal_hits) if hidden_non_mcflash else pipeline_meta.get("total", len(minimal_hits)),
             "strict_candidates": strict_count,
             "hard_select_matched": hard_select_meta.get("matched_candidates"),
             "suggestions": pipeline_suggestions,
