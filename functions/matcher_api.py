@@ -14,17 +14,32 @@ import azure.functions as func
 from core.errors import InvalidInputError
 from infra.chat_history import (
     chat_history_append_turn as _chat_history_append_turn,
+)
+from infra.chat_history import (
     chat_history_load_thread as _chat_history_load_thread,
+)
+from infra.chat_history import (
+    truncate_text as _truncate_text,
 )
 from infra.foundry_agent import (
     response_to_plain_dict as _response_to_plain_dict,
+)
+from infra.foundry_agent import (
     run_foundry_agent as _run_foundry_agent,
+)
+from infra.foundry_agent import (
     split_ai_matcher_answer as _split_ai_matcher_answer,
 )
 from utils.app_settings import settings_value as _settings_value
 from utils.http_errors import http_error_handler
-from utils.http_params import body_params as _body_params, parse_bool as _parse_bool, payload_from_query as _payload_from_query
-from utils.values import extract_json_safe as _extract_json_safe, first_non_empty as _first_non_empty, safe_str as _safe_str
+from utils.http_params import body_params as _body_params
+from utils.http_params import parse_bool as _parse_bool
+from utils.http_params import payload_from_query as _payload_from_query
+from utils.values import extract_json_safe as _extract_json_safe
+from utils.values import first_non_empty as _first_non_empty
+from utils.values import safe_str as _safe_str
+from utils.visibility import resolve_user_scope as _resolve_user_scope
+from utils.visibility import user_permissions as _user_permissions
 
 logger = logging.getLogger(__name__)
 
@@ -80,9 +95,16 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
     if context is not None and not isinstance(context, dict):
         raise InvalidInputError("'context' must be an object when provided")
 
+    # Permessi dell'utente, trasportati all'agente dentro CONTEXT_JSON: e'
+    # l'agente a decidere cosa mostrare in base a `can_view_non_mcflash`.
+    # Default fail-closed (external) quando lo scope non e' determinabile.
+    user_scope = _resolve_user_scope(payload)
+
     session_context = {
         "user_id": user_id,
         "chat_id": chat_id,
+        "scope": user_scope,
+        "permissions": _user_permissions(user_scope),
     }
     if context:
         context = {
@@ -90,6 +112,12 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
             "session": {
                 **session_context,
                 **(context.get("session") if isinstance(context.get("session"), dict) else {}),
+                # Scope e permessi sono calcolati qui e vincono sempre: un
+                # `context.session` fornito dal chiamante non deve poterli
+                # rialzare (il resto del blocco session mantiene la precedenza
+                # al chiamante, come prima).
+                "scope": user_scope,
+                "permissions": _user_permissions(user_scope),
             },
         }
     else:
@@ -212,6 +240,8 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
         "session": {
             "user_id": user_id,
             "chat_id": chat_id,
+            "scope": user_scope,
+            "permissions": _user_permissions(user_scope),
         },
         "conversation": history_status,
         "answer": answer_text,
