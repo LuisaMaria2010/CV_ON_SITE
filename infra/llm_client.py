@@ -18,6 +18,9 @@ from core.config import settings
 
 _credential = None  # lazy-init: usato solo se manca AZURE_OPENAI_KEY
 
+# Un embedding risponde in meno di 1 s: oltre questo tempo la chiamata e' appesa.
+_EMBEDDING_TIMEOUT_SECONDS = 15
+
 
 def _token_provider() -> str:
     """
@@ -149,5 +152,10 @@ def get_embedding_client():
         azure_deployment=settings.azure_openai_embedding_model,
         api_version=settings.azure_openai_api_version,
         dimensions=settings.search_vector_dimensions,
+        # Senza timeout vale il default OpenAI (600 s): una chiamata appesa
+        # bloccava la ricerca. In errore la pipeline ripiega sulla sola
+        # ricerca lessicale.
+        timeout=_EMBEDDING_TIMEOUT_SECONDS,
+        max_retries=1,
         **_auth_kwargs(),
     )

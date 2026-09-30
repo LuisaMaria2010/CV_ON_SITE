@@ -104,4 +104,4 @@ local.settings.json
 .foundry-agent-venv/
 
 # Deploy artifacts
-deploy.zip
+deploy.zipeval_e2e_runs/

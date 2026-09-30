@@ -9,6 +9,7 @@ Layout tabella (PartitionKey = "<user_id>|<chat_id>"):
 """
 from __future__ import annotations
 
+import json
 import logging
 import re
 from datetime import datetime, timezone
@@ -109,7 +110,11 @@ def chat_history_append_turn(
     response_id: str | None,
     agent_name: str,
     model_name: str | None,
+    last_candidates: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
+    """Salva lo scambio. `last_candidates` (se non None) sono i candidati
+    dell'ultima ricerca della conversazione: servono ai turni senza ricerca.
+    None lascia invariati quelli gia' salvati."""
     client = get_chat_history_table_client()
     now = datetime.now(timezone.utc).isoformat()
     pk = chat_partition_key(user_id, chat_id)
@@ -136,6 +141,8 @@ def chat_history_append_turn(
     }
     if not existing_thread:
         thread_entity["created_at"] = now
+    if last_candidates is not None:
+        thread_entity["last_candidates"] = json.dumps(last_candidates, ensure_ascii=False)
 
     exchange_entity = {
         "PartitionKey": pk,

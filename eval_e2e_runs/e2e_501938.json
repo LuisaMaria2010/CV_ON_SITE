@@ -1,0 +1,626 @@
+[
+ {
+  "n": 1,
+  "cat": "ITSM/PMO",
+  "q": "Esperienza Jira Service Management richiesta.",
+  "site": "mcflashrisorse",
+  "status": 200,
+  "secs": 32.5,
+  "search_requests": [
+   "{\"search_request\":{\"skills\":[\"jira service management\"],\"query\":\"Esperienza Jira Service Management richiesta.\"},\"site\":\"mcflashrisorse\",\"original_request\":\"Esperienza Jira Service Management richiesta.\"}"
+  ],
+  "verdict": "none",
+  "hits": [
+   "1603",
+   "1746",
+   "1677",
+   "64",
+   "1787",
+   "1768"
+  ],
+  "candidates": [
+   "1603",
+   "1746",
+   "1677",
+   "64",
+   "1787",
+   "1768"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": true,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Non ho trovato profili che corrispondano esattamente alla richiesta di esperienza specifica in Jira Service Management. Tuttavia, ti presento i profili più vicini disponibili; tutti hanno esperienza con Jira, ma non con Jira Service Management in modo specifico.\n\nCandidati principali:\n- GMI, Service Manager, Torino/remoto\n  - Senior, disponibile in 30 giorni\n  - Competenze: jira, active directory, aix, linux, nivola, remedy\n  - Manca la skill specifica \"jira service management\"\n- RNZ, Full Stack Developer, remoto\n  - Senior, disponibile in 30 giorni\n  - Competenze: jira, xray jira, aem, alm qualitycenter, angular 14, api gateway\n  - Manca la skill specifica \"jira service management\"\n- CPI, Service Manager/Project Manager, remoto\n  - Senior, disponibile in 30 giorni\n  - Competenze: jira, microsoft project, pacchetto office\n  - Manca la skill specifica \"jira service management\"\n\nPotrebbero interessarti anche:\n- MNE, Help Desk/Sistemista, Torino/remoto\n  - Senior, disponibile in 15 giorni\n  - Competenze: jira, service now, active directory, airflow, android studio, as400\n  - Manca la skill specifica \"jira service management\"\n- PMA, Project Manager, remoto\n  - Senior, disponibile in 20 giorni\n  - Competenze: jira, asana, azure, bitrix, canva, confluence\n  - Manca la skill specifica \"jira service management\"\n- GBA, Project Manager, Milano/remoto\n  - Senior, disponibile immediatamente\n  - Competenze: jira, adespresso, azure, buzzsumo, c, c++\n  - Manca la skill specifica \"jira service management\"\n\nPer migliorare la ricerca, potresti chiarire:\n- La richiesta è specifica per esperienza con Jira Service Management o è sufficiente esperienza con Jira in generale?\n- È possibile considerare candidati con esperienza in strumenti simili a Jira Service Management?\n- Qual è il livello minimo di esperienza richiesto con Jira Service Management?"
+ },
+ {
+  "n": 2,
+  "cat": "ITSM/PMO",
+  "q": "Figura con esperienza ALM enterprise.",
+  "site": "mcflashcandidati",
+  "status": 200,
+  "secs": 24.5,
+  "search_requests": [
+   "{\"search_request\":{\"query\":\"esperienza ALM enterprise\"},\"site\":\"mcflashcandidati\",\"original_request\":\"Figura con esperienza ALM enterprise\",\"top\":6}"
+  ],
+  "verdict": "partial",
+  "hits": [
+   "1877",
+   "1640",
+   "1862",
+   "1917",
+   "1918",
+   "1881"
+  ],
+  "candidates": [
+   "1877",
+   "1640",
+   "1862",
+   "1917",
+   "1918",
+   "1881"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Ecco i profili più vicini alla richiesta di una figura con esperienza ALM enterprise; alcuni candidati potrebbero non rispettare tutti i vincoli specifici.\n\nCandidati principali:\n- ASO, Project Manager, Milano/remoto\n  - Senior, disponibilità tra 45 giorni\n  - Competenze: alm, aris express, azure, gams, java, javascript\n  - Match completo con i requisiti richiesti\n\n- GPA, Analista Funzionale, Torino/remoto\n  - Senior, disponibilità tra 45 giorni\n  - Competenze: active directory, alm, confluence, jira, kibana, linux\n  - Match completo con i requisiti richiesti\n\n- SFO, Test Engineer, Bologna/remoto\n  - Junior, disponibilità immediata\n  - Competenze: alm, confluence, jira, latex, microsoft office, pyspark\n  - Match completo con i requisiti richiesti\n\nPotrebbero interessarti anche:\n- VPA, Project Manager/Business Analyst, Verona/remoto\n  - Senior, disponibilità tra 15 giorni\n  - Competenze: access, alm/uft, autocad, bem, filezilla, had\n  - Match completo con i requisiti richiesti\n\n- MVA, Sistemista Linux/Unix, Milano/remoto\n  - Senior, disponibilità tra 15 giorni\n  - Competenze: aws, bamboo, cisco, controlm, db oracle, dynatrace\n  - Match completo con i requisiti richiesti\n\n- AMI, Software Developer, Torino/remoto\n  - Senior, disponibilità tra 20 giorni\n  - Competenze: docker, html, java, jquery, kubernetes, mysql\n  - Match completo con i requisiti richiesti\n\nPer migliorare la ricerca, potresti specificare se l'esperienza ALM deve essere esclusivamente in contesti enterprise, quali competenze o ruoli specifici in ALM sono più rilevanti, e se è importante indicare una seniority o ruolo specifico oltre all'esperienza ALM. Vuoi fornire qualche dettaglio in più?"
+ },
+ {
+  "n": 3,
+  "cat": "Data/AI",
+  "q": "Figura con esperienza training modelli AI.",
+  "site": "mcflashrisorse",
+  "status": 200,
+  "secs": 25.7,
+  "search_requests": [
+   "{\"search_request\":{\"query\":\"esperienza training modelli AI\"},\"site\":\"mcflashrisorse\",\"original_request\":\"Figura con esperienza training modelli AI.\",\"top\":6}"
+  ],
+  "verdict": "partial",
+  "hits": [
+   "1512",
+   "1652",
+   "1902",
+   "1696",
+   "1862",
+   "1790"
+  ],
+  "candidates": [
+   "1512",
+   "1652",
+   "1902",
+   "1696",
+   "1862",
+   "1790"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Ecco i profili più vicini alla richiesta di una figura con esperienza nel training di modelli AI; alcuni candidati potrebbero non rispettare tutti i vincoli specifici.\n\nCandidati principali:\n- FVE, AI Engineer, disponibile tra 20 giorni, senior, lavora in remoto\n  - Competenze: azure, copilot, databricks, docker, fastapi, hugging-face\n  - Nessuna skill mancante segnalata\n- LSE, Data Analyst/Data Scientist/AI Engineer, disponibile dal 7 gennaio, livello medio, Torino/remoto\n  - Competenze: android, azure, c, c++, emcee, fortran\n  - Nessuna skill mancante segnalata\n- DPE, AI Engineer, disponibile immediatamente, junior, lavora in remoto\n  - Competenze: git, java, keras, linux, numpy, pandas\n  - Nessuna skill mancante segnalata\n\nPotrebbero interessarti anche:\n- LRO, Analista Funzionale/AI Strategy Specialist, disponibile immediatamente, livello medio, remoto\n  - Competenze: adobe xd, agentic ai, azure devops, claude, cursor, llamaindex\n  - Nessuna skill mancante segnalata\n- SFO, Test Engineer, disponibile immediatamente, junior, Bologna/remoto\n  - Competenze: alm, confluence, jira, latex, microsoft office, pyspark\n  - Nessuna skill mancante segnalata\n- GSU, Automation Tester/Python Developer, disponibile immediatamente, junior, Torino/remoto\n  - Competenze: arduino, assembly, bash, c, c trader, c#.net\n  - Nessuna skill mancante segnalata\n\nPer migliorare la ricerca, potresti specificare:\n- Quali tecnologie o framework AI devono essere inclusi nell'esperienza di training modelli?\n- Se preferisci esperienza in un settore specifico o tipo di modello AI.\n- Il livello di seniority richiesto per la figura."
+ },
+ {
+  "n": 4,
+  "cat": "Sicurezza/Infrastructure",
+  "q": "Cerco supporto device management enterprise.",
+  "site": "mcflashcandidati",
+  "status": 200,
+  "secs": 21.9,
+  "search_requests": [
+   "{\"search_request\":{\"query\":\"supporto device management enterprise\"},\"site\":\"mcflashcandidati\"}"
+  ],
+  "verdict": "weak",
+  "hits": [
+   "1640",
+   "1793",
+   "1916",
+   "1877",
+   "1922",
+   "1790"
+  ],
+  "candidates": [
+   "1640",
+   "1793",
+   "1916",
+   "1877",
+   "1922",
+   "1790"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": true,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Non ho trovato profili che corrispondano esattamente alla richiesta di supporto device management enterprise. Questi sono i profili più vicini che ho trovato:\n\nCandidati principali:\n- GPA, Analista Funzionale, Torino/remoto\n  - Seniority: Senior\n  - Lingue: Inglese base\n  - Disponibilità: 45 giorni\n  - Competenze: active directory, alm, confluence, jira, kibana, linux\n- CBI, Project Manager Security, Torino/remoto\n  - Seniority: Senior\n  - Lingue: Inglese base\n  - Disponibilità: 45 giorni\n  - Competenze: edr, epp, firewall, gantt, ids/ips, jira\n- FBE, IAM Specialist, Torino/remoto\n  - Seniority: Medium\n  - Lingue: Inglese intermedio\n  - Disponibilità: immediata\n  - Competenze: apache directory studio, bash linux, burp suite pro, dbvisualizer pro, eclipse, forgerock\n\nPotrebbero interessarti anche:\n- ASO, Project Manager, Milano/remoto\n  - Seniority: Senior\n  - Lingue: Inglese avanzato\n  - Disponibilità: 45 giorni\n  - Competenze: alm, aris express, azure, gams, java, javascript\n- MVE, Project Manager, Torino/remoto\n  - Seniority: Senior\n  - Lingue: Inglese intermedio\n  - Disponibilità: 45 giorni\n  - Competenze: microsoft office, notion, power automate, power bi\n- GSU, Automation Tester/Python Developer, Torino/remoto\n  - Seniority: Junior\n  - Lingue: Inglese avanzato\n  - Disponibilità: immediata\n  - Competenze: arduino, assembly, bash, c, c trader, c#.net\n\nPer migliorare la ricerca, potresti specificare:\n- Quali specifiche tecnologie o piattaforme di device management enterprise sono rilevanti?\n- Se il supporto richiesto riguarda più la gestione tecnica o la gestione di progetto?\n- Se ci sono requisiti particolari su seniority o competenze linguistiche?"
+ },
+ {
+  "n": 5,
+  "cat": "chatbot",
+  "q": "Cerco PM con ottimo inglese.",
+  "site": "mcflashrisorse",
+  "status": 200,
+  "secs": 21.6,
+  "search_requests": [
+   "{\"search_request\":{\"role\":\"PM\",\"language\":\"Inglese: Avanzato\",\"top\":6,\"query\":\"PM con ottimo inglese\"},\"site\":\"mcflashrisorse\"}"
+  ],
+  "verdict": "strong",
+  "hits": [
+   "1899",
+   "89",
+   "1880",
+   "1877",
+   "1865",
+   "60"
+  ],
+  "candidates": [
+   "1899",
+   "89",
+   "1880",
+   "1877",
+   "1865",
+   "60"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Ecco i profili più adatti alla tua richiesta di un PM con ottimo inglese:\n\nCandidati principali:\n- DBI, Project Manager, disponibile tra 30 giorni, senior, inglese avanzato, remoto\n  - Competenze: datastage, db2, erwin, filezilla, java, knime\n- RCO, Business Analyst/Project Manager, disponibile tra 45 giorni, senior, inglese avanzato, remoto\n  - Competenze: git, maven, o365, power automate, power bi, powerapps\n- PPO, Project Manager, disponibile immediatamente, senior, inglese avanzato, Roma/remoto\n  - Competenze: absorb lms, excel, hubspot, jira, microsoft 365, power bi\n\nPotrebbero interessarti anche:\n- ASO, Project Manager, disponibile tra 45 giorni, senior, inglese avanzato, Milano/remoto\n  - Competenze: alm, aris express, azure, gams, java, javascript\n- DAL, Project Manager, disponibile immediatamente, medium seniority, inglese avanzato, Roma/remoto\n  - Competenze: asana, css, drupal, ga4, git, hotjar\n- VDT, Project Manager, disponibile tra 45 giorni, medium seniority, inglese avanzato, Bari/remoto\n  - Competenze: autocad, excel, microsoft automate, microsoft project, office suite, power apps\n\nTutti i candidati hanno un ottimo livello di inglese come richiesto. Se vuoi, posso aiutarti a restringere ulteriormente la ricerca o a specificare altri requisiti."
+ },
+ {
+  "n": 6,
+  "cat": "Workplace/M365",
+  "q": "Cerco supporto Microsoft 365.",
+  "site": "mcflashcandidati",
+  "status": 504,
+  "secs": 240.2,
+  "search_requests": [],
+  "verdict": null,
+  "hits": [],
+  "candidates": [],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "{\"error\": \"risposta non JSON: b'504.0 GatewayTimeout'\"}"
+ },
+ {
+  "n": 7,
+  "cat": "Location/Trasferte",
+  "q": "Disponibilità a viaggiare in Europa richiesta.",
+  "site": "mcflashrisorse",
+  "status": 504,
+  "secs": 240.1,
+  "search_requests": [],
+  "verdict": null,
+  "hits": [],
+  "candidates": [],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "{\"error\": \"risposta non JSON: b'504.0 GatewayTimeout'\"}"
+ },
+ {
+  "n": 8,
+  "cat": "chatbot",
+  "q": "Esperienza Databricks richiesta.",
+  "site": "mcflashcandidati",
+  "status": 504,
+  "secs": 240.2,
+  "search_requests": [],
+  "verdict": null,
+  "hits": [],
+  "candidates": [],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "{\"error\": \"risposta non JSON: b'504.0 GatewayTimeout'\"}"
+ },
+ {
+  "n": 9,
+  "cat": "chatbot",
+  "q": "Mi serve una figura tecnica ma anche gestionale.",
+  "site": "mcflashrisorse",
+  "status": 200,
+  "secs": 239.8,
+  "search_requests": [
+   "{\"search_request\":{\"query\":\"figura tecnica e gestionale\"},\"site\":\"mcflashrisorse\",\"original_request\":\"Mi serve una figura tecnica ma anche gestionale.\"}"
+  ],
+  "verdict": "unknown",
+  "hits": [],
+  "candidates": [],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Al momento non sono riuscito a completare la ricerca per un problema tecnico temporaneo. Ti invito a riprovare tra poco. Nel frattempo, se vuoi, puoi fornirmi qualche dettaglio in più sulla figura tecnica e gestionale che cerchi, ad esempio il settore, le competenze specifiche o il tipo di gestione richiesta."
+ },
+ {
+  "n": 10,
+  "cat": "Cloud/DevOps",
+  "q": "Esperienza Prometheus e Grafana.",
+  "site": "mcflashcandidati",
+  "status": 200,
+  "secs": 17.1,
+  "search_requests": [
+   "{\"search_request\":{\"skills\":[\"prometheus\",\"grafana\"],\"query\":\"Esperienza Prometheus e Grafana\",\"top\":6},\"site\":\"mcflashcandidati\",\"original_request\":\"Esperienza Prometheus e Grafana.\"}"
+  ],
+  "verdict": "partial",
+  "hits": [
+   "1866",
+   "1872",
+   "1629",
+   "1828",
+   "26",
+   "1805"
+  ],
+  "candidates": [
+   "1866",
+   "1872",
+   "1629",
+   "1828",
+   "26",
+   "1805"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Ecco i profili più vicini alla richiesta di esperienza con Prometheus e Grafana; alcuni candidati non soddisfano tutti i vincoli richiesti.\n\nCandidati principali:\n- ECA, System Administrator/Cloud Engineer, disponibile immediatamente, senior, remoto\n  - Competenze rilevanti: prometheus, grafana (tutte presenti)\n  - Lingua: Inglese intermedio\n  - Match di tipo \"strict\", quindi corrisponde pienamente alla richiesta.\n\n- CIM, System Administrator, disponibile in 30 giorni, livello medio, Napoli/remoto\n  - Competenze rilevanti: grafana (presente), prometheus (mancante)\n  - Lingua: Inglese intermedio\n  - Match parziale per mancanza di prometheus.\n\n- MBA, Sistemista/HelpDesk IT, disponibile in 30 giorni, livello medio, Roma/remoto\n  - Competenze rilevanti: grafana (presente), prometheus (mancante)\n  - Lingua: Inglese intermedio\n  - Match parziale per mancanza di prometheus.\n\nPotrebbero interessarti anche:\n- MVI, DevOps Engineer, disponibile in 45 giorni, senior, Bologna/remoto\n  - Competenze rilevanti: grafana (presente), prometheus (mancante)\n  - Lingua: Inglese intermedio\n  - Match parziale per mancanza di prometheus.\n\n- NGH, Data Integration Specialist / DBA, disponibile immediatamente, junior, Torino/remoto\n  - Competenze rilevanti: grafana (presente), prometheus (mancante)\n  - Lingua: Inglese avanzato\n  - Match parziale per mancanza di prometheus.\n\n- AMA, Sistemista Linux, disponibile in 20 giorni, senior, Torino/remoto\n  - Competenze rilevanti: prometheus e grafana entrambe mancanti\n  - Lingua: Inglese intermedio\n  - Match parziale, non copre tutti i vincoli richiesti.\n\nLa ricerca è stata allargata e alcuni risultati sono match parziali.\n\nPer migliorare la ricerca, potresti specificare:\n- Se è richiesta esperienza approfondita o base con Prometheus e Grafana?\n- Se la disponibilità immediata è un requisito importante?\n- Qual è il livello di seniority preferito per il candidato?"
+ },
+ {
+  "n": 11,
+  "cat": "Sicurezza/Infrastructure",
+  "q": "Cerco supporto endpoint security.",
+  "site": "mcflashrisorse",
+  "status": 200,
+  "secs": 12.7,
+  "search_requests": [
+   "{\"search_request\":{\"query\":\"supporto endpoint security\"},\"site\":\"mcflashrisorse\"}"
+  ],
+  "verdict": "partial",
+  "hits": [
+   "1793",
+   "1573",
+   "1891",
+   "1916",
+   "1701",
+   "1700"
+  ],
+  "candidates": [
+   "1793",
+   "1573",
+   "1891",
+   "1916",
+   "1701",
+   "1700"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Ecco i profili più vicini alla richiesta di supporto in endpoint security; alcuni non rispettano tutti i vincoli specifici.\n\nCandidati principali:\n- CBI, Project Manager Security, Torino/remoto\n  - Senior, disponibilità tra 45 giorni\n  - Competenze: edr, epp, firewall, gantt, ids/ips, jira\n  - Match completo sui vincoli richiesti\n- FST, IT Support/Helpdesk 2° livello, Roma/remoto\n  - Senior, disponibilità immediata\n  - Competenze: active directory, bitlocker, endpoint central, intune, linux, onedrive\n  - Match completo sui vincoli richiesti\n- PCE, System Administrator, remoto\n  - Seniorità media, disponibilità immediata\n  - Competenze: active directory, cisco call manager, dns, entra id, entra id connect, excel\n  - Match completo sui vincoli richiesti\n\nPotrebbero interessarti anche:\n- FBE, IAM Specialist, Torino/remoto\n  - Seniorità media, disponibilità immediata\n  - Competenze: apache directory studio, bash linux, burp suite pro, dbvisualizer pro, eclipse, forgerock\n  - Match completo sui vincoli richiesti\n- LIL, Full Stack Developer, Milano/remoto\n  - Junior, disponibilità immediata\n  - Competenze: asp.net, c#, css, docker, git, hibernate\n  - Match completo sui vincoli richiesti\n- DPO, Back End Developer, Milano/remoto\n  - Junior, disponibilità immediata\n  - Competenze: apache kafka, dart, docker, firebase, flutter, hibernate\n  - Match completo sui vincoli richiesti\n\nPer migliorare la ricerca, potresti specificare:\n- Quali tecnologie o prodotti di endpoint security sono prioritari?\n- Se il supporto richiesto è più orientato alla gestione operativa o alla progettazione della sicurezza\n- Se preferisci esperienza in ambienti specifici come Windows, Linux o cloud."
+ },
+ {
+  "n": 12,
+  "cat": "Disponibilita",
+  "q": "Cerco figura con flessibilità oraria.",
+  "site": "mcflashcandidati",
+  "status": 200,
+  "secs": 16.6,
+  "search_requests": [
+   "{\"search_request\":{\"query\":\"flessibilità oraria\"},\"site\":\"mcflashcandidati\"}"
+  ],
+  "verdict": "weak",
+  "hits": [
+   "1864",
+   "1839",
+   "1760",
+   "1757",
+   "1913",
+   "1640"
+  ],
+  "candidates": [
+   "1864",
+   "1839",
+   "1760",
+   "1757",
+   "1913",
+   "1640"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": true,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Non ho trovato profili che corrispondano esattamente alla richiesta di una figura con flessibilità oraria, ma posso mostrarti i profili più vicini disponibili; alcuni non rispettano tutti i vincoli.\n\nCandidati principali:\n\n- LLU, Front End Developer, disponibile immediatamente, junior, località remoto\n  - Competenze: git, javascript, laravel, next.js, node.js, php\n  - Lingua: Inglese intermedio\n  - Match stretto, ma senza evidenza esplicita di flessibilità oraria\n\n- FTI, Project Manager, disponibile in 10 giorni, junior, località remoto\n  - Competenze: microsoft office, trello, waterfall\n  - Lingua: Inglese base\n  - Match stretto, ma senza evidenza esplicita di flessibilità oraria\n\n- ADI, Full Stack Developer, disponibile in 15 giorni, medio, località Vicenza/remoto\n  - Competenze: arxivar, aurelia, business central, c, c#, dynamics\n  - Lingua: Inglese intermedio\n  - Match stretto, ma senza evidenza esplicita di flessibilità oraria\n\nPotrebbero interessarti anche:\n\n- SDO, SAP Abap Developer, disponibile in 30 giorni, senior, località Torino/remoto\n  - Competenze: abap, access, adabas, cobol, cobol 2pl/1, db2\n  - Lingua: Inglese intermedio\n\n- SDG, Project Manager, disponibile in 30 giorni, medio, località Torino/remoto\n  - Competenze: cad, matlab, microsoft office suite, rheno, sap, solidworld\n  - Lingua: Inglese intermedio\n\n- GPA, Analista Funzionale, disponibile in 45 giorni, senior, località Torino/remoto\n  - Competenze: active directory, alm, confluence, jira, kibana, linux\n  - Lingua: Inglese base\n\nDomande utili per migliorare la ricerca:\n- La flessibilità oraria si riferisce a orari di lavoro variabili o a disponibilità di lavoro remoto?\n- Qual è la priorità tra flessibilità oraria e altre caratteristiche come seniority o località?\n- È importante che il candidato indichi esplicitamente la flessibilità oraria nella sua disponibilità o modalità di lavoro?\n\nPotresti specificare meglio questi aspetti per affinare la ricerca? In alternativa, potremmo valutare di rilassare qualche requisito per trovare più candidati adatti."
+ },
+ {
+  "n": 13,
+  "cat": "chatbot",
+  "q": "Mi serve un backend developer con Kafka e Kubernetes, almeno 4 anni di esperienza.",
+  "site": "mcflashrisorse",
+  "status": 200,
+  "secs": 14.2,
+  "search_requests": [
+   "{\"search_request\":{\"role\":\"backend developer\",\"skills\":[\"kafka\",\"kubernetes\"],\"years_of_experience\":4,\"query\":\"backend developer con Kafka e Kubernetes, almeno 4 anni di esperienza\"},\"site\":\"mcflashrisorse\",\"original_request\":\"Mi serve un backend developer con Kafka e Kubernetes, almeno 4 anni di esperienza.\"}"
+  ],
+  "verdict": "partial",
+  "hits": [
+   "1807",
+   "1700",
+   "1632",
+   "1736",
+   "1887",
+   "1830"
+  ],
+  "candidates": [
+   "1807",
+   "1700",
+   "1632",
+   "1736",
+   "1887",
+   "1830"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Ecco i profili più vicini alla richiesta di un backend developer con Kafka e Kubernetes e almeno 4 anni di esperienza; alcuni candidati non rispettano tutti i vincoli richiesti.\n\nCandidati principali:\n\n- NBI, Back End Developer, disponibile dal 02/01, senior, remoto\n  - Competenze corrispondenti: kafka, kubernetes\n  - Nessuna skill mancante\n  - Match parziale: esperienza indicata come senior, ma disponibilità non immediata\n\n- DPO, Back End Developer, disponibile immediatamente, junior, Milano/remoto\n  - Competenze corrispondenti: kafka, kubernetes\n  - Nessuna skill mancante\n  - Match parziale: seniority junior, quindi meno di 4 anni di esperienza\n\n- ABO, Salesforce Developer, disponibile in 20 giorni, medium, remoto\n  - Competenze corrispondenti: kubernetes\n  - Skill mancanti: kafka\n  - Match parziale: ruolo diverso da backend developer, manca kafka\n\nPotrebbero interessarti anche:\n\n- PMO, AI Engineer/Python Developer, disponibile in 30 giorni, junior, Genova/remoto\n  - Competenze corrispondenti: kubernetes\n  - Skill mancanti: kafka\n  - Match parziale: ruolo diverso, manca kafka, seniority junior\n\n- ABI, Back End Developer, disponibile immediatamente, medium, Torino/remoto\n  - Competenze corrispondenti: nessuna delle richieste\n  - Skill mancanti: kafka, kubernetes\n  - Match parziale: mancano entrambe le skill richieste\n\n- JCJ, Back End Developer, disponibile immediatamente, medium, Milano/remoto\n  - Competenze corrispondenti: nessuna delle richieste\n  - Skill mancanti: kafka, kubernetes\n  - Match parziale: mancano entrambe le skill richieste\n\nLa ricerca è stata allargata e alcuni risultati sono match parziali.\n\nPer migliorare la ricerca, potresti specificare:\n- Se la seniority minima di 4 anni è tassativa o se si può considerare anche esperienza inferiore\n- Se è indispensabile che il candidato abbia esperienza sia con Kafka che con Kubernetes\n- Se sono accettabili ruoli affini al backend developer\n\nSe vuoi, posso aiutarti a raffinare la ricerca con queste informazioni."
+ },
+ {
+  "n": 14,
+  "cat": "chatbot",
+  "q": "Big Data engineer Hadoop/Kafka.",
+  "site": "mcflashcandidati",
+  "status": 200,
+  "secs": 93.8,
+  "search_requests": [
+   "{\"search_request\":{\"role\":\"Big Data engineer\",\"skills\":[\"hadoop\",\"kafka\"],\"query\":\"Big Data engineer Hadoop Kafka\",\"top\":6},\"site\":\"mcflashcandidati\"}"
+  ],
+  "verdict": "unknown",
+  "hits": [],
+  "candidates": [],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Al momento non sono riuscito a completare la ricerca per un problema tecnico temporaneo. Ti invito a riprovare tra poco per trovare profili di Big Data engineer con competenze in Hadoop e Kafka. Se vuoi, posso aiutarti a specificare meglio la richiesta o a cercare con criteri diversi. Vuoi procedere in questo modo?"
+ },
+ {
+  "n": 15,
+  "cat": "chatbot",
+  "q": "Mi serve supporto per modernizzazione applicativa.",
+  "site": "mcflashrisorse",
+  "status": 200,
+  "secs": 12.3,
+  "search_requests": [
+   "{\"search_request\":{\"query\":\"supporto per modernizzazione applicativa\"},\"site\":\"mcflashrisorse\"}"
+  ],
+  "verdict": "weak",
+  "hits": [
+   "1895",
+   "1540",
+   "1910",
+   "1587",
+   "1805",
+   "1824"
+  ],
+  "candidates": [
+   "1895",
+   "1540",
+   "1910",
+   "1587",
+   "1805",
+   "1824"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": true,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Non ho trovato profili che corrispondano esattamente alla richiesta di supporto per modernizzazione applicativa. Questi sono i profili più vicini che ho trovato:\n\nCandidati principali:\n- GFR, Software Developer, disponibile immediatamente, senior, remoto\n  - Competenze: aws, git, hibernate, java8, jira, junit\n- ERA, Analista Tecnico Funzionale, disponibile in 30 giorni, senior, Milano/remoto\n  - Competenze: asp.net, c, confluence, dos, java, jira\n- GBE, Java Developer, disponibile immediatamente, junior, Torino/remoto\n  - Competenze: android, angular, angularjs, bootstrap, c, css\n\nPotrebbero interessarti anche:\n- TTR, Salesforce Developer, disponibile immediatamente, medio, remoto\n  - Competenze: apex, aura component, bootstrap, component, css3, flow\n- AMA, Sistemista Linux, disponibile in 20 giorni, senior, Torino/remoto\n  - Competenze: aks, asterisk pbx, aws, azure, ca wa, checkpoint\n- ARI, Team Leader Mainframe, disponibile in 45 giorni, senior, remoto\n  - Competenze: cics, cobol, db2, ibm data studio, jcl, mainframe z/os\n\nPer migliorare la ricerca, potresti specificare:\n- Quali tecnologie specifiche o linguaggi sono coinvolti nella modernizzazione applicativa?\n- La modernizzazione riguarda applicazioni legacy, cloud, o altro?\n- Qual è il livello di esperienza richiesto per il supporto alla modernizzazione?"
+ },
+ {
+  "n": 16,
+  "cat": "Settoriale",
+  "q": "Cerco figura con esperienza Pubblica Amministrazione.",
+  "site": "mcflashcandidati",
+  "status": 200,
+  "secs": 16.3,
+  "search_requests": [
+   "{\"search_request\":{\"query\":\"esperienza Pubblica Amministrazione\"},\"site\":\"mcflashcandidati\",\"original_request\":\"Cerco figura con esperienza Pubblica Amministrazione.\",\"top\":6}"
+  ],
+  "verdict": "none",
+  "hits": [
+   "1793",
+   "1512",
+   "1807",
+   "1928",
+   "1810",
+   "1653"
+  ],
+  "candidates": [
+   "1793",
+   "1512",
+   "1807",
+   "1928",
+   "1810",
+   "1653"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": true,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Non ho trovato profili che corrispondano esattamente a una figura con esperienza specifica in Pubblica Amministrazione. Questi sono i profili più vicini che ho trovato:\n\nCandidati principali:\n- CBI, Project Manager Security, Torino/remoto\n  - Senior, disponibilità tra 45 giorni\n  - Competenze: edr, epp, firewall, gantt, ids/ips, jira\n  - Lingua: Inglese base\n- FVE, AI Engineer, remoto\n  - Senior, disponibilità tra 20 giorni\n  - Competenze: azure, copilot, databricks, docker, fastapi, hugging-face\n  - Lingua: Inglese intermedio\n- NBI, Back End Developer, remoto\n  - Senior, disponibilità dal 2 gennaio\n  - Competenze: angular, aws, chargebee, docker, electroneek, git\n  - Lingua: Inglese buono\n\nPotrebbero interessarti anche:\n- BBO, Full Stack Developer, Roma/remoto\n  - Medium, disponibilità dal 23 febbraio\n  - Competenze: .net, .net core, .net framework, aws, azure, bitbucket\n  - Lingua: Inglese avanzato\n- MSA, Software Developer, remoto\n  - Junior, disponibilità tra 15 giorni\n  - Competenze: aws, aws amplify, aws cognito, aws s3, azure, c#\n  - Lingua: Inglese intermedio\n- FBE, Front End Developer, Torino/remoto\n  - Senior, disponibilità immediata\n  - Competenze: angular js, bootstrap, cmp, cms proprietario, confluence, cordova\n  - Lingua: Inglese intermedio\n\nPer migliorare la ricerca, potresti specificare:\n- Se serve esperienza specifica in Pubblica Amministrazione o va bene anche esperienza in ambito pubblico o governativo\n- Quali competenze o ruoli specifici sono richiesti oltre all'esperienza in Pubblica Amministrazione\n- Se la localizzazione o il tipo di contratto (remoto, presenza, tempo determinato) sono rilevanti per la selezione\n\nFammi sapere se vuoi approfondire o modificare qualche criterio!"
+ },
+ {
+  "n": 17,
+  "cat": "chatbot",
+  "q": "ci serve una persona che possa interfacciarsi col cliente e fare sviluppo.",
+  "site": "mcflashrisorse",
+  "status": 200,
+  "secs": 11.7,
+  "search_requests": [
+   "{\"search_request\":{\"query\":\"interfacciarsi col cliente e fare sviluppo\"},\"site\":\"mcflashrisorse\"}"
+  ],
+  "verdict": "partial",
+  "hits": [
+   "1797",
+   "1897",
+   "1832",
+   "1607",
+   "1677",
+   "1822"
+  ],
+  "candidates": [
+   "1797",
+   "1897",
+   "1832",
+   "1607",
+   "1677",
+   "1822"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": false,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Ecco i profili più vicini alla richiesta di una persona che possa interfacciarsi col cliente e fare sviluppo; alcuni non rispettano tutti i vincoli in modo completo.\n\nCandidati principali:\n\n- FAB, Full Stack Developer, remoto\n  - Seniority: Medium\n  - Disponibilità: tra 45 giorni\n  - Lingue: Inglese Intermedio\n  - Competenze: .net, angular, c#, docker, gitlab ci/cd, kotlin\n  - Match di tipo \"strict\" senza skill mancanti segnalate\n\n- FCO, Analista Programmatore Java, Torino/remoto\n  - Seniority: Senior\n  - Disponibilità: immediata\n  - Lingue: Inglese Intermedio\n  - Competenze: ajax, angular, antlr, apache, badboy, code kafka\n  - Match di tipo \"strict\" senza skill mancanti segnalate\n\n- JCO, React Developer, Milano/remoto\n  - Seniority: Junior\n  - Disponibilità: immediata\n  - Lingue: Inglese Intermedio\n  - Competenze: css, git, groovy, hibernate, html, illustrator\n  - Match di tipo \"strict\" senza skill mancanti segnalate\n\nPotrebbero interessarti anche:\n\n- ARI, Mobile Developer, Torino/remoto\n  - Seniority: Junior\n  - Disponibilità: immediata\n  - Lingue: Inglese Intermedio\n  - Competenze: android studio, azure devops, figma, flutter, git kraken, jira\n  - Match di tipo \"strict\" senza skill mancanti segnalate\n\n- CPI, Service Manager/Project Manager, remoto\n  - Seniority: Senior\n  - Disponibilità: tra 30 giorni\n  - Lingue: Inglese Intermedio\n  - Competenze: jira, microsoft project, pacchetto office\n  - Match di tipo \"strict\" senza skill mancanti segnalate\n\n- CCH, Data Analyst, Torino/remoto\n  - Seniority: Neo\n  - Disponibilità: immediata\n  - Lingue: Inglese Intermedio\n  - Competenze: excel, mongodb, mysql, powerbi, python, excell\n  - Match di tipo \"strict\" senza skill mancanti segnalate\n\nPer migliorare la ricerca, potresti specificare quali tecnologie o linguaggi di programmazione preferisci per lo sviluppo, se il ruolo richiede esperienza specifica nell'interfacciamento con il cliente o solo capacità comunicative generali, e il livello di seniority desiderato. Vuoi fornirmi queste informazioni?"
+ },
+ {
+  "n": 18,
+  "cat": "Data/AI",
+  "q": "Cerco supporto BigQuery.",
+  "site": "mcflashcandidati",
+  "status": 200,
+  "secs": 13.0,
+  "search_requests": [
+   "{\"search_request\":{\"skills\":[\"bigquery\"],\"query\":\"supporto BigQuery\"},\"site\":\"mcflashcandidati\"}"
+  ],
+  "verdict": "none",
+  "hits": [
+   "1871",
+   "1766",
+   "1880",
+   "1860",
+   "1862",
+   "1768"
+  ],
+  "candidates": [
+   "1871",
+   "1766",
+   "1880",
+   "1860",
+   "1862",
+   "1768"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": true,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Non ho trovato profili che corrispondano esattamente alla richiesta di supporto BigQuery. Questi sono i profili più vicini che ho trovato, ma nessuno ha competenze dirette in BigQuery:\n\nCandidati principali:\n- MZI, Java Developer, Milano/remoto\n  - Seniority: Junior\n  - Disponibilità: tra 20 giorni\n  - Competenze: angular, docker, git, google cloud platform, java, javascript\n  - Competenze mancanti: bigquery\n- APE, Data Analyst, Milano/remoto\n  - Seniority: Senior\n  - Disponibilità: tra 30 giorni\n  - Competenze: nprinting, power bi, qlik sense, qlikview, sql, data reporting\n  - Competenze mancanti: bigquery\n- PPO, Project Manager, Roma/remoto\n  - Seniority: Senior\n  - Disponibilità: immediata\n  - Competenze: absorb lms, excel, hubspot, jira, microsoft 365, power bi\n  - Competenze mancanti: bigquery\n\nPotrebbero interessarti anche:\n- FMA, Data Analyst Qlik, Roma/remoto\n  - Seniority: Medium\n  - Disponibilità: tra 15 giorni\n  - Competenze: dwh/etl, jira, powershell, python, qlik cloud, qlik sense\n  - Competenze mancanti: bigquery\n- SFO, Test Engineer, Bologna/remoto\n  - Seniority: Junior\n  - Disponibilità: immediata\n  - Competenze: alm, confluence, jira, latex, microsoft office, pyspark\n  - Competenze mancanti: bigquery\n- GBA, Project Manager, Milano/remoto\n  - Seniority: Senior\n  - Disponibilità: immediata\n  - Competenze: adespresso, azure, buzzsumo, c, c++, canva\n  - Competenze mancanti: bigquery\n\nLa ricerca è stata allargata per mostrare anche candidati senza competenze dirette in BigQuery. Per migliorare il risultato, potresti specificare se sono accettabili competenze correlate a BigQuery, indicare preferenze su seniority o ruolo, o definire il livello di esperienza richiesto con BigQuery.\n\nTi posso chiedere:\n- Il supporto a BigQuery è indispensabile o sono accettabili competenze correlate?\n- Ci sono preferenze per seniority o ruolo specifico oltre al supporto BigQuery?\n- Qual è il livello di esperienza richiesto con BigQuery?"
+ },
+ {
+  "n": 19,
+  "cat": "chatbot",
+  "q": "React developer full remote ma disponibile a trasferte mensili.",
+  "site": "mcflashrisorse",
+  "status": 200,
+  "secs": 14.5,
+  "search_requests": [
+   "{\"search_request\":{\"role\":\"React developer\",\"work_mode\":\"remote\",\"query\":\"disponibile a trasferte mensili\"},\"site\":\"mcflashrisorse\"}"
+  ],
+  "verdict": "weak",
+  "hits": [
+   "1832",
+   "1903",
+   "1669",
+   "1853",
+   "1864",
+   "1704"
+  ],
+  "candidates": [
+   "1832",
+   "1903",
+   "1669",
+   "1853",
+   "1864",
+   "1704"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": true,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Non ho trovato profili che corrispondano esattamente alla richiesta di un React developer full remote con disponibilità a trasferte mensili. Tuttavia, ti presento i profili più vicini che ho trovato; alcuni non rispettano tutti i vincoli richiesti.\n\nCandidati principali:\n- JCO, React Developer, località Milano/remoto\n  - Seniority: Junior\n  - Disponibilità: Immediata\n  - Competenze: react, css, git, groovy, hibernate, html\n  - Match type: strict\n- ACA, Front End Developer, località Milano/remoto\n  - Seniority: Senior\n  - Disponibilità: Immediata\n  - Competenze: react, react native, cloudflare, css, docker, git\n  - Match type: match parziale (hybrid_extension)\n- MCH, Phyton Developer, località Milano/remoto\n  - Seniority: Medium\n  - Disponibilità: Immediata\n  - Competenze: aws, cloudformation, docker, git, github actions, gitlab\n  - Match type: match parziale (hybrid_extension)\n\nPotrebbero interessarti anche:\n- DCA, React Developer, località Roma/remoto\n  - Seniority: Senior\n  - Disponibilità: dal 07/01\n  - Competenze: angular2, angularjs, ant design, bootstrap, ci/cd, confluence\n  - Match type: strict\n- LLU, Front End Developer, località remoto\n  - Seniority: Junior\n  - Disponibilità: Immediata\n  - Competenze: react, git, javascript, laravel, next.js, node.js\n  - Match type: match parziale (hybrid_extension)\n- AHU, React Developer, località remoto\n  - Seniority: Medium\n  - Disponibilità: tra 20 giorni\n  - Competenze: @tanstack/react-q, react 18, react hook form, react native, react query, react router\n  - Match type: strict\n\nPer migliorare la ricerca, potresti chiarire:\n- La disponibilità a trasferte mensili è obbligatoria o preferibile?\n- I candidati devono indicare esplicitamente la disponibilità a trasferte?\n- Qual è la distanza massima accettabile per le trasferte mensili?\n\nIn alternativa, potresti valutare di rilassare il vincolo sulla disponibilità a trasferte mensili per ampliare i risultati."
+ },
+ {
+  "n": 20,
+  "cat": "chatbot",
+  "q": "Analista funzionale con esperienza CRM.",
+  "site": "mcflashcandidati",
+  "status": 200,
+  "secs": 11.5,
+  "search_requests": [
+   "{\"search_request\":{\"role\":\"Analista funzionale\",\"query\":\"esperienza CRM\",\"top\":6},\"site\":\"mcflashcandidati\",\"original_request\":\"Analista funzionale con esperienza CRM.\"}"
+  ],
+  "verdict": "weak",
+  "hits": [
+   "1719",
+   "1640",
+   "1716",
+   "1917",
+   "1884",
+   "1901"
+  ],
+  "candidates": [
+   "1719",
+   "1640",
+   "1716",
+   "1917",
+   "1884",
+   "1901"
+  ],
+  "candidates_equal_hits": true,
+  "missing_in_text": [],
+  "counts_in_text": [],
+  "weak_declared": true,
+  "json_in_text": false,
+  "out_of_perimeter": [],
+  "answer": "Non ho trovato profili che corrispondano esattamente alla richiesta di un analista funzionale con esperienza CRM. Questi sono i profili più vicini che ho trovato; alcuni non rispettano tutti i vincoli richiesti.\n\nCandidati principali:\n\n- LBO, Analista funzionale SAP, Milano/remoto\n  - Seniority: Senior\n  - Disponibilità: 45 giorni\n  - Competenze: excel, microsoft office suite, navicat, sap erp, sap fiori, sql\n  - Nessuna skill CRM specifica rilevata\n- GPA, Analista Funzionale, Torino/remoto\n  - Seniority: Senior\n  - Disponibilità: 45 giorni\n  - Competenze: active directory, alm, confluence, jira, kibana, linux\n  - Nessuna skill CRM specifica rilevata\n- DGH, Analista Funzionale, remoto\n  - Seniority: Senior\n  - Disponibilità: 45 giorni\n  - Competenze: .net, abap 4, dart, flutter, html, linux\n  - Nessuna skill CRM specifica rilevata\n\nPotrebbero interessarti anche:\n\n- VPA, Project Manager/Business Analyst, Verona/remoto\n  - Seniority: Senior\n  - Disponibilità: 15 giorni\n  - Competenze: access, alm/uft, autocad, bem, filezilla, had\n  - Nessuna skill CRM specifica rilevata\n- DCA, Analista Programmatore, Torino/remoto\n  - Seniority: Senior\n  - Disponibilità: Immediata\n  - Competenze: asp.net, aws, bash, c, c#, css\n  - Nessuna skill CRM specifica rilevata\n- VBR, Analista Programmatore, Torino/remoto\n  - Seniority: Senior\n  - Disponibilità: dal 02/02\n  - Competenze: gitlab, html, java, linux, oracle, penthao\n  - Nessuna skill CRM specifica rilevata\n\nPer migliorare la ricerca, potresti specificare:\n\n- Il CRM è legato a un sistema specifico o tecnologia?\n- Quali competenze CRM sono più rilevanti per la posizione?\n- È richiesta esperienza in particolari moduli o piattaforme CRM?"
+ }
+]

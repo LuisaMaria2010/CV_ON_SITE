@@ -125,7 +125,7 @@ def _searcher_wrapper_openapi_spec(wrapper_url: str) -> dict[str, Any]:
             "schemas": {
                 "SearcherWrapperRequest": {
                     "type": "object",
-                    "required": ["search_request"],
+                    "required": ["search_request", "site"],
                     "additionalProperties": True,
                     "properties": {
                         "search_request": {
@@ -133,13 +133,13 @@ def _searcher_wrapper_openapi_spec(wrapper_url: str) -> dict[str, Any]:
                             "description": "Richiesta strutturata da inoltrare al motore search.",
                             "additionalProperties": True,
                         },
-                        "user_type": {
+                        "site": {
                             "type": "string",
+                            "enum": ["mcflashcandidati", "mcflashrisorse"],
                             "description": (
-                                "Valore presente in CONTEXT_JSON.session.user_type ('internal' o "
-                                "'external'). Va inoltrato VERBATIM a ogni chiamata, senza "
-                                "interpretarlo ne' modificarlo. Se omesso, il servizio applica la "
-                                "visibilita' piu' ristretta e alcuni candidati non verranno restituiti."
+                                "Valore presente in CONTEXT_JSON.session.site. Va inoltrato "
+                                "VERBATIM a ogni chiamata, senza interpretarlo ne' modificarlo. "
+                                "Obbligatorio: senza, il servizio rifiuta la richiesta."
                             ),
                         },
                         "original_request": {

@@ -2,14 +2,23 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import os
 import re
 import statistics
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
+
+from utils.site import record_visible, site_key
+
+logger = logging.getLogger(__name__)
+
+# Una pagina MCFlash oltre questa soglia viene segnalata nei log.
+_SLOW_PAGE_SECONDS = 5.0
 
 
 class MCFlashApiError(RuntimeError):
@@ -338,39 +347,62 @@ class MCFlashCandidatesClient:
             for p in parts
         )
 
-    @staticmethod
-    def _language_matches(asked_language: str, candidate_languages: str) -> bool:
-        def _normalize_language_text(text: str) -> str:
-            normalized = (text or "").strip().lower()
-            # Align common qualitative labels with the level taxonomy used by the bot.
-            normalized = re.sub(r"\bbuon[oa]?\b", "intermedio", normalized)
-            normalized = re.sub(r"\bgood\b", "intermedio", normalized)
-            return normalized
+    # Scala dei livelli linguistici: il livello richiesto e' un MINIMO, un livello
+    # superiore lo soddisfa (chi chiede "Intermedio" accetta anche "Avanzato").
+    # MCFlash usa Base / Intermedio / Buono / Avanzato / Madrelingua.
+    _LANGUAGE_LEVEL_RANK: dict[str, int] = {
+        "base": 1, "basic": 1, "elementare": 1, "scolastico": 1, "a1": 1, "a2": 1,
+        "intermedio": 2, "buono": 2, "buona": 2, "discreto": 2, "discreta": 2, "good": 2,
+        "intermediate": 2, "b1": 2, "b2": 2,
+        "avanzato": 3, "ottimo": 3, "ottima": 3, "fluente": 3, "fluent": 3, "advanced": 3,
+        "c1": 3, "c2": 3,
+        "madrelingua": 4, "nativo": 4, "native": 4, "mother tongue": 4, "bilingue": 4,
+    }
+    _LANGUAGE_NAME_ALIASES: dict[str, str] = {
+        "english": "inglese", "french": "francese", "german": "tedesco", "spanish": "spagnolo",
+        "italian": "italiano", "portuguese": "portoghese",
+    }
 
-        asked = _normalize_language_text(asked_language)
-        value = _normalize_language_text(candidate_languages)
+    @classmethod
+    def _parse_language_entries(cls, text: str) -> list[tuple[str, int | None]]:
+        """"Inglese: Avanzato, Francese: Base" -> [("inglese", 3), ("francese", 1)]."""
+        entries: list[tuple[str, int | None]] = []
+        for part in re.split(r"[,;/\n]+", (text or "").lower()):
+            part = part.strip()
+            if not part:
+                continue
+            name, _, level = part.partition(":")
+            paren = re.search(r"\((.*?)\)", name)
+            if paren and not level:
+                level = paren.group(1)  # "Inglese (Avanzato)"
+            name = re.sub(r"\(.*?\)", "", name).strip()
+            name = cls._LANGUAGE_NAME_ALIASES.get(name, name)
+            level = level.strip()
+            rank = cls._LANGUAGE_LEVEL_RANK.get(level)
+            if rank is None and level:
+                rank = next((r for k, r in cls._LANGUAGE_LEVEL_RANK.items() if re.search(rf"\b{k}\b", level)), None)
+            entries.append((name, rank if level else None))
+        return entries
+
+    @classmethod
+    def _language_matches(cls, asked_language: str, candidate_languages: str) -> bool:
+        asked = cls._parse_language_entries(asked_language)
         if not asked:
             return True
-        if not value:
+        candidate = cls._parse_language_entries(candidate_languages)
+        if not candidate:
             return False
-
-        # Direct contains match first (works for full "inglese: intermedio").
-        if asked in value:
-            return True
-
-        # If caller passes only language name (no level), match by language token.
-        if ":" not in asked:
-            language_token = asked.split("(", 1)[0].strip()
-            if language_token and language_token in value:
-                return True
-            return False
-
-        # If caller passed language + level, try matching both parts even with punctuation variations.
-        lang_part, level_part = [p.strip() for p in asked.split(":", 1)]
-        if lang_part and level_part:
-            return lang_part in value and level_part in value
-
-        return False
+        for name, min_rank in asked:
+            known = [rank for cand_name, rank in candidate if cand_name == name]
+            if not known:
+                return False
+            # Lingua richiesta senza livello: basta che il candidato la parli.
+            if min_rank is None:
+                continue
+            # Livello richiesto: almeno quel livello (livello del candidato ignoto -> escluso).
+            if not any(rank is not None and rank >= min_rank for rank in known):
+                return False
+        return True
 
     @classmethod
     def _normalize_seniority_key(cls, seniority: str) -> str:
@@ -988,7 +1020,36 @@ class MCFlashCandidatesClient:
 
         return False
 
+    # Filtri applicati a OGNI lettura del DB MCFlash (filter/find/fetch_candidates):
+    # un record che non li soddisfa per la ricerca non esiste. Campo mancante o
+    # valore non riconosciuto -> record escluso.
+    _ELIGIBILITY: dict[str, bool] = {"abilitato": True}
+
+    @staticmethod
+    def _as_bool(value: Any) -> bool | None:
+        if isinstance(value, bool):
+            return value
+        text = str(value if value is not None else "").strip().lower()
+        if text in {"true", "1", "si", "sì", "yes"}:
+            return True
+        if text in {"false", "0", "no"}:
+            return False
+        return None
+
+    @classmethod
+    def is_eligible(cls, record: Any) -> bool:
+        if not isinstance(record, dict):
+            return False
+        lowered = {str(k).lower(): v for k, v in record.items()}
+        return all(
+            cls._as_bool(lowered.get(field.lower())) is expected
+            for field, expected in cls._ELIGIBILITY.items()
+        )
+
     async def fetch_page(self, *, limit: int, offset: int) -> list[dict[str, Any]]:
+        """Pagina GREZZA dell'API, serve alla paginazione. Non usarla per leggere
+        candidati: filter_candidates / find_candidates / fetch_candidates applicano
+        i filtri di idoneita'."""
         def _run() -> list[dict[str, Any]]:
             payload = self._request_json({"limit": limit, "offset": offset})
             if isinstance(payload, list):
@@ -1010,7 +1071,8 @@ class MCFlashCandidatesClient:
         # Endpoint supports max 1000 items per page.
         page_limit = max(1, min(limit, 1000))
         page_offset = max(0, offset)
-        return await self.fetch_page(limit=page_limit, offset=page_offset)
+        page = await self.fetch_page(limit=page_limit, offset=page_offset)
+        return [record for record in page if self.is_eligible(record)]
 
     async def filter_candidates(
         self,
@@ -1027,12 +1089,14 @@ class MCFlashCandidatesClient:
         budget: str | None = None,
         disponibilita: str | None = None,
         age: str | None = None,
+        site: str | None = None,
         max_scan_records: int = 5000,
         return_all_matches: bool = False,
     ) -> list[dict[str, Any]]:
         requested_limit = max(1, int(limit))
         requested_offset = max(0, int(offset))
 
+        site_l = site_key(site)
         query_l = (query or "").strip().lower()
         role_l = self._normalize_role_text(role or "")
         location_l = (sede or "").strip().lower()
@@ -1081,6 +1145,8 @@ class MCFlashCandidatesClient:
             )
             text_blob = " ".join(self._pick(candidate, field) for field in fields).lower()
 
+            if site_l and not record_visible(candidate, site_l):
+                return False
             if query_l and query_l not in text_blob:
                 return False
             if role_l and not self._role_matches(role_l, self._pick(candidate, "Ruolo")):
@@ -1131,29 +1197,38 @@ class MCFlashCandidatesClient:
             return True
 
         has_filters = any([
-            query_l, role_l, location_l, work_mode_l, seniority_l, language_l, budget_l, disponibilita_l,
+            site_l, query_l, role_l, location_l, work_mode_l, seniority_l, language_l, budget_l, disponibilita_l,
             age_min is not None, age_max is not None,
         ])
         page_size = 200
         cursor = 0
         scanned = 0
         matched: list[dict[str, Any]] = []
+        pages = 0
+        t0 = time.monotonic()
+        logger.info("MCFlash scan start site=%s", site_l or "-")
 
         while scanned < max_scan_records:
+            tp = time.monotonic()
             page = await self.fetch_page(limit=page_size, offset=cursor)
+            page_s = time.monotonic() - tp
+            pages += 1
+            if page_s > _SLOW_PAGE_SECONDS:
+                logger.warning("MCFlash slow page offset=%d took %.1f s", cursor, page_s)
             if not page:
                 break
 
             scanned += len(page)
             cursor += len(page)
 
-            if not has_filters:
-                matched.extend(page)
-                continue
-
             for candidate in page:
-                if _candidate_matches(candidate):
+                if not self.is_eligible(candidate):
+                    continue
+                if not has_filters or _candidate_matches(candidate):
                     matched.append(candidate)
+
+        logger.info("MCFlash scan done site=%s pages=%d records=%d matched=%d ms=%.0f",
+                    site_l or "-", pages, scanned, len(matched), (time.monotonic() - t0) * 1000)
 
         if return_all_matches:
             return matched
@@ -1188,6 +1263,8 @@ class MCFlashCandidatesClient:
             offset += len(page)
 
             for candidate in page:
+                if not self.is_eligible(candidate):
+                    continue
                 candidate_id = self._pick(candidate, "Id").strip().lower()
                 if candidate_id and candidate_id == key_l:
                     return [candidate]
