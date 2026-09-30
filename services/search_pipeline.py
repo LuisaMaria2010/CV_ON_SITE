@@ -1,13 +1,18 @@
 from __future__ import annotations
 
+import asyncio
 import math
 import re
+import time
 from typing import Any
 
 from core.config import settings
 from core.errors import InvalidInputError
+from infra.cv_mcflash_map import get_cv_mcflash_map
 from infra.mcflash_candidates import MCFlashApiError, MCFlashCandidatesClient
 from infra.search_service import SearchService, _looks_like_cv_boilerplate
+from utils.roles import drop_generic_role
+from utils.site import resolve_site
 from utils.values import (
     first_non_empty as _first_non_empty,
     lower_list as _lower_list,
@@ -168,6 +173,7 @@ async def _aggregate_top_candidates(
     candidate_top_k: int,
     query_skills: list[str] | None = None,
     query_role: str | None = None,
+    cv_map: dict[str, str] | None = None,
 ) -> list[dict[str, Any]]:
     chunks_by_doc: dict[str, list[dict[str, Any]]] = {}
     doc_person: dict[str, str] = {}
@@ -199,14 +205,28 @@ async def _aggregate_top_candidates(
     #
     # Il nome da solo NON basta come identita': il codice anonimizzato in
     # full_name non e' univoco in MCFlash (esistono omonimi), e raggruppare solo
-    # per nome faceva sparire silenziosamente il secondo omonimo. Il ruolo e' lo
-    # stesso discriminante gia' usato da _select_mcflash_profile_for_hit, con lo
-    # stesso matcher tollerante: "Java Developer" e "Java Backend Developer" sono
-    # la stessa persona, "Java Developer" e "Data Analyst" sono due persone.
+    # per nome faceva sparire silenziosamente il secondo omonimo. Per i CV fuori
+    # tabella si ricade su nome + ruolo, con il matcher tollerante: "Java
+    # Developer" e "Java Backend Developer" sono la stessa persona, "Java
+    # Developer" e "Data Analyst" sono due persone.
+    #
+    # Quando il CV e' nella tabella CV -> MCFlash, l'identita' e' l'id MCFlash:
+    # tutti i CV collegati allo stesso record sono la stessa persona, e CV con lo
+    # stesso codice ma collegati a record diversi sono persone diverse.
     groups: list[dict[str, Any]] = []  # {"person": str, "role": str, "docs": [str]}
     for doc_id in chunks_by_doc:
         pkey = doc_person.get(doc_id)
         role = doc_role.get(doc_id, "")
+        mcflash_id = (cv_map or {}).get(doc_id)
+        if mcflash_id:
+            pkey = f"mcflash:{mcflash_id}"
+            for group in groups:
+                if group["person"] == pkey:
+                    group["docs"].append(doc_id)
+                    break
+            else:
+                groups.append({"person": pkey, "role": role, "docs": [doc_id]})
+            continue
         if not pkey:
             groups.append({"person": f"doc:{doc_id}", "role": role, "docs": [doc_id]})
             continue
@@ -296,8 +316,7 @@ def _is_same_candidate(a: dict[str, Any], b: dict[str, Any]) -> bool:
     """Stessa persona?
 
     1. `id_mcflash` e' l'identita' AUTOREVOLE: stesso id -> stessa persona,
-       id diversi -> persone diverse (e' esattamente cosi' che
-       _select_mcflash_profile_for_hit distingue gli omonimi). Vince su tutto.
+       id diversi -> persone diverse. Vince su tutto.
     2. Solo quando l'id non e' disponibile su entrambi si ricade su
        nome + ruolo, con match tollerante sul ruolo.
 
@@ -340,46 +359,16 @@ def _already_present(candidate: dict[str, Any], hits: list[dict[str, Any]]) -> b
     )
 
 
+def _record_id(record: dict[str, Any]) -> str:
+    """Id di un record MCFlash, come stringa (chiave della tabella CV -> MCFlash)."""
+    return _safe_str(_first_non_empty(record.get("id"), record.get("Id")))
+
+
 def _normalise_person_key(value: Any) -> str:
     raw = _safe_str(value).lower()
     if not raw:
         return ""
     return re.sub(r"[^a-z0-9]+", "", raw)
-
-
-def _select_mcflash_profile_for_hit(
-    hit_role: Any,
-    candidates: list[dict[str, Any]],
-) -> tuple[dict[str, Any] | None, bool]:
-    """
-    Disambigua record MCFlash omonimi (stesso nome normalizzato) usando la similarita'
-    di ruolo (tollerante a piccole variazioni: sinonimi IT/EN, forme parziali, ecc.
-    tramite MCFlashCandidatesClient._role_matches).
-
-    Ritorna (profile, ambiguous). `ambiguous` e' True quando esistono piu' omonimi e
-    il ruolo da solo non ha permesso di isolare un candidato univoco: in tal caso si
-    ricade sul primo match di ruolo disponibile, o sul primo omonimo se nessuno
-    combacia, ma il flag segnala che l'identita' non e' stata risolta con certezza.
-    """
-    if not candidates:
-        return None, False
-    if len(candidates) == 1:
-        return candidates[0], False
-
-    hit_role_norm = _safe_str(hit_role)
-    role_matches = [
-        c for c in candidates
-        if hit_role_norm and MCFlashCandidatesClient._role_matches(
-            hit_role_norm,
-            _safe_str(_first_non_empty(c.get("ruolo"), c.get("Ruolo"))),
-        )
-    ]
-
-    if len(role_matches) == 1:
-        return role_matches[0], False
-
-    fallback = role_matches[0] if role_matches else candidates[0]
-    return fallback, True
 
 
 def _escape_odata_string(value: str) -> str:
@@ -431,36 +420,6 @@ def _skill_overlap_count(candidate_skills: Any, requested_skills: list[str]) -> 
     return len(requested & candidate)
 
 
-def _escape_search_query_term(value: str) -> str:
-    term = str(value or "").strip()
-    if not term:
-        return ""
-    term = term.replace('"', ' ')
-    term = re.sub(r"\s+", " ", term)
-    return term.strip()
-
-
-def _build_name_keyword_query(names: set[str], *, max_terms: int = 1000) -> str:
-    """Nessun taglio di pertinenza qui: l'universo hard-select e' gia' il
-    sotto-insieme corretto di MCFlash per questa richiesta, e va cercato per
-    intero. Il precedente max_terms=60, combinato con l'ordinamento
-    alfabetico di sorted(names), scartava sistematicamente i candidati il cui
-    nome non rientrava tra i primi 60 in ordine alfabetico - indipendentemente
-    dalla loro pertinenza. max_terms resta solo come protezione tecnica contro
-    query eccessivamente lunghe: con l'universo MCFlash attuale (263
-    candidati) non viene mai raggiunto.
-    """
-    cleaned: list[str] = []
-    for raw in sorted(names):
-        term = _escape_search_query_term(raw)
-        if not term:
-            continue
-        cleaned.append(f'"{term}"')
-        if len(cleaned) >= max_terms:
-            break
-    return " OR ".join(cleaned)
-
-
 def _extract_availability_hint_from_query(query: str | None) -> str | None:
     text = _safe_str(query).lower()
     if not text:
@@ -483,10 +442,18 @@ def _extract_availability_hint_from_query(query: str | None) -> str | None:
     return None
 
 async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, logger) -> dict:
+    # Ruolo fatto solo di parole generiche ("Figura", "Profilo"): non e' un ruolo.
+    if "role" in payload and drop_generic_role(payload.get("role")) is None:
+        payload = {k: v for k, v in payload.items() if k != "role"}
     p = normalise_search_request(payload)
 
     if not p["query"] and not p["skills"] and not p["role"]:
         raise InvalidInputError("At least one of 'query', 'skills' or 'role' is required")
+
+    # Perimetro della ricerca: solo i record MCFlash di questo site. E' un filtro
+    # hard come gli altri, con una differenza: non viene mai tolto, nemmeno
+    # quando la ricerca si allarga.
+    site = resolve_site(payload)
 
     hard_seniority = _safe_str(
         _first_non_empty(p.get("seniority"), payload.get("seniority"), p.get("seniority_explicit"))
@@ -519,9 +486,6 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
 
     hard_select_enabled = True
     hard_selected_total = 0
-    hard_selected_nomi_keys: set[str] = set()
-    hard_selected_full_names: set[str] = set()
-    hard_selected_by_nome_key: dict[str, list[dict[str, Any]]] = {}
 
     client = get_mcflash_candidates_client()
 
@@ -530,25 +494,28 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         hard_language, hard_disponibilita, hard_budget, hard_age,
     ])
 
-    async def _scan_full_mcflash_archive() -> list[dict[str, Any]]:
-        collected: list[dict[str, Any]] = []
-        offset = 0
-        page_size = 1000
-        max_scan = 20000
-        while len(collected) < max_scan:
-            page = await client.fetch_page(limit=page_size, offset=offset)
-            if not page:
-                break
-            collected.extend(page)
-            if len(page) < page_size:
-                break
-            offset += len(page)
-        return collected[:max_scan]
+    # Tutti i record MCFlash del site, senza filtri di business: e' l'universo
+    # usato quando la ricerca si allarga (nessun filtro, filtri senza esito,
+    # second pass). Caricato al primo uso e riusato.
+    site_universe: list[dict[str, Any]] | None = None
 
-    try:
-        # Hard-select is always executed. Without filters we scan MCFlash pages and use
-        # the full table (bounded by safety cap) as mandatory candidate universe.
-        if hard_filters_present:
+    async def _load_site_universe() -> list[dict[str, Any]]:
+        nonlocal site_universe
+        if site_universe is None:
+            try:
+                site_universe = await client.filter_candidates(
+                    limit=5000,
+                    offset=0,
+                    site=site,
+                    max_scan_records=20000,
+                    return_all_matches=True,
+                )
+            except MCFlashApiError as exc:
+                raise InvalidInputError(f"MCFlash site scan failed: {exc}") from exc
+        return site_universe
+
+    if hard_filters_present:
+        try:
             hard_selected = await client.filter_candidates(
                 limit=5000,
                 offset=0,
@@ -560,30 +527,29 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 disponibilita=hard_disponibilita,
                 budget=hard_budget,
                 age=hard_age,
+                site=site,
                 max_scan_records=20000,
                 return_all_matches=True,
             )
-        else:
-            hard_selected = await _scan_full_mcflash_archive()
-    except MCFlashApiError as exc:
-        raise InvalidInputError(f"MCFlash hard select failed: {exc}") from exc
+        except MCFlashApiError as exc:
+            raise InvalidInputError(f"MCFlash hard select failed: {exc}") from exc
+    else:
+        hard_selected = await _load_site_universe()
 
     hard_selected_total = len(hard_selected)
 
     # Fallback: the business filters (role/sede/seniority/language/budget/age)
     # matched nobody in MCFlash, but the request still carries something the CV
     # index can search on (skills, a role, or free-text intent). Don't stop here
-    # — widen the universe to the whole archive (same path as the no-filter
-    # case) and let the index search + rerank + semantic pass do the work.
+    # — widen the universe to every MCFlash record of the site (same path as the
+    # no-filter case: business filters dropped, site kept) and let the index
+    # search + rerank + semantic pass do the work.
     # Flagged so the response can say the business constraints could not be
     # honoured. Covers e.g. role acronyms MCFlash cannot resolve ("SRE").
     hard_select_widened = False
     if not hard_selected and hard_filters_present and (p["skills"] or p["role"] or p["query"]):
         hard_select_widened = True
-        try:
-            hard_selected = await _scan_full_mcflash_archive()
-        except MCFlashApiError as exc:
-            raise InvalidInputError(f"MCFlash archive scan failed: {exc}") from exc
+        hard_selected = await _load_site_universe()
 
     if not hard_selected:
         return {
@@ -607,6 +573,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                     "disponibilita": hard_disponibilita,
                     "budget": hard_budget,
                     "age": hard_age,
+                    "site": site,
                     "matched_candidates": 0,
                     "widened": hard_select_widened,
                 },
@@ -614,68 +581,33 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             "suggestions": [],
         }
 
-    for candidate in hard_selected:
-        mcflash_nome = _safe_str(_first_non_empty(candidate.get("nome"), candidate.get("Nome")))
+    # Collegamento CV -> MCFlash: SOLO tramite la tabella su storage
+    # (infra/cv_mcflash_map). Il codice anonimizzato nel CV non e' univoco (lo
+    # stesso codice compare su CV di persone diverse, dentro e fuori MCFlash),
+    # quindi non viene usato per l'identita'. Un CV fuori tabella non e' mai
+    # ammissibile. La lettura e' sincrona (Table SDK): fuori dall'event loop.
+    # Log qui e non dentro il thread: i log emessi dai thread non arrivano ad
+    # Application Insights.
+    t_map = time.monotonic()
+    cv_map = await asyncio.to_thread(get_cv_mcflash_map)
+    map_ms = (time.monotonic() - t_map) * 1000
+    if map_ms > 2000:
+        logger.warning("CV->MCFlash map lookup took %.0f ms", map_ms)
+    hard_selected_by_id = {_record_id(r): r for r in hard_selected if _record_id(r)}
 
-        # Solo il codice anonimizzato (es. "ELO") va usato per risolvere l'identita'
-        # nell'indice CV: e' quello che l'indice usa come full_name (verificato sui
-        # chunk reali). Il nome completo ("nomi", es. "Emanuele Maria Lobundo") non
-        # compare nell'indice CV ed e' presente solo lato MCFlash - includerlo nella
-        # query di risoluzione rischia solo falsi positivi (nomi/cognomi comuni che
-        # matchano per caso il contenuto di CV di altri candidati).
-        if mcflash_nome:
-            hard_selected_full_names.add(mcflash_nome)
+    def _doc_ids_for(records_by_id: dict[str, dict[str, Any]]) -> set[str]:
+        return {doc_id for doc_id, mcflash_id in cv_map.items() if mcflash_id in records_by_id}
 
-        nome_key = _normalise_person_key(mcflash_nome)
-        if nome_key:
-            hard_selected_nomi_keys.add(nome_key)
-            # Keep every homonym (same normalized name): role-based disambiguation
-            # happens later, at attach time, against the actual CV/index role.
-            hard_selected_by_nome_key.setdefault(nome_key, []).append(candidate)
-
-    name_keyword_query = _build_name_keyword_query(hard_selected_full_names)
-
-    if not name_keyword_query:
-        logger.warning("MCFlash universe could not be translated to name keyword query")
-        return {
-            "hits": [],
-            "meta": {
-                "total": 0,
-                "top": p["top"],
-                "relaxed": False,
-                "relaxed_criteria": [],
-                "hybrid": p["hybrid"],
-                "work_mode": p["work_mode"],
-                "ignored_constraints": [],
-                "index": settings.document_search_index_name,
-                "hard_select": {
-                    "enabled": True,
-                    "role": hard_role,
-                    "seniority": hard_seniority,
-                    "sede": hard_sede,
-                    "work_mode": hard_work_mode,
-                    "lingue": hard_language,
-                    "disponibilita": hard_disponibilita,
-                    "budget": hard_budget,
-                    "age": hard_age,
-                    "matched_candidates": hard_selected_total,
-                    "widened": hard_select_widened,
-                },
-            },
-            "suggestions": [],
-        }
+    def _mapped_id(hit: dict[str, Any]) -> str:
+        return cv_map.get(_safe_str(hit.get("document_id")), "")
 
     index_name = settings.document_search_index_name
     search = SearchService()
 
-    # Risolve l'universo hard-select (nomi/codici MCFlash) in document_id
-    # dell'indice CV. Il punteggio di questa ricerca viene scartato: serve solo
-    # a stabilire CHI e' ammissibile (identita'), non quanto e' pertinente -
-    # quella valutazione spetta solo alle ricerche vere piu' sotto, scoped da
-    # un filtro invece che da testo libero in competizione con le skill.
-    identity_doc_ids = await search.resolve_document_ids_by_name(
-        name_keyword_query, index_name=index_name
-    )
+    # I CV dei record della hard select: la ricerca di pertinenza piu' sotto e'
+    # filtrata su questi document_id, cosi' l'ammissibilita' non compete con le
+    # skill nel punteggio.
+    identity_doc_ids = _doc_ids_for(hard_selected_by_id)
     if not identity_doc_ids:
         # Nessun document_id risolto per l'universo hard-select corrente (es. un
         # candidato MCFlash senza CV indicizzato). Non e' un caso da chiudere qui:
@@ -738,17 +670,15 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         # Senza identity_doc_ids non c'e' nessun filtro di identita' da applicare:
         # cercare comunque significherebbe interrogare l'indice senza alcuna
         # restrizione di ammissibilita'. Meglio saltare la ricerca stretta (resta
-        # vuota, come sarebbe comunque risultata dopo il filtro _is_hard_name_match
+        # vuota, come sarebbe comunque risultata dopo il filtro _in_hard_select
         # sotto) e lasciare che sia il second-pass a cercare in modo esplicitamente
         # allargato.
         raw_hits = []
 
-    def _is_hard_name_match(hit: dict[str, Any]) -> bool:
-        hit_full_name = _safe_str(_first_non_empty(hit.get("full_name"), hit.get("name")))
-        hit_name_key = _normalise_person_key(hit_full_name)
-        return bool(hit_name_key and hit_name_key in hard_selected_nomi_keys)
+    def _in_hard_select(hit: dict[str, Any]) -> bool:
+        return _mapped_id(hit) in hard_selected_by_id
 
-    strict_raw_hits = [h for h in raw_hits if isinstance(h, dict) and _is_hard_name_match(h)]
+    strict_raw_hits = [h for h in raw_hits if isinstance(h, dict) and _in_hard_select(h)]
 
     reranked_chunks = rerank(
         strict_raw_hits,
@@ -765,29 +695,17 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         candidate_top_k=candidate_top_k,
         query_skills=p["skills"],
         query_role=p["role"],
+        cv_map=cv_map,
     )
 
-    # `_attach_mcflash_profile_by_nome` runs more than once on the same hit object
-    # across passes (first-pass strict match, then the final re-attach loop). Role
-    # disambiguation must always compare against the role as originally read from
-    # the CV/index, not the MCFlash-overlaid value written back onto the hit by a
-    # previous call — otherwise a wrong guess would "confirm" itself on re-entry.
-    original_cv_role_by_hit: dict[int, Any] = {}
-
-    def _attach_mcflash_profile_by_nome(hit: dict[str, Any]) -> bool:
-        hit_full_name = _safe_str(_first_non_empty(hit.get("full_name"), hit.get("name")))
-        hit_name_key = _normalise_person_key(hit_full_name)
-        candidates = hard_selected_by_nome_key.get(hit_name_key) or []
-        cache_key = id(hit)
-        if cache_key not in original_cv_role_by_hit:
-            original_cv_role_by_hit[cache_key] = hit.get("role")
-        profile, ambiguous = _select_mcflash_profile_for_hit(original_cv_role_by_hit[cache_key], candidates)
-        if profile is None or hit_name_key not in hard_selected_nomi_keys:
+    def _attach_mcflash_profile(hit: dict[str, Any]) -> bool:
+        """Aggancia il record della hard select collegato al CV dalla tabella."""
+        profile = hard_selected_by_id.get(_mapped_id(hit))
+        if profile is None:
             hit["strict_mcflash_name_match"] = False
             return False
 
         hit["mcflash_profile"] = dict(profile)
-        hit["mcflash_name_ambiguous"] = ambiguous
 
         def _profile_value(*keys: str) -> Any:
             for key in keys:
@@ -833,7 +751,14 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         hit["strict_mcflash_name_match"] = True
         return True
 
-    mcflash_full_name_cache: dict[str, list[dict[str, Any]]] = {}
+    site_universe_by_id: dict[str, dict[str, Any]] | None = None
+
+    async def _load_site_universe_by_id() -> dict[str, dict[str, Any]]:
+        """Record MCFlash del site per id."""
+        nonlocal site_universe_by_id
+        if site_universe_by_id is None:
+            site_universe_by_id = {_record_id(r): r for r in await _load_site_universe() if _record_id(r)}
+        return site_universe_by_id
 
     def _fill_missing_from_profile(hit: dict[str, Any], profile: dict[str, Any]) -> None:
         def _profile_value(*keys: str) -> Any:
@@ -860,7 +785,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         _set_if_missing("language", "lingue", "Lingue")
         _set_if_missing("availability", "disponibilita", "Disponibilita")
 
-    def _overlay_from_mcflash_for_second_pass(hit: dict[str, Any], profile: dict[str, Any], *, ambiguous: bool) -> None:
+    def _overlay_from_mcflash_for_second_pass(hit: dict[str, Any], profile: dict[str, Any]) -> None:
         def _profile_value(*keys: str) -> Any:
             for key in keys:
                 if key not in profile:
@@ -874,7 +799,6 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             return None
 
         hit["mcflash_profile"] = dict(profile)
-        hit["mcflash_name_ambiguous"] = ambiguous
 
         role_value = _profile_value("ruolo", "Ruolo", "role", "Role")
         if role_value is not None:
@@ -905,26 +829,15 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         if not hit.get("second_pass_extension"):
             return
         if hit.get("strict_mcflash_name_match"):
-            # Already resolved (and role-disambiguated, if needed) by
-            # _attach_mcflash_profile_by_nome against the hard-select universe.
-            # Re-running a live single-name MCFlash lookup here would only risk
-            # overwriting a good match with an undisambiguated one.
+            # Gia' agganciato da _attach_mcflash_profile a un record della hard select.
             return
 
-        full_name = _safe_str(_first_non_empty(hit.get("full_name"), hit.get("name")))
-        if not full_name:
-            if not _safe_str(hit.get("availability")):
-                hit["availability"] = "non disponibile"
-            return
-
-        cache_key = full_name.lower()
-        if cache_key not in mcflash_full_name_cache:
-            mcflash_full_name_cache[cache_key] = await client.find_candidates(full_name)
-
-        candidates = mcflash_full_name_cache.get(cache_key) or []
-        profile, ambiguous = _select_mcflash_profile_for_hit(hit.get("role"), candidates)
+        # Il record collegato dalla tabella, purche' sia del site: un CV fuori
+        # tabella o collegato a un altro site resta senza profilo e viene
+        # scartato dal chiamante.
+        profile = (await _load_site_universe_by_id()).get(_mapped_id(hit))
         if profile is not None:
-            _overlay_from_mcflash_for_second_pass(hit, profile, ambiguous=ambiguous)
+            _overlay_from_mcflash_for_second_pass(hit, profile)
             return
 
         if not _safe_str(hit.get("availability")):
@@ -936,7 +849,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
     for hit in hits:
         if not isinstance(hit, dict):
             continue
-        if _attach_mcflash_profile_by_nome(hit):
+        if _attach_mcflash_profile(hit):
             strict_hits_initial.append(hit)
 
     # Il profilo MCFlash e' ora agganciato: si puo' collassare sull'identita'
@@ -955,11 +868,14 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             relaxed_criteria.append("hard_select_widened")
         suggestions.append(
             "Nessun candidato MCFlash soddisfa i vincoli di business "
-            "(ruolo/sede/seniority/lingua/budget/eta): ricerca estesa a tutto "
-            "l'archivio e filtrata per skill."
+            "(ruolo/sede/seniority/lingua/budget/eta): ricerca estesa a tutti "
+            "i candidati MCFlash del site e filtrata per skill."
         )
 
-    if len(hits) < fallback_min and p["skills"]:
+    # Senza identity_filter (nessun CV in tabella per la hard select) il
+    # rilassamento interrogherebbe l'intero indice: si salta, come la ricerca
+    # stretta, e si lascia fare al second pass sui CV del site.
+    if len(hits) < fallback_min and p["skills"] and identity_filter:
         relaxed = True
         if "skills" not in relaxed_criteria:
             relaxed_criteria.append("skills")
@@ -991,7 +907,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         )
         relaxed_strict_raw_hits = [
             h for h in relaxed_hits
-            if isinstance(h, dict) and _is_hard_name_match(h)
+            if isinstance(h, dict) and _in_hard_select(h)
         ]
         relaxed_reranked_chunks = rerank(
             relaxed_strict_raw_hits,
@@ -1008,6 +924,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             candidate_top_k=candidate_top_k,
             query_skills=p["skills"],
             query_role=p["role"],
+            cv_map=cv_map,
         )
         existing_hits: list[dict[str, Any]] = list(hits)
 
@@ -1016,7 +933,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             if _already_present(h, existing_hits):
                 continue
 
-            if _attach_mcflash_profile_by_nome(h):
+            if _attach_mcflash_profile(h):
                 candidate_pool.append(h)
 
         thresholds = _relaxed_skill_thresholds(len(p["skills"]))
@@ -1059,12 +976,8 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
     for hit in hits:
         if not isinstance(hit, dict):
             continue
-        if _attach_mcflash_profile_by_nome(hit):
+        if _attach_mcflash_profile(hit):
             strict_hits_final.append(hit)
-            continue
-
-        await _enrich_second_pass_from_mcflash(hit)
-        strict_hits_final.append(hit)
     hits = _collapse_same_candidates(strict_hits_final)[:candidate_top_k]
 
     # Second pass (extension only): keep first-pass MCFlash logic unchanged.
@@ -1079,7 +992,22 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         bool(p["skills"]),
     ])
 
+    async def _resolve_site_identity_filter() -> str | None:
+        """Filtro document_id sui CV di tutti i record MCFlash del site.
+
+        Il second pass toglie i filtri di business ma resta nel perimetro del
+        site: cerca solo tra questi CV, mai nell'intero indice.
+        """
+        doc_ids = _doc_ids_for(await _load_site_universe_by_id())
+        return _build_search_in_filter("document_id", doc_ids) if doc_ids else None
+
+    site_identity_filter: str | None = None
     if len(hits) < target_min_candidates and has_second_pass_keywords:
+        site_identity_filter = await _resolve_site_identity_filter()
+        if site_identity_filter is None:
+            logger.warning("Site %s did not resolve to any indexed CV; skipping second pass", site)
+
+    if len(hits) < target_min_candidates and has_second_pass_keywords and site_identity_filter:
         keyword_parts = [
             _safe_str(hard_role),
             _safe_str(hard_sede),
@@ -1102,7 +1030,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
         second_pass_raw_hits = await search.search_chunks(
             lexical_query=second_pass_lexical_query,
             semantic_query=second_pass_semantic_query,
-            odata_filter=None,
+            odata_filter=site_identity_filter,
             embedding=second_pass_embedding,
             top=max(chunk_top_k, target_min_candidates * 8),
             index_name=index_name,
@@ -1122,6 +1050,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             candidate_top_k=max(candidate_top_k, target_min_candidates * 2),
             query_skills=p["skills"],
             query_role=p["role"],
+            cv_map=cv_map,
         )
 
         existing_hits = [h for h in hits if isinstance(h, dict)]
@@ -1136,9 +1065,12 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             # l'identita' autorevole (id_mcflash) non e' ancora disponibile e il
             # confronto ricadrebbe su nome+ruolo, lasciando passare la stessa
             # persona con un ruolo estratto diverso.
-            _attach_mcflash_profile_by_nome(candidate)
+            _attach_mcflash_profile(candidate)
             candidate["second_pass_extension"] = True
             await _enrich_second_pass_from_mcflash(candidate)
+            if not candidate.get("mcflash_profile"):
+                # CV senza record MCFlash nel site: fuori perimetro.
+                continue
             if not candidate.get("strict_mcflash_name_match"):
                 candidate["non_perfect_match"] = True
 
@@ -1182,7 +1114,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
             second_pass_relaxed_raw_hits = await search.search_chunks(
                 lexical_query=second_pass_relaxed_lexical_query,
                 semantic_query=second_pass_relaxed_semantic_query,
-                odata_filter=None,
+                odata_filter=site_identity_filter,
                 embedding=second_pass_relaxed_embedding,
                 top=max(chunk_top_k, target_min_candidates * 10),
                 index_name=index_name,
@@ -1202,6 +1134,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 candidate_top_k=max(candidate_top_k, target_min_candidates * 3),
                 query_skills=p["skills"],
                 query_role=p["role"],
+                cv_map=cv_map,
             )
 
             for candidate in second_pass_relaxed_candidates:
@@ -1210,10 +1143,12 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 if not isinstance(candidate, dict):
                     continue
 
-                _attach_mcflash_profile_by_nome(candidate)
+                _attach_mcflash_profile(candidate)
                 candidate["second_pass_extension"] = True
                 candidate["second_pass_skills_relaxed"] = True
                 await _enrich_second_pass_from_mcflash(candidate)
+                if not candidate.get("mcflash_profile"):
+                    continue
                 if not candidate.get("strict_mcflash_name_match"):
                     candidate["non_perfect_match"] = True
 
@@ -1276,6 +1211,7 @@ async def run_search_pipeline(payload: dict, *, get_mcflash_candidates_client, l
                 "disponibilita": hard_disponibilita,
                 "budget": hard_budget,
                 "age": hard_age,
+                "site": site,
                 "matched_candidates": hard_selected_total,
                 "widened": hard_select_widened,
             },

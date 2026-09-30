@@ -339,3 +339,65 @@ def split_ai_matcher_answer(output_text: str) -> tuple[str, list[dict[str, Any]]
     prose = "\n".join(prose_lines).rstrip()
 
     return prose, normalise_ai_matcher_candidates(trailer.get("candidates"))
+
+
+# =========================================================
+# Candidati dai risultati della ricerca (non dal trailer)
+# =========================================================
+
+def _decode_tool_output(value: Any) -> Any:
+    """L'output di un openapi_call e' JSON dentro JSON: {"response": "<json>"}
+    e poi l'envelope {"success", "data"}. Scarta gli strati finche' ce ne sono."""
+    for _ in range(5):
+        if isinstance(value, str):
+            try:
+                value = json.loads(value)
+            except (TypeError, ValueError):
+                return None
+            continue
+        if isinstance(value, dict):
+            if "search_response" in value:
+                return value
+            inner = value.get("response") if "response" in value else value.get("data")
+            if inner is None:
+                return value
+            value = inner
+            continue
+        return value
+    return value if isinstance(value, dict) else None
+
+
+def search_hits_from_response(raw_response: Any) -> list[list[dict[str, Any]]]:
+    """Gli hit restituiti a ogni chiamata di invoke_searcher_wrapper, in ordine."""
+    calls: list[list[dict[str, Any]]] = []
+    items = raw_response.get("output") if isinstance(raw_response, dict) else None
+    for item in items or []:
+        if not isinstance(item, dict) or "call_output" not in safe_str(item.get("type")):
+            continue
+        payload = _decode_tool_output(item.get("output"))
+        if not isinstance(payload, dict):
+            continue
+        hits = (payload.get("search_response") or {}).get("hits")
+        if isinstance(hits, list):
+            calls.append([h for h in hits if isinstance(h, dict)])
+    return calls
+
+
+def candidates_from_search(tool_calls: list[list[dict[str, Any]]]) -> list[dict[str, Any]] | None:
+    """I candidati da restituire al frontend: gli hit dell'ultima ricerca del turno.
+
+    L'agente deve presentare TUTTI gli hit della ricerca, quindi l'elenco e'
+    esattamente quello restituito da invoke_searcher_wrapper, con i suoi id
+    (univoci) e nel suo ordine: nessuna lettura del testo, nessun trailer.
+    L'ultima chiamata e' quella da presentare (un retry si fa solo se la prima
+    non ha trovato nulla).
+
+    None se in questo turno l'agente non ha cercato (es. follow-up): il
+    chiamante usa allora i candidati dell'ultima ricerca della conversazione.
+    """
+    if not tool_calls:
+        return None
+    return [
+        {"id_mcflash": hit.get("id_mcflash"), "trigramma": safe_str(hit.get("nome")).strip()}
+        for hit in tool_calls[-1]
+    ]

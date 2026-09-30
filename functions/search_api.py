@@ -7,8 +7,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import azure.functions as func
 
@@ -17,10 +18,11 @@ from core.dependencies import get_mcflash_candidates_client as _get_mcflash_cand
 from core.errors import InvalidInputError
 from services.coherence_evaluator import run_candidate_coherence_evaluator as _run_candidate_coherence_evaluator
 from services.search_pipeline import run_search_pipeline
+from utils.app_settings import settings_value
 from utils.http_errors import http_error_handler
+from utils.roles import drop_generic_role as _drop_generic_role
 from utils.http_params import body_params as _body_params, payload_from_query as _payload_from_query
 from utils.values import first_non_empty as _first_non_empty, lower_list as _lower_list, safe_str as _safe_str
-from utils.visibility import can_view_non_mcflash as _can_view_non_mcflash
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +140,33 @@ def _apply_optional_constraints(
             ignored.append("availability_date")
 
     return filtered, ignored
+
+def _roll_past_date_forward(value: Any, today: date | None = None) -> str | None:
+    """YYYY-MM-DD gia' passata -> prossima occorrenza di quel giorno e mese;
+    None se la data non e' passata o non e' una data."""
+    text = _safe_str(value)
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", text):
+        return None
+    try:
+        requested = date.fromisoformat(text)
+    except ValueError:
+        return None
+    today = today or datetime.now(ZoneInfo("Europe/Rome")).date()
+    if requested >= today:
+        return None
+    day = min(requested.day, 28) if requested.month == 2 else requested.day
+    nxt = requested.replace(year=today.year, day=day)
+    if nxt < today:
+        nxt = nxt.replace(year=today.year + 1)
+    return nxt.isoformat()
+
+
+def _searcher_timeout_seconds() -> float:
+    try:
+        return float(settings_value("SEARCHER_TIMEOUT_SECONDS", default="90"))
+    except ValueError:
+        return 90.0
+
 
 async def _run_search_pipeline(payload: dict) -> dict:
     return await run_search_pipeline(
@@ -304,6 +333,17 @@ async def searcher_wrapper(req: func.HttpRequest):
     if not isinstance(search_request, dict):
         raise InvalidInputError("'search_request' must be an object")
 
+    # Un ruolo fatto solo di parole generiche ("Figura", "Profilo senior") non e'
+    # un ruolo: tolto qui, prima della ricerca e del filtro sul ruolo piu' sotto.
+    if "role" in search_request and _drop_generic_role(search_request.get("role")) is None:
+        search_request = {k: v for k, v in search_request.items() if k != "role"}
+
+    # "ad agosto" senza anno: l'agente a volte mette l'anno in corso anche se il
+    # mese e' gia' passato. Una data di disponibilita' passata vale l'anno dopo.
+    rolled = _roll_past_date_forward(search_request.get("availability_days"))
+    if rolled:
+        search_request = {**search_request, "availability_days": rolled}
+
     # Availability and language-level constraints are handled outside index search.
     # Keep language filter enabled, but do not pass language level until indexed support exists.
     search_request_for_index = {
@@ -314,6 +354,9 @@ async def searcher_wrapper(req: func.HttpRequest):
             "english_level",
         }
     }
+    # `site` arriva da ai-matcher-wrapper attraverso l'agente, accanto a
+    # search_request: il pipeline cerca solo tra i candidati MCFlash di quel site.
+    search_request_for_index["site"] = _first_non_empty(payload.get("site"), search_request.get("site"))
 
     has_index_search_criteria = bool(
         str(search_request_for_index.get("query") or "").strip()
@@ -321,9 +364,26 @@ async def searcher_wrapper(req: func.HttpRequest):
         or str(search_request_for_index.get("role") or "").strip()
     )
 
+    # Ricerca non eseguita: l'agente lo deve sapere per non dire "non ci sono
+    # candidati" (search_meta.search_executed / not_executed_reason).
+    not_executed_reason: str | None = None
     if has_index_search_criteria:
-        search_response = await _run_search_pipeline(search_request_for_index)
+        # Tempo massimo della ricerca, sotto il timeout del tool Foundry (~240 s):
+        # meglio una risposta "ricerca non riuscita" che una chiamata appesa fino
+        # al timeout della Function.
+        timeout_s = _searcher_timeout_seconds()
+        try:
+            search_response = await asyncio.wait_for(
+                _run_search_pipeline(search_request_for_index), timeout=timeout_s
+            )
+        except asyncio.TimeoutError:
+            logger.error("searcher-wrapper: search pipeline exceeded %.0f s (site=%s)",
+                         timeout_s, search_request_for_index.get("site"))
+            not_executed_reason = "search_timeout"
     else:
+        not_executed_reason = "missing_query_skills_role"
+
+    if not_executed_reason:
         fallback_top = 10
         try:
             fallback_top = max(1, min(int(search_request.get("top") or 10), 100))
@@ -340,7 +400,7 @@ async def searcher_wrapper(req: func.HttpRequest):
                 "hybrid": bool(search_request.get("hybrid", True)),
                 "work_mode": str(search_request.get("work_mode") or "unknown"),
                 "index": settings.document_search_index_name,
-                "skipped": "availability_only",
+                "skipped": not_executed_reason,
             },
             "suggestions": [],
         }
@@ -384,26 +444,13 @@ async def searcher_wrapper(req: func.HttpRequest):
             continue
         minimal_hits.append(_build_minimal_search_hit(hit, requested_skills))
 
-    # Visibilita': solo un utente `internal` vede i candidati senza profilo
-    # MCFlash risolto. `user_type` arriva da ai-matcher-wrapper attraverso
-    # l'agente; qualsiasi valore diverso da internal -- campo assente incluso --
-    # significa filtro. Cosi' l'agente non puo' causare una fuga dimenticando o
-    # sbagliando il campo: il caso peggiore e' un interno che vede meno.
-    #
-    # Il filtro sta QUI, prima del valutatore di coerenza, cosi' i candidati
-    # scartati non entrano nel suo prompt ne' in quello dell'agente. Filtrarli
-    # piu' a valle li avrebbe comunque fatti uscire dalla Function.
-    user_type = _safe_str(_first_non_empty(payload.get("user_type"), payload.get("userType")))
-    hidden_non_mcflash = 0
-    if not _can_view_non_mcflash(user_type):
-        visible_hits = [h for h in minimal_hits if h.get("id_mcflash") is not None]
-        hidden_non_mcflash = len(minimal_hits) - len(visible_hits)
-        minimal_hits = visible_hits
-
-    logger.info(
-        "visibility user_type=%r hidden_non_mcflash=%s visible=%s",
-        user_type, hidden_non_mcflash, len(minimal_hits),
-    )
+    # I filtri MCFlash (ruolo/seniority/sede/lingua/budget/eta') non hanno trovato
+    # nessuno e sono stati tolti: nessun candidato li rispetta tutti, quindi
+    # nessuno e' "strict", anche se ha le skill richieste.
+    if hard_select_widened:
+        for h in minimal_hits:
+            if h.get("match_type") == "strict":
+                h["match_type"] = "widened"
 
     original_request = _safe_str(
         _first_non_empty(payload.get("original_request"), payload.get("query"), search_request.get("query"))
@@ -422,14 +469,7 @@ async def searcher_wrapper(req: func.HttpRequest):
     # widened (skills filter dropped, hybrid extension) and does not present
     # relaxed / second-pass candidates as strict matches.
     pipeline_suggestions = search_response.get("suggestions") if isinstance(search_response.get("suggestions"), list) else []
-    if hard_select_widened and not requested_skills:
-        # Nothing was actually hard-filtered (business filters matched nobody,
-        # no skills to filter the index on) — "strict" would overstate how
-        # solid these matches are, even for the ones that survived the role
-        # trim above.
-        strict_count = 0
-    else:
-        strict_count = sum(1 for h in minimal_hits if h.get("match_type") == "strict")
+    strict_count = sum(1 for h in minimal_hits if h.get("match_type") == "strict")
 
     return {
         "original_request": original_request,
@@ -438,11 +478,11 @@ async def searcher_wrapper(req: func.HttpRequest):
             "hits": evaluation["candidates"],
         },
         "search_meta": {
+            "search_executed": not_executed_reason is None,
+            "not_executed_reason": not_executed_reason,
             "relaxed": bool(pipeline_meta.get("relaxed")),
             "relaxed_criteria": pipeline_meta.get("relaxed_criteria") or [],
-            # Dopo il filtro di visibilita': l'agente non deve annunciare
-            # "ho trovato 12 candidati" per poi elencarne 4.
-            "total_candidates": len(minimal_hits) if hidden_non_mcflash else pipeline_meta.get("total", len(minimal_hits)),
+            "total_candidates": pipeline_meta.get("total", len(minimal_hits)),
             "strict_candidates": strict_count,
             "hard_select_matched": hard_select_meta.get("matched_candidates"),
             "suggestions": pipeline_suggestions,

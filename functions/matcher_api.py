@@ -7,7 +7,9 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from datetime import datetime
 from typing import Any
+from zoneinfo import ZoneInfo
 
 import azure.functions as func
 
@@ -28,6 +30,12 @@ from infra.foundry_agent import (
     run_foundry_agent as _run_foundry_agent,
 )
 from infra.foundry_agent import (
+    candidates_from_search as _candidates_from_search,
+)
+from infra.foundry_agent import (
+    search_hits_from_response as _search_hits_from_response,
+)
+from infra.foundry_agent import (
     split_ai_matcher_answer as _split_ai_matcher_answer,
 )
 from utils.app_settings import settings_value as _settings_value
@@ -38,8 +46,7 @@ from utils.http_params import payload_from_query as _payload_from_query
 from utils.values import extract_json_safe as _extract_json_safe
 from utils.values import first_non_empty as _first_non_empty
 from utils.values import safe_str as _safe_str
-from utils.visibility import resolve_user_type as _resolve_user_type
-from utils.visibility import can_view_non_mcflash as _can_view_non_mcflash
+from utils.site import resolve_site as _resolve_site
 
 logger = logging.getLogger(__name__)
 
@@ -95,16 +102,18 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
     if context is not None and not isinstance(context, dict):
         raise InvalidInputError("'context' must be an object when provided")
 
-    # `user_type` arriva dal frontend e viene inoltrato all'agente dentro
-    # CONTEXT_JSON, che lo ripassa a invoke_searcher_wrapper. Il FILTRO sui
-    # candidati e' applicato lato server da /api/searcher-wrapper: l'agente
-    # trasporta il valore, non decide cosa mostrare.
-    user_type = _resolve_user_type(payload)
+    # `site` arriva dal frontend e viene inoltrato all'agente dentro
+    # CONTEXT_JSON, che lo ripassa a invoke_searcher_wrapper: la ricerca
+    # seleziona solo i candidati MCFlash di quel site.
+    site = _resolve_site(payload)
 
     session_context = {
         "user_id": user_id,
         "chat_id": chat_id,
-        "user_type": user_type,
+        "site": site,
+        # Data di oggi: serve all'agente per risolvere date senza anno
+        # ("ad agosto", "dal 15 marzo") in availability_days.
+        "today": datetime.now(ZoneInfo("Europe/Rome")).date().isoformat(),
     }
     if context:
         context = {
@@ -112,10 +121,10 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
             "session": {
                 **session_context,
                 **(context.get("session") if isinstance(context.get("session"), dict) else {}),
-                # `user_type` e' risolto qui e vince sempre: un `context.session`
+                # `site` e' risolto qui e vince sempre: un `context.session`
                 # fornito dal chiamante non deve poterlo sostituire (il resto del
                 # blocco session mantiene la precedenza al chiamante, come prima).
-                "user_type": user_type,
+                "site": site,
             },
         }
     else:
@@ -175,8 +184,9 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
     # The agent appends a machine-readable trailer after its prose answer:
     #   <<<CANDIDATES_JSON>>>
     #   {"candidates":[{"id_mcflash":..,"trigramma":..}, ...]}
-    # Keep `answer` pure natural language and surface the trailer as `candidates`.
-    answer_body, proposed_candidates = _split_ai_matcher_answer(output_text)
+    # Keep `answer` pure natural language: an old-style trailer, if the agent still
+    # writes one, is stripped and ignored (`candidates` come from the search, below).
+    answer_body, _ignored_trailer = _split_ai_matcher_answer(output_text)
     effective_text = answer_body or output_text
     parsed_output = _extract_json_safe(effective_text) if effective_text else None
 
@@ -202,6 +212,23 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
     if not answer_text:
         answer_text = _truncate_text(json.dumps(result_payload, ensure_ascii=False), max_len=4000)
 
+    # `candidates` = gli hit dell'ultima ricerca di questo turno (l'agente deve
+    # presentarli tutti). Turno senza ricerca (follow-up): i candidati dell'ultima
+    # ricerca della conversazione, salvati nello storico chat. Un eventuale
+    # trailer scritto dall'agente viene solo tolto dal testo, mai usato.
+    searched_candidates = _candidates_from_search(_search_hits_from_response(raw_response))
+    if searched_candidates is not None:
+        proposed_candidates = searched_candidates
+    else:
+        proposed_candidates = []
+        try:
+            thread = await asyncio.to_thread(_chat_history_load_thread, user_id, chat_id)
+            stored = json.loads(_safe_str((thread or {}).get("last_candidates")) or "[]")
+            if isinstance(stored, list):
+                proposed_candidates = [c for c in stored if isinstance(c, dict)]
+        except Exception as exc:
+            logger.warning("last_candidates_load_failed user_id=%s chat_id=%s error=%s", user_id, chat_id, exc)
+
     try:
         persist_meta = await asyncio.to_thread(
             _chat_history_append_turn,
@@ -213,6 +240,7 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
             response_id=response_id,
             agent_name=agent_name,
             model_name=model_name or None,
+            last_candidates=searched_candidates,
         )
         history_status["enabled"] = True
         history_status["persisted"] = True
@@ -238,8 +266,7 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
         "session": {
             "user_id": user_id,
             "chat_id": chat_id,
-            "user_type": user_type,
-            "can_view_non_mcflash": _can_view_non_mcflash(user_type),
+            "site": site,
         },
         "conversation": history_status,
         "answer": answer_text,

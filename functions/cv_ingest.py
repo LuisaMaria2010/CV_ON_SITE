@@ -4,6 +4,7 @@ Estratto da function_app.py senza modifiche ai corpi delle funzioni.
 """
 from __future__ import annotations
 
+import json
 import logging
 from datetime import datetime, timezone
 from uuid import uuid4

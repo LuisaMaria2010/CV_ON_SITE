@@ -23,6 +23,9 @@ import functions.search_api as search_api
 # =========================================================
 
 def _make_request(body: dict | None, method: str = "POST") -> func.HttpRequest:
+    # Ogni ricerca richiede il site: i test che non lo dichiarano usano il default.
+    if body:
+        body = {"site": "mcflashcandidati", **body}
     raw = json.dumps(body).encode() if body is not None else b""
     return func.HttpRequest(
         method=method,
@@ -212,20 +215,33 @@ class FakeSearchService:
         return grouped
 
 
-async def _call_handler(req: func.HttpRequest, monkeypatch, fake_service: FakeSearchService, mcflash_client=None):
-    """Wire fake SearchService and call the handler."""
+async def _call_handler(
+    req: func.HttpRequest,
+    monkeypatch,
+    fake_service: FakeSearchService,
+    mcflash_client=None,
+    cv_map: dict[str, str] | None = None,
+):
+    """Wire fake SearchService and call the handler.
+
+    `cv_map` e' la tabella CV -> MCFlash (document_id -> id MCFlash). Di default
+    ogni CV configurato e' collegato al record MCFlash con Id uguale al suo
+    document_id, cioe' alle righe di default del client MCFlash finto.
+    """
     monkeypatch.setattr(search_mod, "SearchService", lambda: fake_service)
 
     import services.search_pipeline as pipeline_mod
     monkeypatch.setattr(pipeline_mod, "SearchService", lambda: fake_service)
 
     # L'universo hard-select MCFlash di default copre tutte le persone presenti
-    # negli hit configurati: senza una riga per ciascun `full_name`, gli hit
-    # verrebbero scartati da _is_hard_name_match e non arriverebbero mai ai test.
+    # negli hit configurati, una riga per CV con Id = document_id.
     _default_rows = [
         {"Id": doc_id, "Nome": name}
         for doc_id, name in sorted(fake_service.people().items())
     ] or [{"Id": "doc1", "Nome": "Test User"}]
+    if cv_map is None:
+        cv_map = {str(r["Id"]): str(r["Id"]) for r in _default_rows}
+    monkeypatch.setattr(pipeline_mod, "get_cv_mcflash_map", lambda: dict(cv_map))
 
     class _FakeMCFlashClient:
         async def filter_candidates(self, **kwargs):
@@ -566,104 +582,225 @@ def _hit(document_id: str, full_name: str, role: str) -> dict:
 
 
 class _HomonymMCFlashClient:
-    """Two MCFlash rows sharing the same normalized name but different roles."""
+    """Two MCFlash rows sharing the same normalized name but different roles.
 
-    def __init__(self, rows, name_lookup: dict[str, list[dict]] | None = None):
+    `rows` e' cio' che restituisce la hard select con filtri di business;
+    `site_rows` e' il perimetro del site (solo filtro site), usato quando la
+    ricerca si allarga e dal second pass. Di default coincidono.
+    """
+
+    _NON_FILTER_KWARGS = {"limit", "offset", "site", "max_scan_records", "return_all_matches"}
+
+    def __init__(self, rows, site_rows: list[dict] | None = None):
         self._rows = rows
-        self._name_lookup = name_lookup or {}
+        self._site_rows = site_rows if site_rows is not None else rows
 
     async def filter_candidates(self, **kwargs):
-        _ = kwargs
-        return list(self._rows)
-
-    async def fetch_page(self, *, limit: int, offset: int):
-        if offset > 0:
-            return []
-        return list(self._rows)
-
-    async def find_candidates(self, key: str):
-        return list(self._name_lookup.get((key or "").strip().lower(), []))
-
-    async def find_candidate(self, key: str):
-        matches = await self.find_candidates(key)
-        return matches[0] if matches else None
+        business_filters = any(v for k, v in kwargs.items() if k not in self._NON_FILTER_KWARGS)
+        return list(self._rows if business_filters else self._site_rows)
 
 
-class TestHomonymDisambiguation:
+class TestCvMcflashMap:
+    """L'identita' di un CV viene SOLO dalla tabella CV -> MCFlash, mai dal codice."""
 
-    def test_homonyms_disambiguated_by_role(self, monkeypatch):
-        mcflash = _HomonymMCFlashClient([
-            {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
-            {"Id": "mc2", "Nome": "Mario Rossi", "Ruolo": "Data Analyst"},
-        ])
+    _HOMONYMS = [
+        {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
+        {"Id": "mc2", "Nome": "Mario Rossi", "Ruolo": "Data Analyst"},
+    ]
+
+    def _run(self, monkeypatch, body, fake, mcflash, cv_map):
+        req = _make_request(body)
+
+        async def _go():
+            return await _call_handler(req, monkeypatch, fake, mcflash_client=mcflash, cv_map=cv_map)
+
+        return _parse_response(asyncio.run(_go()))
+
+    def test_homonyms_resolved_by_the_map(self, monkeypatch):
         fake = FakeSearchService(hits_sequence=[[
             _hit("doc1", "Mario Rossi", "java developer"),
             _hit("doc2", "Mario Rossi", "data analyst"),
         ]])
-        req = _make_request({"query": "mario rossi", "hybrid": False})
-
-        async def _run():
-            return await _call_handler(req, monkeypatch, fake, mcflash_client=mcflash)
-
-        result = asyncio.run(_run())
-        data = _parse_response(result)
+        data = self._run(monkeypatch, {"query": "mario rossi", "hybrid": False}, fake,
+                         _HomonymMCFlashClient(self._HOMONYMS), {"doc1": "mc1", "doc2": "mc2"})
         by_doc = {h["document_id"]: h for h in data["hits"]}
 
         assert by_doc["doc1"]["mcflash_profile"]["Id"] == "mc1"
-        assert by_doc["doc1"]["mcflash_name_ambiguous"] is False
         assert by_doc["doc2"]["mcflash_profile"]["Id"] == "mc2"
-        assert by_doc["doc2"]["mcflash_name_ambiguous"] is False
 
-    def test_homonyms_flagged_ambiguous_when_role_does_not_disambiguate(self, monkeypatch):
-        mcflash = _HomonymMCFlashClient([
-            {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
-            {"Id": "mc2", "Nome": "Mario Rossi", "Ruolo": "Data Analyst"},
-        ])
-        # Role on the CV side does not match either MCFlash homonym closely enough.
+    def test_the_map_wins_over_the_cv_role(self, monkeypatch):
+        """Il ruolo estratto dal CV non conta: decide la tabella."""
+        fake = FakeSearchService(hits_sequence=[[_hit("doc1", "Mario Rossi", "java developer")]])
+        data = self._run(monkeypatch, {"query": "mario rossi", "hybrid": False}, fake,
+                         _HomonymMCFlashClient(self._HOMONYMS), {"doc1": "mc2"})
+
+        assert [h["mcflash_profile"]["Id"] for h in data["hits"]] == ["mc2"]
+
+    def test_cv_outside_the_map_is_out_of_perimeter(self, monkeypatch):
+        """Stesso codice di un record MCFlash, ma CV non in tabella: mai restituito."""
         fake = FakeSearchService(hits_sequence=[[
-            _hit("doc1", "Mario Rossi", "project manager"),
+            _hit("doc1", "Mario Rossi", "java developer"),
+            _hit("doc9", "Mario Rossi", "rust developer"),
+        ]] * 4)
+        data = self._run(monkeypatch, {"query": "mario rossi", "skills": ["python"], "hybrid": False}, fake,
+                         _HomonymMCFlashClient(self._HOMONYMS), {"doc1": "mc1"})
+
+        assert {h["document_id"] for h in data["hits"]} == {"doc1"}
+
+    def test_cvs_of_the_same_record_are_one_candidate(self, monkeypatch):
+        fake = FakeSearchService(hits_sequence=[[
+            _hit("doc1", "Mario Rossi", "java developer"),
+            _hit("doc1b", "Mario Rossi", "backend developer"),
         ]])
-        req = _make_request({"query": "mario rossi", "hybrid": False})
+        data = self._run(monkeypatch, {"query": "mario rossi", "hybrid": False}, fake,
+                         _HomonymMCFlashClient(self._HOMONYMS), {"doc1": "mc1", "doc1b": "mc1"})
 
-        async def _run():
-            return await _call_handler(req, monkeypatch, fake, mcflash_client=mcflash)
+        assert [h["mcflash_profile"]["Id"] for h in data["hits"]] == ["mc1"]
 
-        result = asyncio.run(_run())
-        data = _parse_response(result)
-
-        assert data["hits"][0]["mcflash_name_ambiguous"] is True
-
-    def test_second_pass_extension_disambiguates_homonyms_by_role(self, monkeypatch):
-        # Hard-select universe only contains an unrelated person, so the
-        # "Mario Rossi" CVs miss the strict first-pass name match and fall
-        # into the second-pass hybrid extension, where identity is resolved
-        # via a live MCFlash name lookup instead.
+    def test_second_pass_resolves_identity_with_the_map(self, monkeypatch):
+        # I filtri di business selezionano solo un'altra persona: i CV di Mario
+        # Rossi entrano dal second pass, collegati tramite la tabella ai record
+        # del site.
         mcflash = _HomonymMCFlashClient(
             rows=[{"Id": "other", "Nome": "Altra Persona"}],
-            name_lookup={
-                "mario rossi": [
-                    {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
-                    {"Id": "mc2", "Nome": "Mario Rossi", "Ruolo": "Data Analyst"},
-                ],
-            },
+            site_rows=[{"Id": "other", "Nome": "Altra Persona"}, *self._HOMONYMS],
         )
         fake = FakeSearchService(hits_sequence=[
-            [],  # first pass: nothing survives the strict hard-select name filter
-            [
-                _hit("doc1", "Mario Rossi", "java developer"),
-                _hit("doc2", "Mario Rossi", "data analyst"),
-            ],  # second-pass hybrid extension
+            [],
+            [_hit("doc1", "Mario Rossi", "java developer"), _hit("doc2", "Mario Rossi", "data analyst")],
         ])
-        req = _make_request({"query": "mario rossi", "role": "java developer", "hybrid": False})
-
-        async def _run():
-            return await _call_handler(req, monkeypatch, fake, mcflash_client=mcflash)
-
-        result = asyncio.run(_run())
-        data = _parse_response(result)
+        data = self._run(monkeypatch, {"query": "mario rossi", "role": "java developer", "hybrid": False},
+                         fake, mcflash, {"doc1": "mc1", "doc2": "mc2"})
         by_doc = {h["document_id"]: h for h in data["hits"]}
 
         assert by_doc["doc1"]["mcflash_profile"]["Id"] == "mc1"
-        assert by_doc["doc1"]["mcflash_name_ambiguous"] is False
         assert by_doc["doc2"]["mcflash_profile"]["Id"] == "mc2"
-        assert by_doc["doc2"]["mcflash_name_ambiguous"] is False
+
+
+# =========================================================
+# Perimetro del site
+# =========================================================
+
+class TestSitePerimeter:
+    """La ricerca resta sempre dentro i record MCFlash del site richiesto."""
+
+    def _run(self, monkeypatch, body: dict, fake: FakeSearchService, mcflash, cv_map) -> dict:
+        req = _make_request(body)
+
+        async def _go():
+            return await _call_handler(req, monkeypatch, fake, mcflash_client=mcflash, cv_map=cv_map)
+
+        return _parse_response(asyncio.run(_go()))
+
+    def test_second_pass_drops_cvs_outside_the_site(self, monkeypatch):
+        mcflash = _HomonymMCFlashClient(
+            rows=[{"Id": "other", "Nome": "Altra Persona"}],
+            site_rows=[
+                {"Id": "other", "Nome": "Altra Persona"},
+                {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
+            ],
+        )
+        fake = FakeSearchService(hits_sequence=[
+            [],  # first pass: hard select contains nobody from the index
+            [
+                _hit("doc1", "Mario Rossi", "java developer"),   # record del site
+                _hit("doc8", "Mario Rossi", "java developer"),   # record dell'altro site
+                _hit("doc9", "Luigi Verdi", "java developer"),   # fuori tabella
+            ],
+        ])
+        data = self._run(monkeypatch, {"query": "java", "role": "java developer", "hybrid": False}, fake, mcflash,
+                         {"doc1": "mc1", "doc8": "mc-altro-site"})
+
+        assert [h["document_id"] for h in data["hits"]] == ["doc1"]
+        assert data["hits"][0]["mcflash_profile"]["Id"] == "mc1"
+
+    def test_second_pass_searches_only_the_site_cvs(self, monkeypatch):
+        mcflash = _HomonymMCFlashClient(
+            rows=[{"Id": "other", "Nome": "Altra Persona"}],
+            site_rows=[
+                {"Id": "other", "Nome": "Altra Persona"},
+                {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"},
+            ],
+        )
+        fake = FakeSearchService(hits_sequence=[[], [_hit("doc1", "Mario Rossi", "java developer")]])
+        self._run(monkeypatch, {"query": "java", "role": "java developer", "hybrid": False}, fake, mcflash,
+                  {"doc1": "mc1", "doc8": "mc-altro-site"})
+
+        assert len(fake.calls) >= 2
+        assert all(call["odata_filter"] for call in fake.calls), "nessuna ricerca sull'intero indice"
+        assert all("doc8" not in call["odata_filter"] for call in fake.calls)
+
+    @pytest.mark.parametrize("body", [
+        {"query": "java", "role": "java developer", "hybrid": False},
+        {"query": "java", "skills": ["python"], "hybrid": False},                        # rilassamento skill
+        {"query": "java", "role": "cobol developer", "skills": ["python"], "hybrid": False},  # hard select allargata
+    ])
+    def test_every_index_search_is_restricted_to_mapped_cvs(self, monkeypatch, body):
+        """Nessuna ricerca sull'indice senza filtro sui document_id della tabella."""
+        mcflash = _HomonymMCFlashClient(
+            rows=[{"Id": "other", "Nome": "Altra Persona"}],
+            site_rows=[{"Id": "other", "Nome": "Altra Persona"},
+                       {"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"}],
+        )
+        fake = FakeSearchService(hits_sequence=[[_hit("doc9", "Mario Rossi", "java developer")]] * 5)
+        data = self._run(monkeypatch, body, fake, mcflash, {"doc1": "mc1", "doc8": "mc-altro-site"})
+
+        assert fake.calls, "almeno una ricerca attesa"
+        for call in fake.calls:
+            assert call["odata_filter"] and "search.in(document_id" in call["odata_filter"]
+            assert "doc8" not in call["odata_filter"]
+        assert all(h["document_id"] in {"doc1"} for h in data["hits"])
+
+    def test_second_pass_skipped_when_site_has_no_indexed_cv(self, monkeypatch):
+        mcflash = _HomonymMCFlashClient(rows=[{"Id": "other", "Nome": "Altra Persona"}])
+        fake = FakeSearchService(hits_sequence=[[], [_hit("doc9", "Luigi Verdi", "java developer")]])
+        data = self._run(monkeypatch, {"query": "java", "role": "java developer", "hybrid": False}, fake, mcflash, {})
+
+        assert data["hits"] == []
+        assert all(call["odata_filter"] for call in fake.calls)
+
+    def test_widening_keeps_the_site(self, monkeypatch):
+        """Filtri di business senza esito: si tolgono i filtri, non il site."""
+        mcflash = _HomonymMCFlashClient(
+            rows=[],
+            site_rows=[{"Id": "mc1", "Nome": "Mario Rossi", "Ruolo": "Java Developer"}],
+        )
+        fake = FakeSearchService(hits_sequence=[[_hit("doc1", "Mario Rossi", "java developer")]])
+        data = self._run(monkeypatch, {"query": "java", "role": "cobol developer", "hybrid": False}, fake, mcflash,
+                         {"doc1": "mc1"})
+
+        assert data["meta"]["hard_select"]["widened"] is True
+        assert data["meta"]["hard_select"]["site"] == "mcflashcandidati"
+        assert [h["mcflash_profile"]["Id"] for h in data["hits"]] == ["mc1"]
+
+    def test_site_is_passed_to_every_mcflash_selection(self, monkeypatch):
+        seen: list[dict] = []
+
+        class _Recording(_HomonymMCFlashClient):
+            async def filter_candidates(self, **kwargs):
+                seen.append(kwargs)
+                return await super().filter_candidates(**kwargs)
+
+        mcflash = _Recording(rows=[], site_rows=[{"Id": "mc1", "Nome": "Mario Rossi"}])
+        fake = FakeSearchService(hits_sequence=[[_hit("doc1", "Mario Rossi", "java developer")]])
+        self._run(
+            monkeypatch,
+            {"site": "mcflashrisorse", "query": "java", "role": "java developer", "hybrid": False},
+            fake, mcflash, {"doc1": "mc1"},
+        )
+
+        assert seen and all(kw.get("site") == "mcflashrisorse" for kw in seen)
+
+    @pytest.mark.parametrize("site", [None, "", "altro"])
+    def test_missing_or_unknown_site_is_rejected(self, monkeypatch, site):
+        body = {"query": "java", "site": site}
+        req = func.HttpRequest(
+            method="POST", url="/api/search", body=json.dumps(body).encode(),
+            headers={"content-type": "application/json"}, params={}, route_params={},
+        )
+        fake = FakeSearchService(hits_sequence=[[_hit("doc1", "Mario Rossi", "java developer")]])
+
+        async def _go():
+            return await _call_handler(req, monkeypatch, fake)
+
+        assert asyncio.run(_go()).status_code == 400
