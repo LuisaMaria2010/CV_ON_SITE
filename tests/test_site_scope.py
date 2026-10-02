@@ -63,12 +63,14 @@ def test_risorse_sees_risorse_and_candidati():
 
 
 @pytest.mark.parametrize("record,eligible", [
-    ({"abilitato": True}, True),
-    ({"Abilitato": "true"}, True),
-    ({"abilitato": False}, False),
-    ({"abilitato": "false"}, False),
+    ({"abilitato": True, "isTalentUp": False}, True),
+    ({"Abilitato": "true", "istalentup": "false"}, True),
+    ({"abilitato": False, "isTalentUp": False}, False),
+    ({"abilitato": "false", "isTalentUp": False}, False),
     ({}, False),                      # campo mancante: escluso
-    ({"abilitato": None}, False),
+    ({"abilitato": None, "isTalentUp": False}, False),
+    ({"abilitato": True, "isTalentUp": True}, False),   # TalentUp: mai ricercabile
+    ({"abilitato": True}, False),                       # isTalentUp mancante: escluso
 ])
 def test_eligibility(record, eligible):
     assert MCFlashCandidatesClient.is_eligible(record) is eligible
@@ -88,12 +90,14 @@ class _DummyMCFlashClient(MCFlashCandidatesClient):
 
 
 _RECORDS = [
-    {"Id": "1", "Ruolo": "Java Developer", "site": "mcflashcandidati.mcengineering.eu", "abilitato": True},
-    {"Id": "2", "Ruolo": "Java Developer", "site": "mcflashrisorse", "abilitato": True},
-    {"Id": "3", "Ruolo": "Data Analyst", "site": "mcflashcandidati.mcengineering.eu", "abilitato": True},
-    {"Id": "4", "Ruolo": "Java Developer", "abilitato": True},
-    {"Id": "5", "Ruolo": "Java Developer", "site": "mcflashcandidati.mcengineering.eu", "abilitato": False},
-    {"Id": "6", "Ruolo": "Java Developer", "site": "mcflashrisorse", "abilitato": False},
+    {"Id": "1", "Ruolo": "Java Developer", "site": "mcflashcandidati.mcengineering.eu", "abilitato": True, "isTalentUp": False},
+    {"Id": "2", "Ruolo": "Java Developer", "site": "mcflashrisorse", "abilitato": True, "isTalentUp": False},
+    {"Id": "3", "Ruolo": "Data Analyst", "site": "mcflashcandidati.mcengineering.eu", "abilitato": True, "isTalentUp": False},
+    {"Id": "4", "Ruolo": "Java Developer", "abilitato": True, "isTalentUp": False},
+    {"Id": "5", "Ruolo": "Java Developer", "site": "mcflashcandidati.mcengineering.eu", "abilitato": False, "isTalentUp": False},
+    {"Id": "6", "Ruolo": "Java Developer", "site": "mcflashrisorse", "abilitato": False, "isTalentUp": False},
+    {"Id": "7", "Ruolo": "Java Developer", "site": "mcflashcandidati.mcengineering.eu", "abilitato": True, "isTalentUp": True},
+    {"Id": "8", "Ruolo": "Java Developer", "site": "mcflashrisorse", "abilitato": True, "isTalentUp": True},
 ]
 
 
@@ -122,12 +126,13 @@ async def test_site_is_an_additional_filter():
 
 @pytest.mark.asyncio
 async def test_disabled_records_never_come_back():
-    """abilitato=false e' escluso da ogni lettura del DB, anche senza filtri."""
+    """abilitato=false e isTalentUp=true sono esclusi da ogni lettura del DB, anche senza filtri."""
     client = _DummyMCFlashClient(_RECORDS)
     everything = await client.filter_candidates(limit=50, offset=0, return_all_matches=True)
-    assert {"5", "6"}.isdisjoint(c["Id"] for c in everything)
+    assert {"5", "6", "7", "8"}.isdisjoint(c["Id"] for c in everything)
     assert await client.find_candidates("5") == []
-    assert {"5", "6"}.isdisjoint(c["Id"] for c in await client.fetch_candidates(limit=50, offset=0))
+    assert await client.find_candidates("7") == []
+    assert {"5", "6", "7", "8"}.isdisjoint(c["Id"] for c in await client.fetch_candidates(limit=50, offset=0))
 
 
 # =========================================================

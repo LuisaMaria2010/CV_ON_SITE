@@ -1022,8 +1022,9 @@ class MCFlashCandidatesClient:
 
     # Filtri applicati a OGNI lettura del DB MCFlash (filter/find/fetch_candidates):
     # un record che non li soddisfa per la ricerca non esiste. Campo mancante o
-    # valore non riconosciuto -> record escluso.
-    _ELIGIBILITY: dict[str, bool] = {"abilitato": True}
+    # valore non riconosciuto -> record escluso. I record TalentUp non sono mai
+    # ricercabili.
+    _ELIGIBILITY: dict[str, bool] = {"abilitato": True, "isTalentUp": False}
 
     @staticmethod
     def _as_bool(value: Any) -> bool | None:
