@@ -4,7 +4,7 @@ Test end-to-end casuali su /api/ai-matcher-wrapper (ambiente dev).
 Pesca N domande a caso dal set del chatbot (in run_evaluation_classifier.py) e
 dal dataset scripts/new_dataset_225.jsonl, le lancia alternando i due site e
 per ognuna controlla:
-- perimetro: ogni candidato esiste in MCFlash, e' abilitato ed e' visibile dal
+- perimetro: ogni candidato esiste in MCFlash, e' abilitato, non e' TalentUp ed e' visibile dal
   site (risorse vede risorse+candidati, candidati vede solo candidati)
 - candidates = hit restituiti dalla ricerca all'agente (stessi id, stesso ordine)
 - il testo cita tutti i candidati; nessun conteggio ("6 candidati", "i primi 3")
@@ -106,6 +106,8 @@ def run_one(url: str, mc: dict[str, dict], n: int, cat: str, q: str, site: str) 
             out_of_perimeter.append(f"{c.get('trigramma')}: site non visibile")
         elif rec.get("abilitato") is not True:
             out_of_perimeter.append(f"{c.get('trigramma')}: non abilitato")
+        elif rec.get("isTalentUp") is not False:
+            out_of_perimeter.append(f"{c.get('trigramma')}: TalentUp")
 
     hits, verdict, requests = [], None, []
     for it in ((data.get("raw_response") or {}).get("output") or []) if ok else []:

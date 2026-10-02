@@ -13,9 +13,10 @@ class _DummyMCFlashClient(MCFlashCandidatesClient):
     async def fetch_page(self, *, limit: int, offset: int) -> list[dict]:
         start = max(0, int(offset))
         end = start + max(1, int(limit))
-        # Record reali hanno sempre `abilitato`; qui e' implicito (true) per non
-        # ripeterlo in ogni fixture. L'idoneita' e' testata in test_site_scope.py.
-        return [{"abilitato": True, **r} for r in self._records[start:end]]
+        # Record reali hanno sempre `abilitato` e `isTalentUp`; qui sono impliciti
+        # (idonei) per non ripeterli in ogni fixture. L'idoneita' e' testata in
+        # test_site_scope.py.
+        return [{"abilitato": True, "isTalentUp": False, **r} for r in self._records[start:end]]
 
 
 @pytest.mark.asyncio
