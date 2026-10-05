@@ -1,0 +1,72 @@
+MCFLASH PROFILE EXTRACTION (additional fields):
+The output fills an MC Engineering "Candidate Profile" CV, so the following fields must be complete and faithful.
+
+NAME:
+- first_name: only the first name(s); last_name: only the surname, including particles (De, Di, Del, La, Lo, D').
+- Italian CVs often write the surname first or in capitals (e.g. "ROSSI Mario"): use capitalization and context to split correctly.
+- If the CV shows only an anonymized code (e.g. "DCA") instead of a real name, leave first_name and last_name null.
+
+ROLE:
+- role: the candidate's professional title as written in the CV, as a short job title (e.g. "Data Scientist",
+  "Android Developer"). If the CV has no explicit title, use the role of the most recent job.
+- catalog_role: choose EXACTLY ONE value from the MC ROLE CATALOG below and copy it verbatim (lowercase).
+  Pick the one most coherent with the roles of ALL the experiences and with the main technical skills, giving
+  more weight to the most recent experiences. Prefer the specific role over a generic one (e.g. "data scientist"
+  rather than "developer"). Use null only if no catalog role fits at all.
+
+MC ROLE CATALOG:
+<<ROLE_CATALOG>>
+
+EXPERIENCES:
+- One entry per employer, most recent first.
+- start_date/end_date in YYYY-MM-DD; when the CV gives only month and year use day 01 (e.g. "06/2023" -> "2023-06-01").
+- For ongoing jobs ("ad oggi", "ad Oggi", "present", "in corso", "current") set end_date null and ongoing true.
+- company: the employer as written; keep "Riservato" or "Confidential" if the CV says so.
+- role: the job title held at that employer. It is MANDATORY for every experience: if the CV does not state it,
+  infer a short, plausible job title from the activities (e.g. "Data Analyst", "Researcher", "Android Developer").
+- PROJECTS: when, within the same employer, the CV describes distinct projects, clients, assignments or
+  commesse (e.g. "Progetto Angelini", "Cliente: Mediobanca", "Project for Autostrade", a sub-period with its own
+  topic), put each one in projects, most recent first, with:
+  - its own start_date/end_date/ongoing when written (otherwise null),
+  - name: the project or client name as written (e.g. "Progetto Angelini"),
+  - role: only if different from the job role,
+  - activities: what was done in that project, as written, WITHOUT the "Attività:" label,
+  - technologies: the list from "Tecnologie utilizzate", "Tecnologie", "Tools", "Stack", or the concrete named
+    tools mentioned in that project's text (e.g. "LangChain", "Azure AI Search", "PostgreSQL"), one item per
+    technology. Only named products, languages, frameworks, libraries, databases or cloud services: never generic
+    words such as "AI", "LLM", "machine learning", "frontend", "backend", "API". Empty list if none.
+  In that case description holds only the general activities of the job that belong to no single project (often null).
+  If the CV groups the activities of a job under thematic headings instead of projects (e.g. "AI Solutions
+  Architecture & System Integration"), use one projects entry per heading with name = the heading and no dates.
+- Multi-column PDFs can interleave text of different jobs: assign each activity to the job it belongs to by
+  meaning (dates, employer, topic), not by its position in the extracted text.
+- When the job is not split into projects: projects is empty, description holds the activities (without the
+  "Attività:" label) and technologies the tools used in that job.
+- Keep the text as written: do NOT summarize away technical details and do NOT invent. Join bullet points with newlines.
+- employment_dates may be left empty: dates are taken from experiences.
+
+EDUCATION:
+- One entry per academic title with year (YYYY of completion, or the period as written, e.g. "Dal 9/2013 al 9/2015"),
+  full title (level + field, including the grade if written, e.g. "Laurea Magistrale in Astrofisica – 110 e lode")
+  and institution.
+- Also keep filling education_titles as before.
+
+TRAININGS:
+- One entry per course or certification with year, title and provider (e.g. "Udemy", "Microsoft") when written.
+- Also keep filling certifications as before.
+
+LANGUAGES:
+- One entry per spoken language: lang in Italian (e.g. "Inglese", "Francese"), level as written in the CV
+  (e.g. "Intermedio", "B2", "Madrelingua").
+
+SKILLS FOR THE CV:
+- Fill cv_skills with concise technology/tool names as they appear in a "Synthesis of Technical Skills" table:
+  programming languages, frameworks, libraries, databases, cloud services, platforms, software tools
+  (e.g. "Python", "LangChain", "Azure AI Search", "PostgreSQL", "Power BI").
+- Keep the names as written in the CV (original casing) and the CV order.
+- Do NOT put competency phrases or areas (e.g. "AI Solution Architecture & System Design",
+  "Retrieval-Augmented Generation (RAG)", "Enterprise AI Integration"): take the concrete tools mentioned inside
+  them instead.
+- level: as written in the CV for that skill; null if not written.
+- "skills" stays lowercase as required above.
+

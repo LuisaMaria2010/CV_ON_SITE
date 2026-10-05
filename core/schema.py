@@ -34,6 +34,13 @@ class SkillEntry(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
 
+class LanguageEntry(BaseModel):
+    lang: str = Field(..., description="Language name or code, e.g. italiano, english, it, en")
+    level: Optional[str] = Field(default=None, description="Proficiency level, e.g. madrelingua, B2, C1")
+
+    model_config = ConfigDict(extra="ignore")
+
+
 # =========================================================
 # 1️⃣ RAW LLM OUTPUT  (LLM-friendly, solo stringhe)
 # =========================================================
@@ -131,6 +138,155 @@ class LLMExtractionRaw(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
 
+# ---------------------------------------------------------
+# Profilo "mcflash": dettaglio in piu' per compilare il CV nel modello MC.
+# Usato solo da POST /api/extract?profile=mcflash; l'ingestione resta sullo
+# schema base, cosi' indice e costi non cambiano.
+# ---------------------------------------------------------
+
+class ProjectEntryRaw(BaseModel):
+    """Progetto/commessa/cliente dentro un singolo posto di lavoro."""
+
+    start_date: Optional[str] = Field(
+        default=None,
+        description="Project start in YYYY-MM-DD; day 01 when only month and year are given"
+    )
+    end_date: Optional[str] = Field(
+        default=None,
+        description="Project end in YYYY-MM-DD; null if ongoing"
+    )
+    ongoing: Optional[bool] = Field(default=None, description="true if the project is ongoing")
+    name: Optional[str] = Field(
+        default=None,
+        description="Project or client name as written (e.g. 'Progetto Angelini', 'Cliente Mediobanca')"
+    )
+    role: Optional[str] = Field(
+        default=None,
+        description="Role in this project only if different from the role of the job"
+    )
+    activities: Optional[str] = Field(
+        default=None,
+        description="Activities of this project as written in the CV, without the 'Attività:' label"
+    )
+    technologies: List[str] = Field(
+        default_factory=list,
+        description="Technologies used in this project (e.g. from 'Tecnologie utilizzate:')"
+    )
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class TrainingEntryRaw(BaseModel):
+    """Corso o certificazione con anno ed ente."""
+
+    year: Optional[str] = Field(default=None, description="Year (YYYY) or period as written")
+    title: Optional[str] = Field(default=None, description="Course or certification title")
+    provider: Optional[str] = Field(default=None, description="Provider or school (e.g. 'Udemy', 'Microsoft')")
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class ExperienceEntryRaw(BaseModel):
+    """Esperienza lavorativa completa prodotta dall'LLM."""
+
+    start_date: Optional[str] = Field(
+        default=None,
+        description="Start date in YYYY-MM-DD format; use day 01 when the CV gives only month and year"
+    )
+    end_date: Optional[str] = Field(
+        default=None,
+        description="End date in YYYY-MM-DD format; null if the job is ongoing"
+    )
+    ongoing: Optional[bool] = Field(
+        default=None,
+        description="true if the job is ongoing (e.g. 'ad oggi', 'present', 'in corso')"
+    )
+    company: Optional[str] = Field(
+        default=None,
+        description="Employer or client company as written in the CV (e.g. 'Lutech', 'Riservato')"
+    )
+    role: Optional[str] = Field(
+        default=None,
+        description="Job title held in this experience"
+    )
+    description: Optional[str] = Field(
+        default=None,
+        description=(
+            "Activities of this job as written (no invention). When the job is split into projects, "
+            "only the general activities not belonging to a single project (often null)"
+        )
+    )
+    technologies: List[str] = Field(
+        default_factory=list,
+        description="Technologies used in this job outside the single projects"
+    )
+    projects: List[ProjectEntryRaw] = Field(
+        default_factory=list,
+        description="Projects/clients/assignments within this job, most recent first; empty if not distinguished"
+    )
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class EducationEntryRaw(BaseModel):
+    """Titolo di studio con anno e istituto."""
+
+    year: Optional[str] = Field(
+        default=None,
+        description="Year the title was obtained (YYYY), or the period as written if no single year"
+    )
+    title: Optional[str] = Field(
+        default=None,
+        description="Full title including level and field (e.g. 'Laurea Magistrale in Statistica')"
+    )
+    institution: Optional[str] = Field(
+        default=None,
+        description="School or university"
+    )
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class LLMExtractionMCFlashRaw(LLMExtractionRaw):
+    """Schema base + campi necessari al modello CV MCFlash."""
+
+    first_name: Optional[str] = Field(
+        default=None,
+        description="Candidate first name(s) only, without surname"
+    )
+    last_name: Optional[str] = Field(
+        default=None,
+        description="Candidate surname only, including particles such as 'De', 'Di', 'La'"
+    )
+    catalog_role: Optional[str] = Field(
+        default=None,
+        description="Exactly one role copied verbatim from the MC ROLE CATALOG in the instructions"
+    )
+    experiences: List[ExperienceEntryRaw] = Field(
+        default_factory=list,
+        description="All work experiences, most recent first, with dates, company, role and description"
+    )
+    education: List[EducationEntryRaw] = Field(
+        default_factory=list,
+        description="All academic titles with year and institution"
+    )
+    languages: List[LanguageEntry] = Field(
+        default_factory=list,
+        description="Spoken languages with level as written in the CV (e.g. Inglese / Intermedio)"
+    )
+    cv_skills: List[SkillEntry] = Field(
+        default_factory=list,
+        description=(
+            "Same technical skills as 'skills' but with names in the ORIGINAL casing as written in the CV "
+            "(e.g. 'Power BI', 'PostgreSQL') and in the CV order"
+        )
+    )
+    trainings: List[TrainingEntryRaw] = Field(
+        default_factory=list,
+        description="Courses and certifications with year and provider"
+    )
+
+
 # =========================================================
 # 2️⃣ DOMAIN MODEL  (tipizzato + business logic)
 # =========================================================
@@ -150,6 +306,55 @@ class WorkExperience(BaseModel):
         default=None,
         description="Parsed end date as Python date object"
     )
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class ProjectEntry(BaseModel):
+    """Progetto dentro un posto di lavoro (profilo mcflash)."""
+
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    ongoing: bool = False
+    name: Optional[str] = None
+    role: Optional[str] = None
+    activities: Optional[str] = None
+    technologies: List[str] = Field(default_factory=list)
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class TrainingEntry(BaseModel):
+    """Corso o certificazione (profilo mcflash)."""
+
+    year: Optional[str] = None
+    title: Optional[str] = None
+    provider: Optional[str] = None
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class ExperienceEntry(BaseModel):
+    """Esperienza lavorativa completa (profilo mcflash)."""
+
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+    ongoing: bool = False
+    company: Optional[str] = None
+    role: Optional[str] = None
+    description: Optional[str] = None
+    technologies: List[str] = Field(default_factory=list)
+    projects: List[ProjectEntry] = Field(default_factory=list)
+
+    model_config = ConfigDict(extra="ignore")
+
+
+class EducationEntry(BaseModel):
+    """Titolo di studio con anno e istituto (profilo mcflash)."""
+
+    year: Optional[str] = None
+    title: Optional[str] = None
+    institution: Optional[str] = None
 
     model_config = ConfigDict(extra="ignore")
 
@@ -221,8 +426,44 @@ class CVExtraction(BaseModel):
     )
 
     # ---------------------------
+    # profilo mcflash (vuoti nel profilo base)
+    # ---------------------------
+
+    first_name: Optional[str] = Field(default=None, description="Candidate first name(s)")
+    last_name: Optional[str] = Field(default=None, description="Candidate surname")
+    catalog_role: Optional[str] = Field(
+        default=None,
+        description="Role from the MC role catalog (infra/mcflash_budget_placeholders.json), shown in the MC CV"
+    )
+    experiences: List[ExperienceEntry] = Field(
+        default_factory=list,
+        description="Work experiences with company, role and description, most recent first"
+    )
+    education: List[EducationEntry] = Field(
+        default_factory=list,
+        description="Academic titles with year and institution"
+    )
+    languages: List[LanguageEntry] = Field(
+        default_factory=list,
+        description="Spoken languages with level"
+    )
+    cv_skills: List[SkillEntry] = Field(
+        default_factory=list,
+        description="Technical skills as written in the CV (original casing and order), levels on the MC scale"
+    )
+    trainings: List[TrainingEntry] = Field(
+        default_factory=list,
+        description="Courses and certifications with year and provider"
+    )
+
+    # ---------------------------
     # campi calcolati (NO LLM)
     # ---------------------------
+
+    trittico: Optional[str] = Field(
+        default=None,
+        description="MC anonymized code: first letter of first name + first two letters of surname"
+    )
 
     age: Optional[int] = Field(
         default=None,
@@ -280,13 +521,6 @@ class CandidateInfo(BaseModel):
     age: Optional[int] = Field(default=None, description="Computed age if available")
     availability: Optional[str] = Field(default=None, description="Availability notes, e.g. immediate, 30 days")
     seniority: Optional[str] = Field(default=None, description="Derived seniority: junior/mid/senior")
-
-    model_config = ConfigDict(extra="ignore")
-
-
-class LanguageEntry(BaseModel):
-    lang: str = Field(..., description="Language name or code, e.g. italiano, english, it, en")
-    level: Optional[str] = Field(default=None, description="Proficiency level, e.g. madrelingua, B2, C1")
 
     model_config = ConfigDict(extra="ignore")
 

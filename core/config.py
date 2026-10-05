@@ -143,6 +143,12 @@ class Settings(BaseSettings):
     # =====================================================
 
     prompt_file: str = "prompts.txt"
+    # Istruzioni aggiunte per /api/extract?profile=mcflash (dettaglio per il modello CV MC)
+    prompt_mcflash_addendum_file: str = "prompts_mcflash.txt"
+    # Il profilo mcflash restituisce descrizioni complete: serve piu' output (e tempo)
+    # dell'estrazione base, che resta su azure_openai_max_tokens / llm_timeout_seconds.
+    mcflash_llm_max_tokens: int = 8000
+    mcflash_llm_timeout_seconds: int = 180
 
     # =====================================================
     # MySQL (COMMENTED OUT - UNCOMMENT WHEN NEEDED)

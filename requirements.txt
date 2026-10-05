@@ -17,6 +17,8 @@ azure-data-tables>=12.5,<13
 # CV parsing
 pymupdf>=1.23,<2
 python-docx>=1.1,<2
+# CV nel modello MCFlash (templates/cv_mcflash.docx)
+docxtpl>=0.18,<1
 
 # Testing
 pytest>=7.0,<8

@@ -239,6 +239,26 @@ class StorageService:
         except ResourceNotFoundError:
             pass
 
+    async def list_names(
+        self,
+        container: Optional[str] = None,
+        prefix: Optional[str] = None,
+    ) -> list[str]:
+        """
+        Nomi di tutti i blob del container (con eventuale prefisso).
+        Container inesistente -> lista vuota.
+        """
+        container = container or self.default_container
+
+        async def _op():
+            container_client = self.service.get_container_client(container)
+            return [b.name async for b in container_client.list_blobs(name_starts_with=prefix)]
+
+        try:
+            return await self._retry(_op)
+        except ResourceNotFoundError:
+            return []
+
     async def close(self):
         """Chiude client e credential async."""
         await self.service.close()
