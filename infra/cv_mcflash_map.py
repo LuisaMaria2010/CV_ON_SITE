@@ -112,6 +112,25 @@ def get_cv_mcflash_map() -> dict[str, str]:
         return _cache
 
 
+def read_file_entries() -> list[dict[str, str]]:
+    """Righe della tabella con il nome file: [{document_id, id_mcflash, file}].
+
+    Lettura diretta, senza cache: serve alla dashboard per proporre il nome
+    del CV e trovare il file attuale di un candidato, non alla ricerca.
+    """
+    client = get_table_client()
+    rows: list[dict[str, str]] = []
+    for entity in client.query_entities(
+        f"PartitionKey eq '{PARTITION_KEY}'", select=["RowKey", "id_mcflash", "file"]
+    ):
+        rows.append({
+            "document_id": str(entity.get("RowKey") or ""),
+            "id_mcflash": str(entity.get("id_mcflash") or ""),
+            "file": str(entity.get("file") or ""),
+        })
+    return rows
+
+
 def clear_cache() -> None:
     global _cache, _loaded_at
     with _lock:

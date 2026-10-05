@@ -14,11 +14,24 @@ import azure.functions as func
 from core.config import settings
 from core.dependencies import pipeline, storage
 from core.errors import FileTooLargeError, InvalidInputError
+from db_data.pipeline import PROFILE_DEFAULT, PROFILE_MCFLASH, PROFILES
 from utils.http_errors import http_error_handler
 
 logger = logging.getLogger(__name__)
 
 bp = func.Blueprint()
+
+# Dati personali: fuori dalla risposta, salvo profilo mcflash o include_contacts=true.
+_CONTACT_FIELDS = ("email", "phone", "age")
+# Campi che esistono solo nel profilo mcflash: nel profilo base la risposta resta quella di prima.
+_MCFLASH_ONLY_FIELDS = (
+    "first_name", "last_name", "catalog_role", "experiences", "education", "trainings", "languages",
+    "cv_skills", "trittico",
+)
+
+
+def _flag(value: str | None) -> bool:
+    return (value or "").strip().lower() in ("1", "true", "yes", "si", "sì")
 
 @bp.route(route="extract", methods=["POST"])
 @http_error_handler
@@ -30,10 +43,20 @@ async def extract(req: func.HttpRequest):
     - raw bytes (PDF / DOCX / TXT)
     - multipart/form-data con campo "file"
 
+    Query:
+    - profile=default|mcflash (default "default"). "mcflash" aggiunge nome e
+      cognome separati, trittico, esperienze complete, formazione con anno e
+      istituto, lingue con livello, e include email/telefono/eta'.
+    - include_contacts=true: email/telefono/eta' anche nel profilo base.
+
     Output:
     - dict dominio CVExtraction
     """
-    
+    profile = (req.params.get("profile") or PROFILE_DEFAULT).strip().lower()
+    if profile not in PROFILES:
+        raise InvalidInputError(f"Unknown profile '{profile}'. Allowed: {', '.join(PROFILES)}")
+    include_contacts = profile == PROFILE_MCFLASH or _flag(req.params.get("include_contacts"))
+
     # Recupero body (raw o multipart)
     file_bytes = None
     upload_filename = None
@@ -81,12 +104,15 @@ async def extract(req: func.HttpRequest):
         )
     
     # Pipeline dominio (parsing + LLM)
-    extraction = await pipeline.process(file_bytes)
+    extraction = await pipeline.process(file_bytes, profile=profile)
 
-    # Rimuoviamo temporaneamente i dati sensibili dall'output pubblico
     response_payload = extraction.model_dump()
-    for field in ("email", "phone", "age"):
-        response_payload.pop(field, None)
+    if not include_contacts:
+        for field in _CONTACT_FIELDS:
+            response_payload.pop(field, None)
+    if profile != PROFILE_MCFLASH:
+        for field in _MCFLASH_ONLY_FIELDS:
+            response_payload.pop(field, None)
     
     # Ritorniamo dict puro (decoratore gestisce envelope)
     return response_payload

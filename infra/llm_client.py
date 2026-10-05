@@ -73,6 +73,7 @@ def _normalize_base_url(endpoint: str) -> str:
 def get_llm(
     temperature: float | None = None,
     max_tokens: int | None = None,
+    timeout_seconds: int | None = None,
 ):
     """
     Restituisce client LLM configurato automaticamente.
@@ -83,6 +84,7 @@ def get_llm(
     Args:
         temperature: override opzionale
         max_tokens: override opzionale
+        timeout_seconds: override opzionale del timeout HTTP
 
     Returns:
         AzureChatOpenAI | ChatOpenAI
@@ -113,7 +115,7 @@ def get_llm(
             api_version=settings.azure_openai_api_version,
             temperature=temperature,
             max_tokens=max_tokens,
-            timeout=settings.llm_timeout_seconds,
+            timeout=timeout_seconds or settings.llm_timeout_seconds,
             **_auth_kwargs(),
         )
 
@@ -131,7 +133,7 @@ def get_llm(
             model=settings.azure_openai_model,
             temperature=temperature,
             max_tokens=max_tokens,
-            timeout=settings.llm_timeout_seconds,
+            timeout=timeout_seconds or settings.llm_timeout_seconds,
             **auth,
         )
 
