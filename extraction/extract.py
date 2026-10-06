@@ -4,10 +4,14 @@ from __future__ import annotations
 import io
 import logging
 import re
+import zipfile
 from statistics import median
 
 import fitz
 from docx import Document
+from docx.oxml.ns import qn
+from docx.table import Table as DocxTable
+from docx.text.paragraph import Paragraph as DocxParagraph
 
 from core.config import settings
 from core.errors import TextExtractionError
@@ -31,7 +35,7 @@ def extract_elements(file_bytes: bytes, mime_type: str | None = None) -> list[Do
         if _is_pdf(mime_type, file_bytes):
             return _elements_from_pdf(file_bytes)
 
-        if _is_docx(mime_type):
+        if _is_docx(mime_type, file_bytes):
             return _elements_from_docx(file_bytes)
 
         return _elements_from_txt(file_bytes)
@@ -53,17 +57,22 @@ def _is_pdf(mime: str | None, data: bytes) -> bool:
     return data.startswith(b"%PDF")
 
 
-def _is_docx(mime: str | None) -> bool:
+def _is_docx(mime: str | None, data: bytes = b"") -> bool:
     """
-    Rileva se il file è un DOCX tramite MIME type.
+    Rileva se il file è un DOCX tramite MIME type o, senza MIME, dal contenuto:
+    uno ZIP che contiene word/document.xml. Senza questo controllo un DOCX
+    arrivato senza MIME (es. POST /api/extract) veniva letto come testo: lo ZIP
+    grezzo finiva all'LLM, che inventava i dati.
     """
-    """
-    DOCX detection solo via MIME (più sicuro).
-    """
-    if not mime:
+    if mime and ("officedocument" in mime or "word" in mime):
+        return True
+    if not data.startswith(b"PK\x03\x04"):
         return False
-
-    return "officedocument" in mime or "word" in mime
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            return "word/document.xml" in archive.namelist()
+    except zipfile.BadZipFile:
+        return False
 
 
 # =========================================================
@@ -329,37 +338,67 @@ def _finalize_raw_block(lines: list[dict]) -> dict:
     }
 
 
+def _docx_paragraph_element(paragraph: DocxParagraph) -> DocumentElement | None:
+    text = _clean_text(paragraph.text)
+    if not text:
+        return None
+
+    style_name = (getattr(paragraph.style, "name", "") or "").lower()
+    if style_name.startswith("heading"):
+        match = re.search(r"(\d+)$", style_name)
+        level = int(match.group(1)) if match else 1
+        return DocumentElement(element_type="heading", text=text, level=min(max(level, 1), 6))
+
+    list_info = _extract_list_info(text)
+    if list_info or "list" in style_name:
+        info = list_info or {"body": text, "ordered": False, "level": 1}
+        return DocumentElement(
+            element_type="list_item",
+            text=info["body"],
+            level=info["level"],
+            list_ordered=info["ordered"],
+        )
+
+    return DocumentElement(element_type="paragraph", text=text)
+
+
+def _docx_table_rows(table: DocxTable) -> list[list[str]]:
+    """Righe della tabella con il testo di ogni cella (le celle unite contano una volta)."""
+    rows: list[list[str]] = []
+    for row in table.rows:
+        cells: list[str] = []
+        seen: set[int] = set()
+        for cell in row.cells:
+            if id(cell._tc) in seen:
+                continue
+            seen.add(id(cell._tc))
+            cells.append(" ".join(_clean_text(p.text) for p in cell.paragraphs if _clean_text(p.text)))
+        if any(cells):
+            rows.append(cells)
+    return rows
+
+
 def _elements_from_docx(data: bytes) -> list[DocumentElement]:
+    """Paragrafi e tabelle nell'ordine del documento.
+
+    Le tabelle contano: molti CV (e tutti quelli nel modello MC) mettono i
+    contenuti in tabelle. Prima si leggevano solo i paragrafi, quindi di un CV
+    MC restavano i titoli delle sezioni: niente nell'indice, e lo stesso testo
+    (e hash) per tutti i CV MC, scartati come duplicati dal registro.
+    """
     file_like = io.BytesIO(data)
     document = Document(file_like)
     elements: list[DocumentElement] = []
 
-    for paragraph in document.paragraphs:
-        text = _clean_text(paragraph.text)
-        if not text:
-            continue
-
-        style_name = (getattr(paragraph.style, "name", "") or "").lower()
-        if style_name.startswith("heading"):
-            match = re.search(r"(\d+)$", style_name)
-            level = int(match.group(1)) if match else 1
-            elements.append(DocumentElement(element_type="heading", text=text, level=min(max(level, 1), 6)))
-            continue
-
-        list_info = _extract_list_info(text)
-        if list_info or "list" in style_name:
-            info = list_info or {"body": text, "ordered": False, "level": 1}
-            elements.append(
-                DocumentElement(
-                    element_type="list_item",
-                    text=info["body"],
-                    level=info["level"],
-                    list_ordered=info["ordered"],
-                )
-            )
-            continue
-
-        elements.append(DocumentElement(element_type="paragraph", text=text))
+    for child in document.element.body.iterchildren():
+        if child.tag == qn("w:p"):
+            element = _docx_paragraph_element(DocxParagraph(child, document))
+            if element:
+                elements.append(element)
+        elif child.tag == qn("w:tbl"):
+            rows = _docx_table_rows(DocxTable(child, document))
+            if rows:
+                elements.append(DocumentElement(element_type="table", rows=rows))
 
     return _coalesce_paragraphs(elements)
 

@@ -3,6 +3,8 @@ azure-functions
 
 # Core
 pydantic>=2.6,<3
+# ZoneInfo("Europe/Rome") su Windows, dove il sistema non ha il database dei fusi
+tzdata
 
 # LangChain + OpenAI (Azure)
 langchain==0.2.17

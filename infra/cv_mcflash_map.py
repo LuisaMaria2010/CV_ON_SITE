@@ -135,3 +135,27 @@ def clear_cache() -> None:
     global _cache, _loaded_at
     with _lock:
         _cache, _loaded_at = None, 0.0
+
+
+def upsert_entry(document_id: str, id_mcflash: str, *, file: str, codice: str = "",
+                 criterio: str = "dashboard") -> dict[str, Any]:
+    """Scrive (o sostituisce) la riga di un CV. Usata dalla conferma della dashboard."""
+    from datetime import datetime, timezone
+
+    entity = {
+        "PartitionKey": PARTITION_KEY,
+        "RowKey": document_id,
+        "id_mcflash": str(id_mcflash),
+        "file": file,
+        "codice": codice,
+        "criterio": criterio,
+        "updated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    get_table_client().upsert_entity(entity=entity)
+    clear_cache()
+    return entity
+
+
+def delete_entry(document_id: str) -> None:
+    get_table_client().delete_entity(PARTITION_KEY, document_id)
+    clear_cache()

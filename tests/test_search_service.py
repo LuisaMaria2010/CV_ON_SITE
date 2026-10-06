@@ -341,3 +341,28 @@ class TestUpsertChunks:
 
         assert len(uploaded) == 2
         assert uploaded[0]["id"] == "c1"
+
+
+class TestDeleteChunks:
+    def test_deletes_every_chunk_of_the_document(self):
+        """Con l'SDK async, search() e' una coroutine: senza await la cancellazione
+        falliva e, a ogni nuova versione di un CV, i chunk vecchi restavano nell'indice."""
+        hits = [{"id": "doc-v1-00000"}, {"id": "doc-v1-00001"}]
+        seen = {}
+
+        async def fake_search(**kwargs):
+            seen["filter"] = kwargs.get("filter")
+            return _make_async_iter(hits)
+
+        fake_client = MagicMock()
+        fake_client.search = fake_search
+        fake_client.delete_documents = AsyncMock()
+        fake_client.close = AsyncMock()
+
+        with patch("infra.search_service.SearchClient", return_value=fake_client), \
+             patch("infra.search_service.DefaultAzureCredential", return_value=MagicMock()), \
+             patch("infra.search_service.AzureKeyCredential", side_effect=lambda k: MagicMock()):
+            asyncio.run(SearchService().delete_chunks("doc"))
+
+        assert seen["filter"] == "document_id eq 'doc'"
+        fake_client.delete_documents.assert_awaited_once_with([{"id": "doc-v1-00000"}, {"id": "doc-v1-00001"}])

@@ -33,6 +33,8 @@ from core.errors import (
     CVError,
     InvalidInputError,
     FileTooLargeError,
+    NotFoundError,
+    UpstreamServiceError,
     TextExtractionError,
     LLMProcessingError,
 )
@@ -110,6 +112,24 @@ def map_exception_to_response(
             error=str(exc),
             request_id=request_id,
             status_code=400,
+        )
+
+    if isinstance(exc, NotFoundError):
+        logger.warning("[%s] %s", request_id, exc)
+        return json_response(
+            data=None,
+            error=str(exc),
+            request_id=request_id,
+            status_code=404,
+        )
+
+    if isinstance(exc, UpstreamServiceError):
+        logger.warning("[%s] %s", request_id, exc)
+        return json_response(
+            data=None,
+            error=str(exc),
+            request_id=request_id,
+            status_code=502,
         )
 
     if isinstance(exc, TextExtractionError):

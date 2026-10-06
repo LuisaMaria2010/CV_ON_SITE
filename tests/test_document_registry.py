@@ -131,3 +131,57 @@ def test_mark_status_updates_entity(patch_table_classes):
     # fetch entity and check status
     found = reg.lookup("incoming/s.docx")
     assert found.get("status") == registry_mod.DocumentRegistry.STATUS_PROCESSED
+
+
+def test_register_continues_version_from_another_source_path(patch_table_classes):
+    """Il CV MC passa da "X.pdf" a "X.docx": stesso documento, versione +1 (non riparte da 1)."""
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    reg.register(document_id="Skill Tecnico_DCA_MC", source_path="/incoming-cv/Skill Tecnico_DCA_MC.pdf", content_hash="h1")
+    reg.register(document_id="Skill Tecnico_DCA_MC", source_path="/incoming-cv/Skill Tecnico_DCA_MC.pdf", content_hash="h2")
+    ent = reg.register(document_id="Skill Tecnico_DCA_MC", source_path="/incoming-cv/Skill Tecnico_DCA_MC.docx",
+                       content_hash="h3")
+    assert ent["version"] == 3
+
+
+def test_list_documents_keeps_highest_version(patch_table_classes):
+    fake = patch_table_classes
+    fake.list_entities = lambda select=None: [
+        {"RowKey": "doc", "version": 2, "status": "processed", "source_path": "/incoming-cv/doc.pdf"},
+        {"RowKey": "doc", "version": 3, "status": "processing", "source_path": "/incoming-cv/doc.docx"},
+    ]
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    assert reg.list_documents()["doc"]["version"] == 3
+    assert reg.list_documents()["doc"]["source_path"] == "/incoming-cv/doc.docx"
+
+
+def _existing(patch_table_classes, doc="skill-tecnico_aaa_mc", hash_="h-template"):
+    patch_table_classes.entities.append({
+        "PartitionKey": "x", "RowKey": doc, "document_id": doc,
+        "source_path": f"/incoming-cv/{doc}.docx", "hash": hash_, "version": 1,
+    })
+
+
+def test_short_text_with_same_hash_as_another_cv_is_not_skipped(patch_table_classes):
+    """Due CV a tabelle letti male avevano lo stesso testo corto: il secondo non va scartato."""
+    _existing(patch_table_classes)
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    proc, ver = reg.should_process("/incoming-cv/Skill Tecnico_MRO_MC.docx", "h-template",
+                                   document_id="Skill Tecnico_MRO_MC", text_chars=71)
+    assert proc is True and ver is None
+
+
+def test_real_duplicate_is_still_skipped(patch_table_classes):
+    """Lo stesso CV (testo pieno) caricato con un altro nome resta un duplicato."""
+    _existing(patch_table_classes)
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    proc, _ = reg.should_process("/incoming-cv/Skill_Tecnico_AAA_MC.docx", "h-template",
+                                 document_id="Skill_Tecnico_AAA_MC", text_chars=4200)
+    assert proc is False
+
+
+def test_short_text_same_document_is_still_a_no_op(patch_table_classes):
+    _existing(patch_table_classes)
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    proc, _ = reg.should_process("/incoming-cv/skill-tecnico_aaa_mc.docx", "h-template",
+                                 document_id="skill-tecnico_aaa_mc", text_chars=71)
+    assert proc is False

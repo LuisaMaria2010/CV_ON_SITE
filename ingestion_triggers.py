@@ -157,7 +157,7 @@ def process_incoming_cv(msg: func.QueueMessage):
                 "LLM enrichment failed, proceeding with partial metadata document_id=%s", document_id
             )
         should_process, next_version = registry.should_process(
-            source_path, content_hash, document_id=document_id
+            source_path, content_hash, document_id=document_id, text_chars=len(extracted_text or "")
         )
         if not should_process:
             logger.info(

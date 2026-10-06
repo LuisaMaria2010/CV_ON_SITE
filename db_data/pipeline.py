@@ -7,6 +7,8 @@ Flusso completo:
 Gestisce cache, chiamate LLM, mapping e arricchimento in modo trasparente.
 """
 
+import logging
+
 from extraction.hashing import sha256_bytes
 from extraction.cache import TextCache
 
@@ -20,11 +22,22 @@ from db_data.postprocess import enrich
 from utils.observability import track_event
 from utils.request_context import get_request_id
 
+logger = logging.getLogger(__name__)
 
+
+# Versione dell'estrazione del testo: entra nelle chiavi della cache, cosi' un
+# cambio dell'estrattore (es. le tabelle dei DOCX, lette dalla v2) non riusa il
+# testo vecchio ne' l'estrazione LLM fatta su quello.
+TEXT_EXTRACTION_VERSION = "2"
 
 PROFILE_DEFAULT = "default"
 PROFILE_MCFLASH = "mcflash"
 PROFILES = (PROFILE_DEFAULT, PROFILE_MCFLASH)
+
+
+def is_raw_zip_text(text: str) -> bool:
+    """Testo che in realta' e' un file ZIP (DOCX) letto come testo semplice."""
+    return text.lstrip("﻿").startswith("PK")
 
 
 class CVPipeline:
@@ -102,7 +115,15 @@ class CVPipeline:
         # TEXT CACHE
         # -------------------------------------------------
 
-        text = await self.cache.get(file_hash)
+        text_key = f"{file_hash}-t{TEXT_EXTRACTION_VERSION}"
+        text = await self.cache.get(text_key)
+
+        # Un DOCX arrivato senza MIME veniva letto come testo: in cache c'e' lo
+        # ZIP grezzo e l'estrazione LLM inventata da quello. Si rifanno entrambi.
+        stale = text is not None and is_raw_zip_text(text)
+        if stale:
+            logger.warning("Pipeline: cached text for %s is a raw ZIP, extracting again", file_hash[:12])
+            text = None
 
         if text is None:
             track_event("pipeline_text_cache_miss", request_id=request_id)
@@ -113,7 +134,7 @@ class CVPipeline:
             if not text:
                 raise TextExtractionError("Empty extracted text")
 
-            await self.cache.save(file_hash, text)
+            await self.cache.save(text_key, text)
         else:
             track_event("pipeline_text_cache_hit", request_id=request_id)
 
@@ -122,9 +143,9 @@ class CVPipeline:
         # -------------------------------------------------
 
         # La firma cambia con prompt e schema: i due profili non condividono cache.
-        json_cache_key = f"{file_hash}-{chain.cache_signature}"
+        json_cache_key = f"{text_key}-{chain.cache_signature}"
 
-        cached_json = await self.cache.get_json(json_cache_key)
+        cached_json = None if stale else await self.cache.get_json(json_cache_key)
 
         if cached_json is not None:
             track_event("pipeline_llm_cache_hit", request_id=request_id)

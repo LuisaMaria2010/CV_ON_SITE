@@ -15,6 +15,9 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from pydantic import ValidationError
+
+from core.errors import InvalidInputError
 from core.schema import CVExtraction
 from domain.role_catalog import display_role
 
@@ -125,6 +128,25 @@ def build_context(cv: CVExtraction | dict) -> dict[str, Any]:
         "skills": skills,
         "lingue": lingue,
     }
+
+
+# Dati personali che restano sul record MCFlash e non entrano nel CV anonimo.
+_NOT_IN_CV = ("email", "phone", "age", "first_name", "last_name", "full_name", "mcflash")
+
+
+def context_from_form(data: dict[str, Any]) -> dict[str, Any]:
+    """Contesto del modello dai dati del form della dashboard.
+
+    Email, telefono, eta' e nome si tolgono prima della validazione: non vanno
+    nel CV, e un'email scritta male nel form non deve bloccare il CV.
+    """
+    clean = {k: v for k, v in data.items() if k not in _NOT_IN_CV}
+    try:
+        cv = CVExtraction.model_validate(clean)
+    except ValidationError as exc:
+        parts = [f"{'.'.join(str(p) for p in err.get('loc', ()))}: {err.get('msg')}" for err in exc.errors()[:5]]
+        raise InvalidInputError("Dati non validi per il CV: " + "; ".join(parts)) from exc
+    return build_context(cv)
 
 
 def render_docx(context: dict[str, Any], template_path: Path | str = TEMPLATE_PATH) -> bytes:

@@ -13,7 +13,7 @@ class FakeRegistry:
         self.mark_status_called = False
         self.last_status = None
 
-    def should_process(self, source_path, content_hash, document_id=None):
+    def should_process(self, source_path, content_hash, document_id=None, text_chars=None):
         self.should_process_called = True
         return True, None
 

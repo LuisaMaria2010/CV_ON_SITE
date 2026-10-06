@@ -210,7 +210,7 @@ class SearchService:
             # find all documents with document_id
             query = f"document_id eq '{document_id}'"
             ids = []
-            results = client.search(search_text="*", filter=query, top=1000)
+            results = await client.search(search_text="*", filter=query, top=1000)
             async for r in results:
                 if hasattr(r, 'id'):
                     ids.append(r.id)

@@ -13,6 +13,10 @@ SKILL_BASE = "Conoscenza base"
 SKILL_GOOD = "Buona conoscenza"
 SKILL_GREAT = "Ottima conoscenza"
 
+# Scale complete, dal livello piu' basso al piu' alto (menu del form della dashboard).
+SKILL_LEVELS: tuple[str, ...] = (SKILL_BASE, SKILL_GOOD, SKILL_GREAT)
+LANGUAGE_LEVELS: tuple[str, ...] = ("Base", "Intermedio", "Avanzato", "Fluente", "Madrelingua")
+
 # Ordine importante: il primo che corrisponde vince ("conoscenza avanzata" -> ottima).
 _SKILL_RULES: tuple[tuple[str, str], ...] = (
     (r"ottim|eccellent|excellent|expert|esper|advanced|avanzat|proficient|master|senior|\b5\s*/\s*5\b", SKILL_GREAT),
