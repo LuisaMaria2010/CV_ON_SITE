@@ -17,6 +17,13 @@ from core.config import settings
 
 logger = logging.getLogger(__name__)
 
+# Sotto questa lunghezza il testo estratto non basta a dire che due file sono lo
+# stesso CV: un hash uguale a quello di un altro documento non lo fa scartare.
+# Caso reale: i DOCX a tabelle (modello MC) letti senza tabelle davano a tutti
+# lo stesso testo ("Information, Education, ...") e dal secondo in poi venivano
+# saltati come duplicati.
+MIN_DEDUP_TEXT_CHARS = 300
+
 
 class DocumentRegistry:
     STATUS_PROCESSING = "processing"
@@ -92,6 +99,25 @@ class DocumentRegistry:
             return None
         return dict(entities[0])
 
+    def list_documents(self) -> dict[str, dict[str, Any]]:
+        """document_id normalizzato -> {version, status, processed_at}: una sola lettura
+        della tabella, per chi deve conoscere lo stato di molti documenti insieme."""
+        out: dict[str, dict[str, Any]] = {}
+        for entity in self.table_client.list_entities(
+            select=["RowKey", "version", "status", "processed_at", "source_path"]
+        ):
+            key = str(entity.get("RowKey") or "")
+            row = {
+                "version": entity.get("version", 1),
+                "status": entity.get("status"),
+                "processed_at": entity.get("processed_at"),
+                "source_path": entity.get("source_path"),
+            }
+            # Piu' righe per lo stesso documento (percorsi diversi): vale la versione piu' alta.
+            if key not in out or (row["version"] or 0) > (out[key]["version"] or 0):
+                out[key] = row
+        return out
+
     def register(self, document_id: str, source_path: str, content_hash: str) -> dict[str, Any]:
         normalized_document_id = self._normalize_document_id(document_id)
         partition_key = self._partition_key_from_source_path(source_path)
@@ -113,13 +139,20 @@ class DocumentRegistry:
             entity["status"] = self.STATUS_PROCESSING
             entity["processed_at"] = now
         else:
+            # Stesso documento da un altro percorso (es. "X.pdf" sostituito da "X.docx"):
+            # la versione continua da quella piu' alta gia' registrata, non riparte da 1.
+            escaped = normalized_document_id.replace("'", "''")
+            previous = [
+                e.get("version", 1)
+                for e in self.table_client.query_entities(query_filter=f"RowKey eq '{escaped}'")
+            ]
             entity = {
                 "PartitionKey": partition_key,
                 "RowKey": normalized_document_id,
                 "document_id": normalized_document_id,
                 "source_path": source_path,
                 "hash": content_hash,
-                "version": 1,
+                "version": max(previous) + 1 if previous else 1,
                 "status": self.STATUS_PROCESSING,
                 "processed_at": now,
             }
@@ -147,9 +180,24 @@ class DocumentRegistry:
             )
             return False
 
-    def should_process(self, source_path: str, content_hash: str, document_id: str | None = None) -> tuple[bool, int | None]:
+    def should_process(
+        self,
+        source_path: str,
+        content_hash: str,
+        document_id: str | None = None,
+        text_chars: int | None = None,
+    ) -> tuple[bool, int | None]:
         # 1) If any record already has the same hash, reuse it (no-op)
         by_hash = self.find_by_hash(content_hash)
+        if by_hash and text_chars is not None and text_chars < MIN_DEDUP_TEXT_CHARS:
+            other = by_hash.get("RowKey") or by_hash.get("document_id")
+            if document_id and other != self._normalize_document_id(document_id):
+                logger.warning(
+                    "Hash shared with document_id=%s but extracted text is only %s chars: "
+                    "%s is processed as its own document, not skipped as a duplicate",
+                    other, text_chars, source_path,
+                )
+                by_hash = None
         if by_hash:
             # ensure the source_path is recorded as an alias
             try:

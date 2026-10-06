@@ -27,6 +27,16 @@ class FileTooLargeError(CVError):
     pass
 
 
+class NotFoundError(CVError):
+    """La risorsa richiesta non esiste (es. candidato MCFlash)."""
+    pass
+
+
+class UpstreamServiceError(CVError):
+    """Un servizio esterno (es. API MCFlash) non risponde o risponde male."""
+    pass
+
+
 # ===============================
 # Extraction / Parsing
 # ===============================

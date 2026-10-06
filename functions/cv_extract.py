@@ -113,6 +113,11 @@ async def extract(req: func.HttpRequest):
     if profile != PROFILE_MCFLASH:
         for field in _MCFLASH_ONLY_FIELDS:
             response_payload.pop(field, None)
-    
+    else:
+        # La dashboard lega la bozza al file originale: serve per rivederlo e,
+        # alla conferma, per registrarne il percorso.
+        response_payload["original_blob"] = blob_name
+        response_payload["original_filename"] = upload_filename
+
     # Ritorniamo dict puro (decoratore gestisce envelope)
     return response_payload
