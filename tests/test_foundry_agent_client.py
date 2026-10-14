@@ -39,3 +39,47 @@ def test_client_timeout_and_retries_from_settings(monkeypatch):
 def test_invalid_settings_fall_back_to_defaults(monkeypatch):
     kwargs = _client(monkeypatch, {"FOUNDRY_TIMEOUT_SECONDS": "abc", "FOUNDRY_SDK_MAX_RETRIES": "x"})
     assert kwargs["timeout"] == 70.0 and kwargs["max_retries"] == 2
+
+
+def test_attempts_are_collected_for_the_caller(monkeypatch):
+    # run_foundry_agent gira in un thread: i tentativi tornano al chiamante, che li logga.
+    class _Responses:
+        def create(self, **kwargs):
+            return "ok"
+
+    class _Client:
+        responses = _Responses()
+
+    monkeypatch.setattr(fa, "get_mc_matcher_client", lambda: _Client())
+    attempts: list = []
+    assert fa.run_foundry_agent(agent_name="a", message="m", attempts=attempts) == "ok"
+    assert len(attempts) == 1 and attempts[0]["attempt"] == 1 and attempts[0]["error"] is None
+
+
+def test_matcher_logs_foundry_metric_from_the_caller(monkeypatch, caplog):
+    import asyncio
+    import json
+    import logging
+
+    import azure.functions as func
+
+    import functions.matcher_api as matcher_api
+
+    class _Resp:
+        output_text = "ok"
+        id = "r1"
+
+    def _fake(**kwargs):
+        kwargs["attempts"].append({"attempt": 1, "ms": 12.0, "error": None})
+        return _Resp()
+
+    monkeypatch.setattr(matcher_api, "_run_foundry_agent", _fake)
+    monkeypatch.setattr(matcher_api, "_response_to_plain_dict", lambda r: {"id": r.id})
+    monkeypatch.setattr(matcher_api, "_chat_history_load_thread", lambda u, c: None)
+    monkeypatch.setattr(matcher_api, "_chat_history_append_turn", lambda **kw: {"turn_count": 1})
+    req = func.HttpRequest(method="POST", url="/api/ai-matcher-wrapper", headers={},
+                           body=json.dumps({"user_id": "u", "chat_id": "c", "user_request": "java", "site": "mcflashrisorse"}).encode())
+    with caplog.at_level(logging.INFO, logger=matcher_api.logger.name):
+        asyncio.run(matcher_api.ai_matcher_wrapper(req))
+    assert any("METRIC::foundry_agent_ms=" in r.getMessage() and "attempts=1" in r.getMessage()
+               for r in caplog.records)

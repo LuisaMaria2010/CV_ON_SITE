@@ -225,8 +225,14 @@ def run_foundry_agent(
     message: str,
     model_name: str | None = None,
     previous_response_id: str | None = None,
+    attempts: list[dict[str, Any]] | None = None,
 ) -> Any:
-    """Invoke Foundry modern agent via Responses API with agent_reference."""
+    """Invoke Foundry modern agent via Responses API with agent_reference.
+
+    `attempts`, se passata, riceve un elemento per tentativo ({attempt, ms,
+    error}): questa funzione gira in un thread (asyncio.to_thread) e i log dei
+    thread non arrivano ad Application Insights, quindi li scrive il chiamante.
+    """
     openai = get_mc_matcher_client()
     if openai is None:
         has_api_key = bool(settings_value("AZURE_OPENAI_KEY", default=settings.azure_openai_key or ""))
@@ -260,16 +266,13 @@ def run_foundry_agent(
         started = time.monotonic()
         try:
             response = openai.responses.create(**kwargs)
-            logger.info(
-                "METRIC::foundry_agent_ms=%.0f | agent=%s attempt=%s",
-                (time.monotonic() - started) * 1000, agent_name, attempt,
-            )
+            if attempts is not None:
+                attempts.append({"attempt": attempt, "ms": (time.monotonic() - started) * 1000, "error": None})
             return response
         except Exception as exc:
-            logger.warning(
-                "foundry_agent_failed agent=%s attempt=%s after=%.0fms error=%s",
-                agent_name, attempt, (time.monotonic() - started) * 1000, str(exc)[:200],
-            )
+            if attempts is not None:
+                attempts.append({"attempt": attempt, "ms": (time.monotonic() - started) * 1000,
+                                 "error": str(exc)[:200]})
             if not is_rate_limit_error(exc) or attempt >= retry_max_attempts:
                 raise
 

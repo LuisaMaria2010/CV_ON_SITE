@@ -7,6 +7,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+import time
 from datetime import datetime
 from typing import Any
 from zoneinfo import ZoneInfo
@@ -25,6 +26,9 @@ from infra.chat_history import (
 )
 from infra.foundry_agent import (
     response_to_plain_dict as _response_to_plain_dict,
+)
+from infra.foundry_agent import (
+    foundry_timeout_seconds as _foundry_timeout_seconds,
 )
 from infra.foundry_agent import (
     run_foundry_agent as _run_foundry_agent,
@@ -169,14 +173,32 @@ async def ai_matcher_wrapper(req: func.HttpRequest):
                 exc,
             )
 
-    response = await asyncio.to_thread(
-        lambda: _run_foundry_agent(
-            agent_name=agent_name,
-            message=agent_input,
-            model_name=model_name,
-            previous_response_id=previous_response_id,
+    # Durata e tentativi della chiamata a Foundry, scritti qui e non nel thread:
+    # i log emessi dai thread non arrivano ad Application Insights.
+    foundry_attempts: list[dict[str, Any]] = []
+    foundry_started = time.monotonic()
+    try:
+        response = await asyncio.to_thread(
+            lambda: _run_foundry_agent(
+                agent_name=agent_name,
+                message=agent_input,
+                model_name=model_name,
+                previous_response_id=previous_response_id,
+                attempts=foundry_attempts,
+            )
         )
-    )
+    finally:
+        foundry_ms = (time.monotonic() - foundry_started) * 1000
+        for item in foundry_attempts:
+            if item.get("error"):
+                logger.warning("foundry_agent_failed agent=%s attempt=%s after=%.0fms error=%s",
+                               agent_name, item["attempt"], item["ms"], item["error"])
+        logger.info("METRIC::foundry_agent_ms=%.0f | agent=%s attempts=%s",
+                    foundry_ms, agent_name, len(foundry_attempts))
+        if foundry_ms > _foundry_timeout_seconds() * 1000:
+            # Oltre il timeout di un tentativo: l'SDK ha ripetuto una richiesta appesa.
+            logger.warning("foundry_agent_slow agent=%s ms=%.0f (timeout per tentativo %.0fs)",
+                           agent_name, foundry_ms, _foundry_timeout_seconds())
 
     raw_response = _response_to_plain_dict(response)
     output_text = _safe_str(getattr(response, "output_text", ""))
