@@ -48,7 +48,7 @@ import unicodedata
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Any
 
 root = Path(__file__).parent.parent
@@ -66,6 +66,7 @@ from core.config import settings  # noqa: E402
 from core.dependencies import get_mcflash_candidates_client  # noqa: E402
 from infra.mcflash_candidates import MCFlashCandidatesClient  # noqa: E402
 from services.search_pipeline import _normalise_person_key  # noqa: E402
+from domain.normalizer import TextNormalizer  # noqa: E402
 from utils.site import site_key  # noqa: E402
 
 MAP_PATH = root / "scripts" / "cv_mcflash_map.json"
@@ -73,11 +74,13 @@ OVERRIDES_PATH = root / "scripts" / "cv_mcflash_map_overrides.json"
 
 AGE_MIN_DELTA, AGE_MAX_DELTA = -1, 3
 MAX_DELTA_SINGLE_PERSON = 12
+JUDGE_EXCERPT_CHARS = 2500
 
 JUDGE_SYSTEM = """\
 Valuti se un CV puo' appartenere a una persona che, nell'anagrafica aziendale,
-ha un certo ruolo professionale. Del CV conosci il ruolo che vi e' indicato e
-le competenze tecniche estratte.
+ha un certo ruolo professionale. Del CV conosci il ruolo che vi e' indicato, le
+competenze tecniche estratte e, quando disponibile, un estratto del testo
+(esperienze, formazione): usalo per capire il mestiere reale.
 
 coerente = true se il CV descrive lo stesso mestiere del ruolo in anagrafica:
 - le competenze sono tipiche di chi svolge quel ruolo, oppure
@@ -139,6 +142,9 @@ def _parse_date(text: str) -> dt.date | None:
     return day if 1940 <= day.year <= 2010 else None
 
 
+_HEADER_LABELS = {"città", "citta", "city", "ruolo", "role", "data di nascita", "date of birth", "overview"}
+_FILE_NOISE_RE = re.compile(r"(?i)skill[\s_]*tecnico|(?<![a-z])mc(?![a-z])")
+_FILE_CODE_RE = re.compile(r"(?<![A-Za-z])([A-Za-z]{3})(?![A-Za-z])")
 _CODE_RE = re.compile(r"\|\s*(?:nome|name)\s*\|\s*([A-Za-z]{3})\b", re.I)
 
 
@@ -168,8 +174,9 @@ def _local_headers(cv_dir: str) -> dict[str, dict[str, Any]]:
         except Exception as exc:  # file danneggiato: resta il dato dell'indice
             print(f"ATTENZIONE: {path.name} non leggibile ({exc})")
             continue
-        lines = [l.strip() for l in text.splitlines() if l.strip()][:40]
-        head: dict[str, Any] = {"file": path.name}
+        all_lines = [l.strip() for l in text.splitlines() if l.strip()]
+        lines = all_lines[:40]
+        head: dict[str, Any] = {"file": path.name, "text": "\n".join(all_lines)}
         for i, line in enumerate(lines):
             low = line.lower().rstrip(":")
             nxt = lines[i + 1] if i + 1 < len(lines) else ""
@@ -179,7 +186,7 @@ def _local_headers(cv_dir: str) -> dict[str, dict[str, Any]]:
                     if m and (day := _parse_date(m.group(1))):
                         head["dob"] = day
                         break
-            if low in ("nome", "name") and "code" not in head:
+            if low in ("nome", "name") and "code" not in head and nxt.lower().rstrip(":") not in _HEADER_LABELS:
                 head["code"] = nxt[:3].upper()
             elif low.startswith(("nome ", "name ")) and "code" not in head:
                 parts = line.split()
@@ -193,11 +200,37 @@ def _local_headers(cv_dir: str) -> dict[str, dict[str, Any]]:
             if low in ("ruolo", "role") and "role" not in head:
                 head["role"] = next((l for l in lines[i + 1:i + 3]
                                      if l.lower() not in ("overview", "education", "experience", "esperienze")), None)
+        if "dob" not in head:
+            # Data di nascita fuori dall'intestazione: la si cerca in tutto il testo.
+            for rx in _DOB_RES:
+                m = rx.search(head["text"])
+                if m and (day := _parse_date(m.group(1))):
+                    head["dob"] = day
+                    break
+        if "code" not in head and (file_code := _file_code(path.name)):
+            # Nome vuoto nell'intestazione: il codice resta quello nel nome del file.
+            head["code"] = file_code
         out[_norm_filename(path.name)] = head
     return out
 
 
-def _all_cv_documents(local: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
+def _file_code(filename: str) -> str | None:
+    """Codice di 3 lettere nel nome del file ("Skill_Tecnico_ABC_MC.pdf" -> "ABC")."""
+    m = _FILE_CODE_RE.search(_FILE_NOISE_RE.sub(" ", PurePath(filename).stem))
+    return m.group(1).upper() if m else None
+
+
+def _codes(header_code: str | None, filename: str) -> set[str]:
+    """Codici con cui cercare il CV: quello dell'intestazione e quello del nome file.
+
+    Non sempre coincidono (es. "Skill_Tecnico_FDB.pdf" con "FDE" nell'intestazione,
+    "Skill_Tecnico_FJC.pdf" per un trittico MCFlash "FCU"): basta che uno dei due
+    sia il codice del record.
+    """
+    return {_normalise_person_key(c) for c in (header_code, _file_code(filename)) if c} - {""}
+
+
+def _all_cv_documents(local: dict[str, dict[str, Any]], include_unindexed: bool = False) -> list[dict[str, Any]]:
     """Tutti i CV dell'indice, uno per document_id, con codice, nascita, citta', ruolo.
 
     Se il file originale e' nella cartella locale, codice/nascita/citta'/ruolo
@@ -252,17 +285,60 @@ def _all_cv_documents(local: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
             "file": file,
             "in_locale": bool(head),
             "code": _normalise_person_key(code) if code else None,
+            "codes": _codes(code, file),
             "role": head.get("role") or next((c.get("role") for c in chunks if c.get("role")), None),
             "skills": skills,
             "dob": dob,
             "city": head.get("city") or (city_m.group(1) if city_m else None) or first.get("location"),
             "processed_at": max((c.get("processed_at") or "") for c in chunks),
+            "text": head.get("text") or text,
+            "in_indice": True,
         })
+    if include_unindexed:
+        # CV locali non ancora nell'indice: il document_id e' quello che avranno
+        # una volta caricati (nome file normalizzato, come in ingestion_triggers).
+        # Stessa regola di DocumentRegistry.resolve_document_id: id ripulito dal
+        # nome, ma se e' gia' di un altro file si usa il nome originale. Tra file
+        # nuovi in collisione vince il primo in ordine di nome: caricarli in
+        # quell'ordine.
+        indexed_files = {_norm_filename(d["file"]) for d in docs}
+        used = {d["document_id"] for d in docs}
+        renamed: list[str] = []
+        for key, head in sorted(local.items(), key=lambda kv: kv[1]["file"]):
+            if key in indexed_files or not head.get("code"):
+                continue
+            doc_id = _registry_key(TextNormalizer.normalize_document_id(head["file"]))
+            if doc_id in used:
+                doc_id = _registry_key(head["file"])
+                renamed.append(head["file"])
+            used.add(doc_id)
+            docs.append({
+                "document_id": doc_id,
+                "file": head["file"],
+                "in_locale": True,
+                "code": _normalise_person_key(head["code"]),
+                "codes": _codes(head["code"], head["file"]),
+                "role": head.get("role"),
+                "skills": [],
+                "dob": head.get("dob"),
+                "city": head.get("city"),
+                "processed_at": "",
+                "text": head.get("text") or "",
+                "in_indice": False,
+            })
+        if renamed:
+            print(f"Nome ripulito gia' di un altro CV, document_id = nome originale ({len(renamed)}): {renamed}")
     return docs
 
 
+def _registry_key(document_id: str) -> str:
+    """document_id come lo salva DocumentRegistry (RowKey)."""
+    return document_id.strip().lower().replace(" ", "-")
+
+
 def _judge(llm: AzureOpenAI, model: str, doc: dict[str, Any], role: str) -> dict[str, Any]:
-    if not doc["skills"] and not doc.get("role"):
+    excerpt = re.sub(r"\s+", " ", doc.get("text") or "")[:JUDGE_EXCERPT_CHARS]
+    if not doc["skills"] and not doc.get("role") and not excerpt:
         return {"coerente": False, "motivo": "CV senza ruolo ne' skill estratti"}
     for attempt in range(4):
         try:
@@ -275,7 +351,8 @@ def _judge(llm: AzureOpenAI, model: str, doc: dict[str, Any], role: str) -> dict
                     {"role": "user", "content": (
                         f"Ruolo in anagrafica: {role}\n"
                         f"Ruolo indicato nel CV: {doc.get('role') or '(non indicato)'}\n"
-                        f"Competenze del CV: {', '.join(doc['skills'][:60]) or '(nessuna)'}"
+                        f"Competenze del CV: {', '.join(doc['skills'][:60]) or '(nessuna)'}\n"
+                        f"Estratto del CV: {excerpt or '(non disponibile)'}"
                     )},
                 ],
             )
@@ -316,7 +393,8 @@ def _record_id(record: dict[str, Any]) -> int:
 # ------------------------------------------------------------------ build
 
 def build(report_path: str | None, dry_run: bool, reuse_report: str | None = None, cv_dir: str | None = None,
-          no_llm: bool = False) -> None:
+          no_llm: bool = False, out_path: Path = MAP_PATH, overrides_path: Path | None = OVERRIDES_PATH,
+          include_unindexed: bool = False) -> None:
     today = dt.date.today()
     records = asyncio.run(get_mcflash_candidates_client().filter_candidates(
         limit=5000, offset=0, max_scan_records=20000, return_all_matches=True,
@@ -329,14 +407,15 @@ def build(report_path: str | None, dry_run: bool, reuse_report: str | None = Non
     print(f"Record MCFlash: {len(records)} ({len(records_by_code)} codici)")
 
     local = _local_headers(cv_dir) if cv_dir else {}
-    all_docs = _all_cv_documents(local)
+    all_docs = _all_cv_documents(local, include_unindexed)
     docs_by_code: dict[str, list[dict[str, Any]]] = collections.defaultdict(list)
     for doc in all_docs:
-        if doc["code"] in records_by_code:
-            docs_by_code[doc["code"]].append(doc)
+        for code in doc["codes"] & set(records_by_code):
+            docs_by_code[code].append(doc)
     n_docs = sum(len(d) for d in docs_by_code.values())
-    print(f"File locali: {len(local)} | CV nell'indice: {len(all_docs)} (con file locale: "
-          f"{sum(1 for d in all_docs if d['in_locale'])}) | con codice MCFlash: {n_docs} | con data di nascita: "
+    print(f"File locali: {len(local)} | CV nell'indice: {sum(1 for d in all_docs if d['in_indice'])} "
+          f"(con file locale: {sum(1 for d in all_docs if d['in_indice'] and d['in_locale'])}) | "
+          f"CV locali da caricare: {sum(1 for d in all_docs if not d['in_indice'])} | con codice MCFlash: {n_docs} | con data di nascita: "
           f"{sum(1 for d in docs_by_code.values() for x in d if x['dob'])}")
     indexed = {_norm_filename(d["file"]) for d in all_docs}
     not_indexed = sorted(h["file"] for k, h in local.items()
@@ -377,8 +456,23 @@ def build(report_path: str | None, dry_run: bool, reuse_report: str | None = Non
     judged.update({(doc["document_id"], _record_id(rec)): v for (doc, rec), v in zip(todo, verdicts)})
     print(f"Coppie CV-record: {len(pairs)} | giudizi nuovi: {len(todo)} | riusati: {len(pairs) - len(todo)}")
 
-    overrides = json.loads(OVERRIDES_PATH.read_text(encoding="utf-8")) if OVERRIDES_PATH.exists() else {}
+    overrides = (json.loads(overrides_path.read_text(encoding="utf-8"))
+                 if overrides_path and overrides_path.exists() else {})
     manual = {int(k): v for k, v in (overrides.get("records") or {}).items()}
+    # CV indicato a mano: per document_id o per nome file, anche se il suo codice
+    # non e' quello del record. Non puo' finire in automatico a un altro record.
+    docs_by_id = {d["document_id"]: d for d in all_docs}
+    docs_by_file = {_norm_filename(d["file"]): d for d in all_docs}
+    manual_doc: dict[int, dict[str, Any] | None] = {}
+    for rid, decision in manual.items():
+        doc = docs_by_id.get(decision.get("document_id") or "") or docs_by_file.get(_norm_filename(decision.get("file") or ""))
+        if (decision.get("document_id") or decision.get("file")) and doc is None:
+            print(f"ATTENZIONE: override per {rid} su un CV sconosciuto: {decision}")
+        manual_doc[rid] = doc
+    reserved = {d["document_id"] for d in manual_doc.values() if d}
+    for code in docs_by_code:
+        docs_by_code[code] = [d for d in docs_by_code[code] if d["document_id"] not in reserved]
+    assigned_docs: set[str] = set()  # un CV a un solo record, anche tra codici diversi
 
     mapping: dict[str, dict[str, Any]] = {}
     report: list[dict[str, Any]] = []
@@ -416,7 +510,8 @@ def build(report_path: str | None, dry_run: bool, reuse_report: str | None = Non
                                                default=(9, 0)))
         for rec in order:
             rid = _record_id(rec)
-            free = [o for o in options[rid] if o["key"] not in taken and o["tier"] < 9]
+            free = [o for o in options[rid] if o["key"] not in taken and o["tier"] < 9
+                    and not any(d["document_id"] in assigned_docs for d in people[o["key"]])]
             decision, chosen, why = "nessun CV", None, "nessun CV con questo codice e mestiere o eta' compatibili"
             if free:
                 best_tier = min(o["tier"] for o in free)
@@ -456,14 +551,13 @@ def build(report_path: str | None, dry_run: bool, reuse_report: str | None = Non
                 ))
 
             if rid in manual:
-                doc_id = manual[rid].get("document_id")
-                chosen_doc = next((d for d in docs if d["document_id"] == doc_id), None) if doc_id else None
-                if doc_id and chosen_doc is None:
-                    print(f"ATTENZIONE: override per {rid} su document_id sconosciuto {doc_id}")
+                chosen_doc = manual_doc[rid]
                 decision, why = "manuale", manual[rid].get("nota") or ""
 
             if chosen_doc:
-                mapping[chosen_doc["document_id"]] = {"id_mcflash": rid, "file": chosen_doc["file"], "codice": code.upper()}
+                assigned_docs.add(chosen_doc["document_id"])
+                mapping[chosen_doc["document_id"]] = {"id_mcflash": rid, "file": chosen_doc["file"], "codice": code.upper(),
+                                                      "in_indice": chosen_doc["in_indice"]}
 
             report.append({
                 "codice": code.upper(), "id_mcflash": rid, "site": site_key(rec.get("site")),
@@ -472,12 +566,14 @@ def build(report_path: str | None, dry_run: bool, reuse_report: str | None = Non
                 "decisione": decision, "motivo": why,
                 "file": chosen_doc["file"] if chosen_doc else None,
                 "document_id": chosen_doc["document_id"] if chosen_doc else None,
+                "in_indice": chosen_doc["in_indice"] if chosen_doc else None,
                 "candidati": [
                     {
                         **{k: o[k] for k in ("tier", "delta", "role_ok", "city_ok")},
                         "nato": str(people[o["key"]][0]["dob"] or "") or None,
                         "files": [
-                            {"file": d["file"], "document_id": d["document_id"], "ruolo": d["role"], "citta": d["city"],
+                            {"file": d["file"], "document_id": d["document_id"], "in_indice": d["in_indice"],
+                             "ruolo": d["role"], "citta": d["city"],
                              "llm": judged[(d["document_id"], rid)]["coerente"], "motivo_llm": judged[(d["document_id"], rid)]["motivo"]}
                             for d in people[o["key"]]
                         ],
@@ -494,14 +590,14 @@ def build(report_path: str | None, dry_run: bool, reuse_report: str | None = Non
         print(f"Dettaglio: {report_path}")
     if dry_run:
         return
-    MAP_PATH.write_text(json.dumps({
+    out_path.write_text(json.dumps({
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "index": settings.document_search_index_name,
         "mcflash_url": get_mcflash_candidates_client().base_url,
         "model": model,
         "documents": dict(sorted(mapping.items(), key=lambda kv: (kv[1]["codice"], kv[1]["id_mcflash"]))),
     }, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
-    print(f"Tabella scritta: {MAP_PATH}")
+    print(f"Tabella scritta: {out_path}")
 
 
 if __name__ == "__main__":
@@ -510,7 +606,13 @@ if __name__ == "__main__":
     parser.add_argument("--dry-run", action="store_true", help="non scrive scripts/cv_mcflash_map.json")
     parser.add_argument("--reuse-report", help="riusa i giudizi LLM di un report precedente")
     parser.add_argument("--cv-dir", help="cartella con i CV originali: codice, nascita, citta' e ruolo dall'intestazione")
+    parser.add_argument("--out", default=str(MAP_PATH), help="file della tabella (default scripts/cv_mcflash_map.json)")
+    parser.add_argument("--overrides", default=str(OVERRIDES_PATH),
+                        help="decisioni manuali per id MCFlash; stringa vuota = nessuna (es. altro MCFlash, id diversi)")
+    parser.add_argument("--include-unindexed", action="store_true",
+                        help="considera anche i CV di --cv-dir non ancora nell'indice (document_id dal nome file)")
     parser.add_argument("--no-llm", action="store_true",
                         help="non chiama l'LLM: le coppie non gia' giudicate usano il confronto dei ruoli")
     args = parser.parse_args()
-    build(args.report, args.dry_run, args.reuse_report, args.cv_dir, args.no_llm)
+    build(args.report, args.dry_run, args.reuse_report, args.cv_dir, args.no_llm,
+          Path(args.out), Path(args.overrides) if args.overrides else None, args.include_unindexed)

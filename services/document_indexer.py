@@ -97,7 +97,16 @@ class DocumentIndexer:
         return self._char_fallback_split(text)
 
     def _sanitize_id(self, value: str) -> str:
-        return "".join(ch if ch.isalnum() or ch in ("-", "_") else "-" for ch in (value or "")).strip("-") or "doc"
+        """Prefisso della chiave dei chunk (l'indice accetta solo lettere, cifre, '_' e '-').
+
+        Se la pulizia cambia l'id (spazi, punti, ...) si aggiunge un hash dell'id
+        originale: "X _MC .pdf" e "X _MC.pdf" sono document_id diversi e non
+        devono avere le stesse chiavi. Gli id gia' puliti restano invariati.
+        """
+        sanitized = "".join(ch if ch.isalnum() or ch in ("-", "_") else "-" for ch in (value or "")).strip("-") or "doc"
+        if sanitized != (value or ""):
+            sanitized += "-" + hashlib.sha1((value or "").encode("utf-8")).hexdigest()[:8]
+        return sanitized
 
     def build_chunk_documents(
         self,
