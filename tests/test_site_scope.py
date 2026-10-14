@@ -174,7 +174,7 @@ class _Resp:
 def agent(monkeypatch):
     box: dict[str, Any] = {}
 
-    def _fake(*, agent_name, message, model_name, previous_response_id):
+    def _fake(*, agent_name, message, model_name, previous_response_id, attempts=None):
         box["message"] = message
         return _Resp()
 
