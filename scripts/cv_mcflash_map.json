@@ -1,1497 +1,2570 @@
 {
- "generated_at": "2026-09-29T13:08:40+00:00",
+ "generated_at": "2026-10-14T08:30:39+00:00",
  "index": "cv-doc-chunks",
- "mcflash_url": "https://mcflashtest.mcengineering.eu/api/Candidati",
- "model": "gpt-4.1-mini",
- "method": "data di nascita del CV vs eta' MCFlash, poi mestiere; un file per record",
+ "mcflash_url": "https://mcflashcandidati.mcengineering.eu/api/Candidati",
+ "model": "gpt-4.1",
  "documents": {
-  "skill-tecnico_aal_mc": {
-   "id_mcflash": 1591,
-   "file": "Skill Tecnico_AAL_MC.pdf",
+  "skill_tecnico_aac": {
+   "id_mcflash": 2547,
+   "file": "Skill_Tecnico_AAC.pdf",
+   "codice": "AAC",
+   "in_indice": true
+  },
+  "skill_tecnico_aal-_mc": {
+   "id_mcflash": 2093,
+   "file": "Skill_Tecnico_AAL _MC.pdf",
    "codice": "AAL",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_aba": {
-   "id_mcflash": 1758,
-   "file": "Skill_Tecnico_ABA.pdf",
+  "skill_tecnico_aal": {
+   "id_mcflash": 2389,
+   "file": "Skill_Tecnico_AAL.pdf",
+   "codice": "AAL",
+   "in_indice": true
+  },
+  "skill_tecnico_aal__mc": {
+   "id_mcflash": 2499,
+   "file": "Skill_Tecnico_AAL__MC.pdf",
+   "codice": "AAL",
+   "in_indice": true
+  },
+  "skill_tecnico_aam": {
+   "id_mcflash": 2236,
+   "file": "Skill_Tecnico_AAM.pdf",
+   "codice": "AAM",
+   "in_indice": true
+  },
+  "skill_tecnico_aar": {
+   "id_mcflash": 2230,
+   "file": "Skill_Tecnico_AAR.pdf",
+   "codice": "AAR",
+   "in_indice": true
+  },
+  "skill_tecnico_aba_mc": {
+   "id_mcflash": 41,
+   "file": "Skill_Tecnico_ABA_MC.pdf",
    "codice": "ABA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_abi": {
-   "id_mcflash": 1887,
-   "file": "Skill_Tecnico_ABI.pdf",
-   "codice": "ABI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_aba-_mc": {
+   "id_mcflash": 2104,
+   "file": "Skill_Tecnico_ABA _MC.pdf",
+   "codice": "ABA",
+   "in_indice": true
   },
-  "skill_tecnico_abo": {
-   "id_mcflash": 1632,
-   "file": "Skill_Tecnico_ABO.pdf",
-   "codice": "ABO",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_abe_mc-.pdf": {
+   "id_mcflash": 2448,
+   "file": "Skill_tecnico_ABE_MC .pdf",
+   "codice": "ABE",
+   "in_indice": false
   },
-  "skill_tecnico_abo_-mc": {
-   "id_mcflash": 1838,
-   "file": "Skill_Tecnico_ABO_ MC.pdf",
-   "codice": "ABO",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_abr__mc": {
+   "id_mcflash": 2295,
+   "file": "Skill_Tecnico_ABR__MC.pdf",
+   "codice": "ABR",
+   "in_indice": true
   },
-  "skill_tecnico_aca_-mc": {
-   "id_mcflash": 1753,
-   "file": "Skill_Tecnico_ACA_ MC.pdf",
+  "skill_tecnico-_-aca": {
+   "id_mcflash": 1951,
+   "file": "Skill_Tecnico _ ACA.pdf",
    "codice": "ACA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_-aca": {
-   "id_mcflash": 1903,
-   "file": "Skill_Tecnico_ ACA.pdf",
+  "skill_tecnico_aca_mce": {
+   "id_mcflash": 2207,
+   "file": "Skill_Tecnico_ACA_MCE.pdf",
    "codice": "ACA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_aco": {
-   "id_mcflash": 1873,
-   "file": "Skill_Tecnico_ACO.pdf",
+  "skill_tecnico__aca": {
+   "id_mcflash": 2235,
+   "file": "Skill_Tecnico__ACA.pdf",
+   "codice": "ACA",
+   "in_indice": true
+  },
+  "skill_-tecnico__aca": {
+   "id_mcflash": 2366,
+   "file": "Skill_ Tecnico__ACA.pdf",
+   "codice": "ACA",
+   "in_indice": true
+  },
+  "skill_tecnico_aca-(5)": {
+   "id_mcflash": 2552,
+   "file": "Skill_Tecnico_ACA (5).pdf",
+   "codice": "ACA",
+   "in_indice": true
+  },
+  "skill_tecnico_ace": {
+   "id_mcflash": 2098,
+   "file": "Skill_Tecnico_ACE.pdf",
+   "codice": "ACE",
+   "in_indice": true
+  },
+  "skill_tecnico-_aco": {
+   "id_mcflash": 2195,
+   "file": "Skill_Tecnico _ACO.pdf",
    "codice": "ACO",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_acr_-mc": {
-   "id_mcflash": 1709,
-   "file": "Skill_Tecnico_ACR_ MC.pdf",
-   "codice": "ACR",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__aco": {
+   "id_mcflash": 2390,
+   "file": "Skill_Tecnico__ACO.pdf",
+   "codice": "ACO",
+   "in_indice": true
   },
-  "skill_tecnico_acv": {
-   "id_mcflash": 1883,
-   "file": "Skill_Tecnico_ACV.pdf",
-   "codice": "ACV",
-   "criterio": "ruolo + lingua; eta' MCFlash da correggere (confermato manualmente)"
+  "skill__tecnico__aco": {
+   "id_mcflash": 2529,
+   "file": "Skill__Tecnico__ACO.pdf",
+   "codice": "ACO",
+   "in_indice": true
   },
-  "skill_tecnico_ada": {
-   "id_mcflash": 1717,
-   "file": "Skill_Tecnico_ADA.pdf",
+  "skill_tecnico_acp_mc": {
+   "id_mcflash": 2424,
+   "file": "Skill_Tecnico_ACP_MC.pdf",
+   "codice": "ACP",
+   "in_indice": true
+  },
+  "skill_tecnico_acu": {
+   "id_mcflash": 2309,
+   "file": "Skill_Tecnico_ACU.pdf",
+   "codice": "ACU",
+   "in_indice": true
+  },
+  "skill_tecnico_ada_mc": {
+   "id_mcflash": 2046,
+   "file": "Skill_Tecnico_ADA_MC.pdf",
    "codice": "ADA",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_-ada": {
-   "id_mcflash": 1738,
-   "file": "Skill_Tecnico_ ADA.pdf",
-   "codice": "ADA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_adb-_mc": {
+   "id_mcflash": 2042,
+   "file": "Skill_Tecnico_ADB _MC.pdf",
+   "codice": "ADB",
+   "in_indice": true
   },
-  "skill_tecnico_adi": {
-   "id_mcflash": 1760,
-   "file": "Skill_Tecnico_ADI.pdf",
-   "codice": "ADI",
-   "criterio": "eta' + ruolo"
+  "skill-tecnico_-ade_mc": {
+   "id_mcflash": 2411,
+   "file": "Skill Tecnico_ ADE_MC.pdf",
+   "codice": "ADE",
+   "in_indice": true
   },
-  "skill-tecnico_ado_mc": {
-   "id_mcflash": 1636,
-   "file": "Skill Tecnico_ADO_MC.pdf",
-   "codice": "ADO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_adm": {
+   "id_mcflash": 2320,
+   "file": "Skill_Tecnico_ADM.pdf",
+   "codice": "ADM",
+   "in_indice": true
   },
-  "skill_tecnico_ado": {
-   "id_mcflash": 1796,
-   "file": "Skill_Tecnico_ADO.pdf",
-   "codice": "ADO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_adp": {
+   "id_mcflash": 2329,
+   "file": "Skill_Tecnico_ADP.pdf",
+   "codice": "ADP",
+   "in_indice": true
   },
-  "skill_tecnico_adu_mc": {
-   "id_mcflash": 1741,
-   "file": "Skill_Tecnico_ADU_MC.pdf",
+  "skill_tecnico_ajd": {
+   "id_mcflash": 2423,
+   "file": "Skill_Tecnico_AJD.pdf",
    "codice": "ADU",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_aec_eng_mc": {
+   "id_mcflash": 2313,
+   "file": "Skill_Tecnico_AEC_ENG_MC.pdf",
+   "codice": "AEC",
+   "in_indice": true
+  },
+  "skill_tecnico_aes": {
+   "id_mcflash": 2091,
+   "file": "Skill_Tecnico_AES.pdf",
+   "codice": "AES",
+   "in_indice": true
+  },
+  "skill_tecnico_afa_eng_mc": {
+   "id_mcflash": 2420,
+   "file": "Skill_Tecnico_AFA_ENG_MC.pdf",
+   "codice": "AFA",
+   "in_indice": true
   },
   "skill_tecnico_afa-_mc": {
-   "id_mcflash": 1731,
+   "id_mcflash": 2432,
    "file": "Skill_Tecnico_AFA _MC.pdf",
    "codice": "AFA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_ahu_mc": {
-   "id_mcflash": 1704,
-   "file": "Skill_Tecnico_AHU_MC.pdf",
-   "codice": "AHU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_afu": {
+   "id_mcflash": 2278,
+   "file": "Skill_Tecnico_AFU.pdf",
+   "codice": "AFU",
+   "in_indice": true
   },
-  "skill-tecnico_ail_mc": {
-   "id_mcflash": 1775,
-   "file": "Skill Tecnico_AIL_MC.pdf",
-   "codice": "AIL",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_age": {
+   "id_mcflash": 2459,
+   "file": "Skill_Tecnico_AGE.pdf",
+   "codice": "AGE",
+   "in_indice": true
   },
-  "skill-tecnico_aky_mc": {
-   "id_mcflash": 1745,
-   "file": "Skill Tecnico_AKY_MC.pdf",
-   "codice": "AKY",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_-agi": {
+   "id_mcflash": 1975,
+   "file": "Skill_Tecnico_ AGI.pdf",
+   "codice": "AGI",
+   "in_indice": true
   },
-  "skill_tecnico_-ama": {
-   "id_mcflash": 1789,
-   "file": "Skill_Tecnico_ AMA.pdf",
+  "skill_tecnico_agi_mc": {
+   "id_mcflash": 2097,
+   "file": "Skill_Tecnico_AGI_MC.pdf",
+   "codice": "AGI",
+   "in_indice": true
+  },
+  "skill_tecnico__agi": {
+   "id_mcflash": 2556,
+   "file": "Skill_Tecnico__AGI.pdf",
+   "codice": "AGI",
+   "in_indice": true
+  },
+  "skill_tecnico_agj": {
+   "id_mcflash": 2511,
+   "file": "Skill_Tecnico_AGJ.pdf",
+   "codice": "AGJ",
+   "in_indice": true
+  },
+  "skill_tecnico_agu": {
+   "id_mcflash": 2053,
+   "file": "Skill_Tecnico_AGU.pdf",
+   "codice": "AGU",
+   "in_indice": true
+  },
+  "skill_tecnico__agu_mc": {
+   "id_mcflash": 2190,
+   "file": "Skill_Tecnico__AGU_MC.pdf",
+   "codice": "AGU",
+   "in_indice": true
+  },
+  "skill_tecnico_aia_mc": {
+   "id_mcflash": 2379,
+   "file": "Skill_Tecnico_AIA_MC.pdf",
+   "codice": "AIA",
+   "in_indice": true
+  },
+  "skill-tecnico_aiz_mc": {
+   "id_mcflash": 2558,
+   "file": "Skill Tecnico_AIZ_MC.pdf",
+   "codice": "AIZ",
+   "in_indice": true
+  },
+  "skill_tecnico_ali": {
+   "id_mcflash": 2070,
+   "file": "Skill_Tecnico_ALI.pdf",
+   "codice": "ALI",
+   "in_indice": true
+  },
+  "skill_tecnico_alo": {
+   "id_mcflash": 2440,
+   "file": "Skill_Tecnico_ALO.pdf",
+   "codice": "ALO",
+   "in_indice": true
+  },
+  "skill-tecnico_alo__mc": {
+   "id_mcflash": 2512,
+   "file": "Skill Tecnico_ALO__MC.pdf",
+   "codice": "ALO",
+   "in_indice": true
+  },
+  "skill_tecnico__ama_mc": {
+   "id_mcflash": 2179,
+   "file": "Skill_Tecnico__AMA_MC.pdf",
    "codice": "AMA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_ama-_mc": {
-   "id_mcflash": 1805,
-   "file": "Skill_Tecnico_AMA _MC.pdf",
-   "codice": "AMA",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_-ama-_mc": {
-   "id_mcflash": 1868,
-   "file": "Skill_Tecnico_ AMA _MC.pdf",
-   "codice": "AMA",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_ami": {
-   "id_mcflash": 1628,
-   "file": "Skill_Tecnico_AMI.pdf",
+  "skill-tecnico_ami__mc": {
+   "id_mcflash": 2559,
+   "file": "Skill Tecnico_AMI__MC.pdf",
    "codice": "AMI",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_-ami": {
-   "id_mcflash": 1759,
-   "file": "Skill_Tecnico_ AMI.pdf",
-   "codice": "AMI",
-   "criterio": "eta' + mestiere"
-  },
-  "skill_tecnico_ami_mc": {
-   "id_mcflash": 1803,
-   "file": "Skill_Tecnico_AMI_MC.pdf",
-   "codice": "AMI",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_-ami_mc": {
-   "id_mcflash": 1881,
-   "file": "Skill_Tecnico_ AMI_MC.pdf",
-   "codice": "AMI",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_amo": {
-   "id_mcflash": 1711,
-   "file": "Skill_Tecnico_AMO.pdf",
-   "codice": "AMO",
-   "criterio": "eta' + ruolo"
+  "skill-tecnico_amu_mc": {
+   "id_mcflash": 1723,
+   "file": "Skill Tecnico_AMU_MC.pdf",
+   "codice": "AMU",
+   "in_indice": true
   },
   "skill_tecnico_aor": {
    "id_mcflash": 1856,
    "file": "Skill_Tecnico_AOR.pdf",
    "codice": "AOR",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill-tecnico_-apa_mc": {
-   "id_mcflash": 1518,
-   "file": "Skill Tecnico_ APA_MC.pdf",
+  "skill_tecnico_-apa": {
+   "id_mcflash": 2096,
+   "file": "Skill_Tecnico_ APA.pdf",
    "codice": "APA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_-tecnico_apa": {
+   "id_mcflash": 2110,
+   "file": "Skill_ Tecnico_APA.pdf",
+   "codice": "APA",
+   "in_indice": true
   },
   "skill_tecnico_ape_-mc": {
    "id_mcflash": 15,
    "file": "Skill_Tecnico_APE_ MC.pdf",
    "codice": "APE",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_ape": {
-   "id_mcflash": 1766,
-   "file": "Skill_Tecnico_APE.pdf",
-   "codice": "APE",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_api_mc": {
+   "id_mcflash": 2008,
+   "file": "Skill_Tecnico_API_MC.pdf",
+   "codice": "API",
+   "in_indice": true
   },
-  "skill-tecnico_ari_-mc": {
-   "id_mcflash": 1607,
-   "file": "Skill Tecnico_ARI_ MC.pdf",
+  "skill_tecnico_api": {
+   "id_mcflash": 2187,
+   "file": "Skill_Tecnico_API.pdf",
+   "codice": "API",
+   "in_indice": true
+  },
+  "skill_tecnico_apr": {
+   "id_mcflash": 2418,
+   "file": "Skill_Tecnico_APR.pdf",
+   "codice": "APR",
+   "in_indice": true
+  },
+  "skill_tecnico_are_mc": {
+   "id_mcflash": 2200,
+   "file": "Skill_Tecnico_ARE_MC.pdf",
+   "codice": "ARE",
+   "in_indice": true
+  },
+  "skill_tecnico_ari_mce": {
+   "id_mcflash": 2534,
+   "file": "Skill_Tecnico_ARI_MCE.pdf",
    "codice": "ARI",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_ari_mc": {
-   "id_mcflash": 1824,
-   "file": "Skill_Tecnico_ARI_MC.pdf",
-   "codice": "ARI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__asa_mc": {
+   "id_mcflash": 2306,
+   "file": "Skill_Tecnico__ASA_MC.pdf",
+   "codice": "ASA",
+   "in_indice": true
   },
-  "skill_tecnico_aru_mc": {
-   "id_mcflash": 1791,
-   "file": "Skill_Tecnico_ARU_MC.pdf",
-   "codice": "ARU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__asa": {
+   "id_mcflash": 2378,
+   "file": "Skill_Tecnico__ASA.pdf",
+   "codice": "ASA",
+   "in_indice": true
   },
-  "skill_tecnico_aru": {
-   "id_mcflash": 1825,
-   "file": "Skill_Tecnico_ARU.pdf",
-   "codice": "ARU",
-   "criterio": "eta' + mestiere"
+  "skill__tecnico__asa": {
+   "id_mcflash": 2500,
+   "file": "Skill__Tecnico__ASA_.pdf",
+   "codice": "ASA",
+   "in_indice": true
   },
-  "skill_tecnico_aso_mc": {
-   "id_mcflash": 1877,
-   "file": "Skill_Tecnico_ASO_MC.pdf",
+  "skill_tecnico_asc": {
+   "id_mcflash": 2232,
+   "file": "Skill_Tecnico_ASC.pdf",
+   "codice": "ASC",
+   "in_indice": true
+  },
+  "skill_tecnico_ase": {
+   "id_mcflash": 2038,
+   "file": "Skill_Tecnico_ASE.pdf",
+   "codice": "ASE",
+   "in_indice": true
+  },
+  "skill_tecnico_aso": {
+   "id_mcflash": 2004,
+   "file": "Skill_Tecnico_ASO.pdf",
    "codice": "ASO",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_ast_mc": {
-   "id_mcflash": 1870,
-   "file": "Skill_Tecnico_AST_MC.pdf",
-   "codice": "AST",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
   "skill-tecnico_ata_mc": {
    "id_mcflash": 1606,
    "file": "Skill Tecnico_ATA_MC.pdf",
    "codice": "ATA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_ata": {
+   "id_mcflash": 2296,
+   "file": "Skill_Tecnico_ATA.pdf",
+   "codice": "ATA",
+   "in_indice": true
+  },
+  "skill_tecnico_ato_mce": {
+   "id_mcflash": 2243,
+   "file": "Skill_Tecnico_ATO_MCE.pdf",
+   "codice": "ATO",
+   "in_indice": true
+  },
+  "skill_tecnico_atr": {
+   "id_mcflash": 1979,
+   "file": "Skill_Tecnico_ATR.pdf",
+   "codice": "ATR",
+   "in_indice": true
+  },
+  "skill_tecnico_atr__mc": {
+   "id_mcflash": 2341,
+   "file": "Skill_Tecnico_ATR__MC.pdf",
+   "codice": "ATR",
+   "in_indice": true
+  },
+  "skill_tecnico_ave_mc": {
+   "id_mcflash": 2079,
+   "file": "Skill_Tecnico_AVE_MC.pdf",
+   "codice": "AVE",
+   "in_indice": true
+  },
+  "skill_tecnico_avi": {
+   "id_mcflash": 2242,
+   "file": "Skill_Tecnico_AVI.pdf",
+   "codice": "AVI",
+   "in_indice": true
+  },
+  "skill_tecnico_bba_mc": {
+   "id_mcflash": 2473,
+   "file": "Skill_Tecnico_BBA_MC.pdf",
+   "codice": "BBA",
+   "in_indice": true
   },
   "skill_tecnico_bbi_mc": {
    "id_mcflash": 2,
    "file": "Skill_Tecnico_BBI_MC.pdf",
    "codice": "BBI",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_bbo_mc": {
-   "id_mcflash": 1928,
-   "file": "Skill_Tecnico_BBO_MC.pdf",
-   "codice": "BBO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__bbi_mc": {
+   "id_mcflash": 2272,
+   "file": "Skill_Tecnico__BBI_MC.pdf",
+   "codice": "BBI",
+   "in_indice": true
+  },
+  "skill_tecnico_beh_mc": {
+   "id_mcflash": 2161,
+   "file": "Skill_Tecnico_BEH_MC.pdf",
+   "codice": "BEH",
+   "in_indice": true
   },
   "skill_tecnico_bfe_mc": {
    "id_mcflash": 1744,
    "file": "Skill_Tecnico_BFE_MC.pdf",
    "codice": "BFE",
-   "criterio": "ruolo + lingua; eta' MCFlash da correggere (confermato manualmente)"
+   "in_indice": true
   },
-  "skill_tecnico_bmu": {
-   "id_mcflash": 1804,
-   "file": "Skill_Tecnico_BMU.pdf",
-   "codice": "BMU",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_cbo": {
+   "id_mcflash": 2160,
+   "file": "Skill_Tecnico_CBO.pdf",
+   "codice": "CBO",
+   "in_indice": true
   },
-  "skill_tecnico_cbi_mc": {
-   "id_mcflash": 1793,
-   "file": "Skill_Tecnico_CBI_MC.pdf",
-   "codice": "CBI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_cca": {
+   "id_mcflash": 2158,
+   "file": "Skill_Tecnico_CCA.pdf",
+   "codice": "CCA",
+   "in_indice": true
   },
-  "skill_tecnico_cch_mc": {
-   "id_mcflash": 1822,
-   "file": "Skill_Tecnico_CCH_MC.pdf",
-   "codice": "CCH",
-   "criterio": "ruolo + lingua; eta' MCFlash da correggere (confermato manualmente)"
+  "skill_tecnico__cca": {
+   "id_mcflash": 2383,
+   "file": "Skill_Tecnico__CCA.pdf",
+   "codice": "CCA",
+   "in_indice": true
   },
-  "skill_tecnico_cfr_-mc": {
-   "id_mcflash": 1649,
-   "file": "Skill_Tecnico_CFR_ MC.pdf",
-   "codice": "CFR",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_cca_.pdf": {
+   "id_mcflash": 2494,
+   "file": "Skill_Tecnico_CCA_.pdf",
+   "codice": "CCA",
+   "in_indice": false
   },
-  "skill_tecnico_cim": {
-   "id_mcflash": 1872,
-   "file": "Skill_Tecnico_CIM.pdf",
-   "codice": "CIM",
-   "criterio": "eta' + ruolo"
+  "skill__tecnico__cca": {
+   "id_mcflash": 2536,
+   "file": "Skill__Tecnico__CCA.pdf",
+   "codice": "CCA",
+   "in_indice": true
   },
-  "skill_tecnico_cma": {
-   "id_mcflash": 1863,
-   "file": "Skill_Tecnico_CMA.pdf",
+  "skill_tecnico__ccm_mc": {
+   "id_mcflash": 2192,
+   "file": "Skill_Tecnico__CCM_MC.pdf",
+   "codice": "CCM",
+   "in_indice": true
+  },
+  "skill_tecnico_cdi_mc": {
+   "id_mcflash": 2375,
+   "file": "Skill_Tecnico_CDI_MC.pdf",
+   "codice": "CDI",
+   "in_indice": true
+  },
+  "skill_tecnico_cdo_mc": {
+   "id_mcflash": 154,
+   "file": "Skill_tecnico_CDO_MC.pdf",
+   "codice": "CDO",
+   "in_indice": true
+  },
+  "skill_tecnico_cdp": {
+   "id_mcflash": 2362,
+   "file": "Skill_Tecnico_CDP.pdf",
+   "codice": "CDP",
+   "in_indice": true
+  },
+  "skill_tecnico_cfe": {
+   "id_mcflash": 2191,
+   "file": "Skill_Tecnico_CFE.pdf",
+   "codice": "CFE",
+   "in_indice": true
+  },
+  "skill_tecnico_cfi_mc": {
+   "id_mcflash": 2109,
+   "file": "Skill_Tecnico_CFI_MC.pdf",
+   "codice": "CFI",
+   "in_indice": true
+  },
+  "skill_tecnico_cge": {
+   "id_mcflash": 2154,
+   "file": "Skill_Tecnico_CGE.pdf",
+   "codice": "CGE",
+   "in_indice": true
+  },
+  "skill_tecnico_cio": {
+   "id_mcflash": 2112,
+   "file": "Skill_Tecnico_CIO.pdf",
+   "codice": "CIO",
+   "in_indice": true
+  },
+  "skill_tecnico_-cma": {
+   "id_mcflash": 2168,
+   "file": "Skill_Tecnico_ CMA.pdf",
    "codice": "CMA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_cmo": {
+   "id_mcflash": 2277,
+   "file": "Skill_Tecnico_CMO.pdf",
+   "codice": "CMO",
+   "in_indice": true
+  },
+  "skill_tecnico_cmu": {
+   "id_mcflash": 2533,
+   "file": "Skill_Tecnico_CMU.pdf",
+   "codice": "CMU",
+   "in_indice": true
   },
   "skill-tecnico_cpi_mc-engineering": {
    "id_mcflash": 1677,
    "file": "Skill Tecnico_CPI_MC Engineering.pdf",
    "codice": "CPI",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_cra_mc": {
-   "id_mcflash": 1926,
-   "file": "Skill_Tecnico_CRA_MC.pdf",
-   "codice": "CRA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_cpi": {
+   "id_mcflash": 2431,
+   "file": "Skill_Tecnico_CPI.pdf",
+   "codice": "CPI",
+   "in_indice": true
   },
-  "skill-tecnico_cva_mc": {
-   "id_mcflash": 1638,
-   "file": "Skill Tecnico_CVA_MC.pdf",
-   "codice": "CVA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_csp": {
+   "id_mcflash": 2132,
+   "file": "Skill_Tecnico_CSP.pdf",
+   "codice": "CSP",
+   "in_indice": true
   },
-  "skill_tecnico_dal_mc": {
-   "id_mcflash": 1865,
-   "file": "Skill_Tecnico_DAL_MC.pdf",
+  "skill_tecnico_czu": {
+   "id_mcflash": 2451,
+   "file": "Skill_Tecnico_CZU.pdf",
+   "codice": "CZU",
+   "in_indice": true
+  },
+  "skill-tecnico_dal_mc": {
+   "id_mcflash": 2403,
+   "file": "Skill Tecnico_DAL_MC.pdf",
    "codice": "DAL",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_dbe": {
-   "id_mcflash": 1734,
-   "file": "Skill_Tecnico_DBE.pdf",
+  "skill_tecnico_-dbe": {
+   "id_mcflash": 2114,
+   "file": "Skill_Tecnico_ DBE.pdf",
    "codice": "DBE",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_dbi": {
-   "id_mcflash": 1765,
-   "file": "Skill_Tecnico_DBI.pdf",
-   "codice": "DBI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__dbe": {
+   "id_mcflash": 2222,
+   "file": "Skill_Tecnico__DBE.pdf",
+   "codice": "DBE",
+   "in_indice": true
   },
   "skill_tecnico_dbi_mc": {
    "id_mcflash": 1899,
    "file": "Skill_Tecnico_DBI_MC.pdf",
    "codice": "DBI",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_dbu_mc": {
-   "id_mcflash": 1754,
-   "file": "Skill_Tecnico_DBU_MC.pdf",
-   "codice": "DBU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__dbi": {
+   "id_mcflash": 2382,
+   "file": "Skill_Tecnico__DBI.pdf",
+   "codice": "DBI",
+   "in_indice": true
   },
-  "skill-tecnico_dca_-mc": {
-   "id_mcflash": 1853,
-   "file": "Skill Tecnico_DCA_ MC.pdf",
+  "skill_tecnico__dca": {
+   "id_mcflash": 2257,
+   "file": "Skill_Tecnico__DCA.pdf",
    "codice": "DCA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_dca_-mc": {
-   "id_mcflash": 1884,
-   "file": "Skill_Tecnico_DCA_ MC.pdf",
+  "skill__tecnico__dca": {
+   "id_mcflash": 2508,
+   "file": "Skill__Tecnico__DCA.pdf",
    "codice": "DCA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
   "skill_tecnico_dco": {
    "id_mcflash": 1557,
    "file": "Skill_Tecnico_DCO.pdf",
    "codice": "DCO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill-tecnico_dco_mc": {
+   "id_mcflash": 2447,
+   "file": "Skill Tecnico_DCO_MC.pdf",
+   "codice": "DCO",
+   "in_indice": true
+  },
+  "skill_tecnico__dco": {
+   "id_mcflash": 2503,
+   "file": "Skill_Tecnico__DCO.pdf",
+   "codice": "DCO",
+   "in_indice": true
+  },
+  "skill_tecnico_dda_mc": {
+   "id_mcflash": 2076,
+   "file": "Skill_Tecnico_DDA_MC.pdf",
+   "codice": "DDA",
+   "in_indice": true
+  },
+  "skill_tecnico_ddb": {
+   "id_mcflash": 2495,
+   "file": "Skill_Tecnico_DDB.pdf",
+   "codice": "DDB",
+   "in_indice": true
+  },
+  "skill_tecnico_ddc": {
+   "id_mcflash": 2080,
+   "file": "Skill_Tecnico_DDC.pdf",
+   "codice": "DDC",
+   "in_indice": true
+  },
+  "skill_tecnico__ddc_mc": {
+   "id_mcflash": 2283,
+   "file": "Skill_Tecnico__DDC_MC.pdf",
+   "codice": "DDC",
+   "in_indice": true
   },
   "skill-tecnico_ddf_mc": {
-   "id_mcflash": 1834,
+   "id_mcflash": 2413,
    "file": "Skill Tecnico_DDF_MC.pdf",
    "codice": "DDF",
-   "criterio": "eta' non verificabile + ruolo"
+   "in_indice": true
   },
-  "skill-tecnico_dfo_-mc": {
-   "id_mcflash": 1782,
-   "file": "Skill Tecnico_DFO_ MC.pdf",
+  "skill_tecnico_ddr__mc": {
+   "id_mcflash": 2505,
+   "file": "Skill_Tecnico_DDR__MC.pdf",
+   "codice": "DDR",
+   "in_indice": true
+  },
+  "skill_tecnico_dfa_mc": {
+   "id_mcflash": 2385,
+   "file": "Skill_Tecnico_DFA_MC.pdf",
+   "codice": "DFA",
+   "in_indice": true
+  },
+  "skill_tecnico_dfi_mc": {
+   "id_mcflash": 2047,
+   "file": "Skill_Tecnico_DFI_MC.pdf",
+   "codice": "DFI",
+   "in_indice": true
+  },
+  "skill_tecnico_dfo_mc": {
+   "id_mcflash": 2151,
+   "file": "Skill_Tecnico_DFO_MC.pdf",
    "codice": "DFO",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_dga_mc": {
-   "id_mcflash": 1795,
-   "file": "Skill_tecnico_DGA_MC.pdf",
-   "codice": "DGA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
   "skill_tecnico_dgh_mc": {
    "id_mcflash": 1716,
    "file": "Skill_Tecnico_DGH_MC.pdf",
    "codice": "DGH",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_dko_mc": {
-   "id_mcflash": 1672,
-   "file": "Skill_Tecnico_DKO_MC.pdf",
+  "skill_tecnico_dgi_mc": {
+   "id_mcflash": 2478,
+   "file": "Skill_Tecnico_DGI_MC.pdf",
+   "codice": "DGI",
+   "in_indice": true
+  },
+  "skill_tecnico_dgu": {
+   "id_mcflash": 2537,
+   "file": "Skill_Tecnico_DGU.pdf",
+   "codice": "DGU",
+   "in_indice": true
+  },
+  "skill_tecnico_dko": {
+   "id_mcflash": 2253,
+   "file": "Skill_Tecnico_DKO.pdf",
    "codice": "DKO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_dla": {
-   "id_mcflash": 1802,
-   "file": "Skill_Tecnico_DLA.pdf",
-   "codice": "DLA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_dle": {
+   "id_mcflash": 2077,
+   "file": "Skill_Tecnico_DLE.pdf",
+   "codice": "DLE",
+   "in_indice": true
   },
-  "skill_tecnico_-dma": {
-   "id_mcflash": 1914,
-   "file": "Skill_Tecnico_ DMA.pdf",
+  "skill_tecnico_dlu": {
+   "id_mcflash": 2017,
+   "file": "Skill_Tecnico_DLU.pdf",
+   "codice": "DLU",
+   "in_indice": true
+  },
+  "skill_tecnico_dma__mc": {
+   "id_mcflash": 2285,
+   "file": "Skill_Tecnico_DMA__MC.pdf",
    "codice": "DMA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
   "skill_tecnico_dmo_mc": {
    "id_mcflash": 144,
    "file": "Skill_Tecnico_DMO_MC.pdf",
    "codice": "DMO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_dmo-_mc": {
-   "id_mcflash": 1739,
-   "file": "Skill_Tecnico_DMO _MC.pdf",
-   "codice": "DMO",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_dol": {
+   "id_mcflash": 2264,
+   "file": "Skill_Tecnico_DOL.pdf",
+   "codice": "DOL",
+   "in_indice": true
   },
-  "skill_tecnico_dpe_mc": {
-   "id_mcflash": 1902,
-   "file": "Skill_tecnico_DPE_MC.pdf",
-   "codice": "DPE",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_dru": {
+   "id_mcflash": 1976,
+   "file": "Skill_Tecnico_DRU.pdf",
+   "codice": "DRU",
+   "in_indice": true
   },
-  "skill-tecnico_dpo_mc": {
-   "id_mcflash": 1700,
-   "file": "Skill Tecnico_DPO_MC.pdf",
-   "codice": "DPO",
-   "criterio": "eta' + ruolo"
+  "skill-tecnico_dru": {
+   "id_mcflash": 2006,
+   "file": "Skill Tecnico_DRU.pdf",
+   "codice": "DRU",
+   "in_indice": true
   },
-  "skill-tecnico_dre_mc": {
-   "id_mcflash": 1508,
-   "file": "Skill tecnico_DRE_MC.pdf",
-   "codice": "DRE",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico-_-dsc": {
+   "id_mcflash": 2221,
+   "file": "Skill_Tecnico _ DSC.pdf",
+   "codice": "DSC",
+   "in_indice": true
   },
-  "skill_tecnico_dsa": {
-   "id_mcflash": 1667,
-   "file": "Skill_Tecnico_DSA.pdf",
-   "codice": "DSA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_dsi": {
+   "id_mcflash": 2101,
+   "file": "Skill_Tecnico_DSI.pdf",
+   "codice": "DSI",
+   "in_indice": true
   },
-  "skill_tecnico_dva_mc": {
-   "id_mcflash": 1737,
-   "file": "Skill_Tecnico_DVA_MC.pdf",
-   "codice": "DVA",
-   "criterio": "ruolo + lingua; eta' MCFlash da correggere (confermato manualmente)"
+  "skill_tecnico_-dza": {
+   "id_mcflash": 2116,
+   "file": "Skill_Tecnico_ DZA.pdf",
+   "codice": "DZA",
+   "in_indice": true
   },
-  "skill_tecnico_eca_mc": {
-   "id_mcflash": 81,
-   "file": "Skill_Tecnico_ECA_MC.pdf",
+  "skill__tecnico__dza": {
+   "id_mcflash": 2539,
+   "file": "Skill__Tecnico__DZA.pdf",
+   "codice": "DZA",
+   "in_indice": true
+  },
+  "skill_tecnico_eba": {
+   "id_mcflash": 2401,
+   "file": "Skill_Tecnico_EBA.pdf",
+   "codice": "EBA",
+   "in_indice": true
+  },
+  "skill_tecnico_ebi": {
+   "id_mcflash": 2166,
+   "file": "Skill_Tecnico_EBI.pdf",
+   "codice": "EBI",
+   "in_indice": true
+  },
+  "skill_tecnico_ebl": {
+   "id_mcflash": 2022,
+   "file": "Skill_Tecnico_EBL.pdf",
+   "codice": "EBL",
+   "in_indice": true
+  },
+  "skill_tecnico_-ebo": {
+   "id_mcflash": 2113,
+   "file": "Skill_Tecnico_ EBO.pdf",
+   "codice": "EBO",
+   "in_indice": true
+  },
+  "skill_tecnico_eca-_mc": {
+   "id_mcflash": 2044,
+   "file": "Skill_Tecnico_ECA _MC.pdf",
    "codice": "ECA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_-eca_-mc": {
-   "id_mcflash": 1866,
-   "file": "Skill_Tecnico_ ECA_ MC.pdf",
+  "skill_tecnico__eca": {
+   "id_mcflash": 2433,
+   "file": "Skill_Tecnico__ECA.pdf",
    "codice": "ECA",
-   "criterio": "ruolo + lingua; eta' MCFlash da correggere (confermato manualmente)"
+   "in_indice": true
   },
-  "skill_tecnico_eco_mc": {
-   "id_mcflash": 1748,
-   "file": "Skill_Tecnico_ECO_MC.pdf",
-   "codice": "ECO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_edm": {
+   "id_mcflash": 2254,
+   "file": "Skill_Tecnico_EDM.pdf",
+   "codice": "EDM",
+   "in_indice": true
   },
-  "skill_tecnico_eco": {
-   "id_mcflash": 1813,
-   "file": "Skill_Tecnico_ECO.pdf",
-   "codice": "ECO",
-   "criterio": "eta' non combacia + ruolo"
+  "skill_tecnico_edp": {
+   "id_mcflash": 2238,
+   "file": "Skill_Tecnico_EDP.pdf",
+   "codice": "EDP",
+   "in_indice": true
   },
-  "skill_tecnico_edl_mc": {
-   "id_mcflash": 1762,
-   "file": "Skill_Tecnico_EDL_MC.pdf",
-   "codice": "EDL",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_egu": {
+   "id_mcflash": 2039,
+   "file": "Skill_Tecnico_EGU.pdf",
+   "codice": "EGU",
+   "in_indice": true
   },
-  "skill_tecnico_ela": {
-   "id_mcflash": 1909,
-   "file": "Skill_Tecnico_ELA.pdf",
-   "codice": "ELA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_eim": {
+   "id_mcflash": 2072,
+   "file": "Skill_Tecnico_EIM.pdf",
+   "codice": "EIM",
+   "in_indice": true
   },
-  "skill_tecnico_elo_mc": {
-   "id_mcflash": 1875,
-   "file": "Skill_Tecnico_ELO_MC.pdf",
-   "codice": "ELO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_els": {
+   "id_mcflash": 2429,
+   "file": "Skill_Tecnico_ELS.pdf",
+   "codice": "ELS",
+   "in_indice": true
   },
-  "skill_tecnico_ema": {
-   "id_mcflash": 1675,
-   "file": "Skill_Tecnico_EMA.pdf",
+  "skill_tecnico__ema": {
+   "id_mcflash": 2214,
+   "file": "Skill_Tecnico__EMA.pdf",
    "codice": "EMA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill-tecnico_epi_mc": {
-   "id_mcflash": 1620,
-   "file": "Skill Tecnico_EPI_MC.pdf",
-   "codice": "EPI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_eor": {
+   "id_mcflash": 2269,
+   "file": "Skill_Tecnico_EOR.pdf",
+   "codice": "EOR",
+   "in_indice": true
   },
-  "skill-tecnico_era_mc": {
-   "id_mcflash": 1540,
-   "file": "Skill Tecnico_ERA_MC.pdf",
-   "codice": "ERA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_epe": {
+   "id_mcflash": 2317,
+   "file": "Skill_Tecnico_EPE.pdf",
+   "codice": "EPE",
+   "in_indice": true
   },
-  "skill_tecnico_est_mc": {
-   "id_mcflash": 78,
-   "file": "Skill_Tecnico_EST_MC.pdf",
-   "codice": "EST",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_eri_mc": {
+   "id_mcflash": 2372,
+   "file": "Skill_Tecnico_ERI_MC.pdf",
+   "codice": "ERI",
+   "in_indice": true
+  },
+  "skill_tecnico_ero_eng_mc": {
+   "id_mcflash": 2457,
+   "file": "Skill_Tecnico_ERO_ENG_MC.pdf",
+   "codice": "ERO",
+   "in_indice": true
+  },
+  "skill_tecnico__eru_mc": {
+   "id_mcflash": 2326,
+   "file": "Skill_Tecnico__ERU_MC.pdf",
+   "codice": "ERU",
+   "in_indice": true
+  },
+  "skill_tecnico_esa": {
+   "id_mcflash": 2504,
+   "file": "Skill_Tecnico_ESA.pdf",
+   "codice": "ESA",
+   "in_indice": true
+  },
+  "skill-tecnico_esi_mc": {
+   "id_mcflash": 1996,
+   "file": "Skill Tecnico_ESI_MC.pdf",
+   "codice": "ESI",
+   "in_indice": true
+  },
+  "skill_tecnico_eti": {
+   "id_mcflash": 2479,
+   "file": "Skill_Tecnico_ETI.pdf",
+   "codice": "ETI",
+   "in_indice": true
+  },
+  "skill_tecnico_eve": {
+   "id_mcflash": 2532,
+   "file": "Skill_Tecnico_EVE.pdf",
+   "codice": "EVE",
+   "in_indice": true
+  },
+  "skill-tecnico_ewi_mc": {
+   "id_mcflash": 2489,
+   "file": "Skill Tecnico_EWI_MC.pdf",
+   "codice": "EWI",
+   "in_indice": true
   },
   "skill_tecnico_ezu_mc": {
    "id_mcflash": 1779,
    "file": "Skill_Tecnico_EZU_MC.pdf",
    "codice": "EZU",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_fab": {
-   "id_mcflash": 1797,
-   "file": "Skill_Tecnico_FAB.pdf",
-   "codice": "FAB",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_fai_mc": {
+   "id_mcflash": 2361,
+   "file": "Skill_Tecnico_FAI_MC.pdf",
+   "codice": "FAI",
+   "in_indice": true
   },
-  "skill_tecnico_fbe_-mc": {
-   "id_mcflash": 1653,
-   "file": "Skill_tecnico_FBE_ MC.pdf",
-   "codice": "FBE",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_fau_mc": {
+   "id_mcflash": 2205,
+   "file": "Skill_Tecnico_FAU_MC.pdf",
+   "codice": "FAU",
+   "in_indice": true
   },
-  "skill_tecnico_fbe-_mc": {
-   "id_mcflash": 1916,
-   "file": "Skill_Tecnico_FBE _MC.pdf",
-   "codice": "FBE",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_fba": {
+   "id_mcflash": 2157,
+   "file": "Skill_Tecnico_FBA.pdf",
+   "codice": "FBA",
+   "in_indice": true
   },
-  "skill_tecnico_fbl_mc": {
-   "id_mcflash": 1686,
-   "file": "Skill_Tecnico_FBL_MC.pdf",
-   "codice": "FBL",
-   "criterio": "ruolo + lingua; eta' MCFlash da correggere (confermato manualmente)"
-  },
-  "skill-tecnico_fbr_mc-engineering": {
-   "id_mcflash": 1589,
-   "file": "Skill Tecnico_FBR_MC Engineering.pdf",
-   "codice": "FBR",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_fbu_mc": {
+   "id_mcflash": 2000,
+   "file": "Skill_Tecnico_FBU_MC.pdf",
+   "codice": "FBU",
+   "in_indice": true
   },
   "skill_tecnico_fbu_mc_engineering": {
-   "id_mcflash": 1930,
+   "id_mcflash": 2526,
    "file": "Skill_Tecnico_FBU_MC_Engineering.pdf",
    "codice": "FBU",
-   "criterio": "eta' + ruolo (FBU: confermato manualmente)"
+   "in_indice": true
   },
-  "skill_tecnico_fch_-mc": {
-   "id_mcflash": 1806,
-   "file": "Skill_Tecnico_FCH_ MC.pdf",
-   "codice": "FCH",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__fca": {
+   "id_mcflash": 2364,
+   "file": "Skill_Tecnico__FCA.pdf",
+   "codice": "FCA",
+   "in_indice": true
   },
-  "skill-tecnico_-fco_-mc": {
-   "id_mcflash": 1897,
-   "file": "Skill Tecnico_ FCO_ MC.pdf",
+  "skill_tecnico__fco": {
+   "id_mcflash": 2367,
+   "file": "Skill_Tecnico__FCO.pdf",
    "codice": "FCO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_fjc": {
+   "id_mcflash": 2131,
+   "file": "Skill_Tecnico_FJC.pdf",
+   "codice": "FCU",
+   "in_indice": true
+  },
+  "skill_tecnico_fdb": {
+   "id_mcflash": 2003,
+   "file": "Skill_Tecnico_FDB.pdf",
+   "codice": "FDB",
+   "in_indice": true
   },
   "skill_tecnico_fdc": {
    "id_mcflash": 1750,
    "file": "Skill_Tecnico_FDC.pdf",
    "codice": "FDC",
-   "criterio": "eta' non combacia + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_ffi_mc": {
-   "id_mcflash": 1684,
-   "file": "Skill_Tecnico_FFI_MC.pdf",
-   "codice": "FFI",
-   "criterio": "eta' non combacia + ruolo"
+  "skill_tecnico__fdc_mc": {
+   "id_mcflash": 2281,
+   "file": "Skill_Tecnico__FDC_MC.pdf",
+   "codice": "FDC",
+   "in_indice": true
   },
-  "skill_tecnico_fga__mc": {
-   "id_mcflash": 1898,
-   "file": "Skill_Tecnico_FGA__MC.pdf",
+  "skill_tecnico_fdd_mc": {
+   "id_mcflash": 2206,
+   "file": "Skill_Tecnico_FDD_MC.pdf",
+   "codice": "FDD",
+   "in_indice": true
+  },
+  "skill_tecnico_fdm_mc": {
+   "id_mcflash": 2234,
+   "file": "Skill_Tecnico_FDM_MC.pdf",
+   "codice": "FDM",
+   "in_indice": true
+  },
+  "skill_tecnico_fdr": {
+   "id_mcflash": 2027,
+   "file": "Skill_Tecnico_FDR.pdf",
+   "codice": "FDR",
+   "in_indice": true
+  },
+  "skill_tecnico_ffe": {
+   "id_mcflash": 2323,
+   "file": "Skill_Tecnico_FFE .pdf",
+   "codice": "FFE",
+   "in_indice": false
+  },
+  "skill_tecnico_ffe.pdf": {
+   "id_mcflash": 2466,
+   "file": "Skill_Tecnico_FFE.pdf",
+   "codice": "FFE",
+   "in_indice": false
+  },
+  "skill_tecnico_fga_mc": {
+   "id_mcflash": 2344,
+   "file": "Skill_Tecnico_FGA_MC.pdf",
    "codice": "FGA",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
+  },
+  "skill_tecnico_fga": {
+   "id_mcflash": 2428,
+   "file": "Skill_Tecnico_FGA.pdf",
+   "codice": "FGA",
+   "in_indice": true
   },
   "skill_tecnico_fgi_-mc": {
    "id_mcflash": 1798,
    "file": "Skill_Tecnico_FGI_ MC.pdf",
    "codice": "FGI",
-   "criterio": "eta' non verificabile + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_fgr_-mc": {
-   "id_mcflash": 1894,
-   "file": "Skill_tecnico_FGR_ MC.pdf",
-   "codice": "FGR",
-   "criterio": "eta' + mestiere"
+  "skill-tecnico_fgu_mc": {
+   "id_mcflash": 1681,
+   "file": "Skill Tecnico_FGU_MC.pdf",
+   "codice": "FGU",
+   "in_indice": true
   },
-  "skill_tecnico_fma_-mc": {
-   "id_mcflash": 1860,
-   "file": "Skill_Tecnico_FMA_ MC.pdf",
-   "codice": "FMA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_fmo": {
+   "id_mcflash": 2282,
+   "file": "Skill_Tecnico_FMO.pdf",
+   "codice": "FMO",
+   "in_indice": true
   },
-  "skill_tecnico_fma": {
-   "id_mcflash": 1920,
-   "file": "Skill_Tecnico_FMA_.pdf",
-   "codice": "FMA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_-fpa_mc": {
+   "id_mcflash": 2155,
+   "file": "Skill_Tecnico_ FPA_MC.pdf",
+   "codice": "FPA",
+   "in_indice": true
   },
-  "skill_tecnico_fmi_-mc": {
-   "id_mcflash": 1767,
-   "file": "Skill_Tecnico_FMI_ MC.pdf",
-   "codice": "FMI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__fpa": {
+   "id_mcflash": 2530,
+   "file": "Skill_Tecnico__FPA.pdf",
+   "codice": "FPA",
+   "in_indice": true
   },
-  "skill_tecnico_fpe_mc": {
-   "id_mcflash": 1835,
-   "file": "Skill_Tecnico_FPE_MC.pdf",
+  "skill_tecnico_fpe__mc": {
+   "id_mcflash": 2497,
+   "file": "Skill_Tecnico_FPE__MC.pdf",
    "codice": "FPE",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_-fra": {
+  "skill_tecnico_fpi_-mc": {
+   "id_mcflash": 2102,
+   "file": "Skill_Tecnico_FPI_ MC.pdf",
+   "codice": "FPI",
+   "in_indice": true
+  },
+  "skill_tecnico_fpi__mc": {
+   "id_mcflash": 2419,
+   "file": "Skill_Tecnico_FPI__MC.pdf",
+   "codice": "FPI",
+   "in_indice": true
+  },
+  "skill_tecnico_fpo": {
+   "id_mcflash": 2250,
+   "file": "Skill_Tecnico_FPO.pdf",
+   "codice": "FPO",
+   "in_indice": true
+  },
+  "skill_tecnico_fra": {
    "id_mcflash": 1829,
-   "file": "Skill_Tecnico_ FRA.pdf",
+   "file": "Skill_Tecnico_FRA.pdf",
    "codice": "FRA",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill-tecnico_fsi_mc": {
-   "id_mcflash": 1783,
-   "file": "Skill Tecnico_FSI_MC.pdf",
-   "codice": "FSI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_fsc_mc": {
+   "id_mcflash": 2237,
+   "file": "Skill_Tecnico_FSC_MC.pdf",
+   "codice": "FSC",
+   "in_indice": true
   },
   "skill_tecnico_fst": {
    "id_mcflash": 1573,
    "file": "Skill_Tecnico_FST.pdf",
    "codice": "FST",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_fti_mc": {
-   "id_mcflash": 1839,
-   "file": "Skill_Tecnico_FTI_MC.pdf",
-   "codice": "FTI",
-   "criterio": "ruolo + lingua; eta' MCFlash da correggere (confermato manualmente)"
+  "skill_tecnico_fte": {
+   "id_mcflash": 2387,
+   "file": "Skill_Tecnico_FTE.pdf",
+   "codice": "FTE",
+   "in_indice": true
   },
-  "skill-tecnico_fud_mc": {
-   "id_mcflash": 1800,
-   "file": "Skill Tecnico_FUD_MC.pdf",
-   "codice": "FUD",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__fto_mc": {
+   "id_mcflash": 2180,
+   "file": "Skill_Tecnico__FTO_MC.pdf",
+   "codice": "FTO",
+   "in_indice": true
   },
-  "skill_tecnico_fve_mc": {
-   "id_mcflash": 1512,
-   "file": "Skill_tecnico_FVE_MC.pdf",
-   "codice": "FVE",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__fva": {
+   "id_mcflash": 2384,
+   "file": "Skill_Tecnico__FVA.pdf",
+   "codice": "FVA",
+   "in_indice": true
   },
-  "skill_tecnico_gal_mc": {
-   "id_mcflash": 1626,
-   "file": "Skill_Tecnico_GAL_MC.pdf",
+  "skill_tecnico_gad": {
+   "id_mcflash": 2099,
+   "file": "Skill_Tecnico_GAD.pdf",
+   "codice": "GAD",
+   "in_indice": true
+  },
+  "skill_tecnico__gal": {
+   "id_mcflash": 2316,
+   "file": "Skill_Tecnico__GAL.pdf",
    "codice": "GAL",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_gal": {
-   "id_mcflash": 1905,
-   "file": "Skill_Tecnico_GAL.pdf",
-   "codice": "GAL",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
   "skill_tecnico_gap": {
    "id_mcflash": 1855,
    "file": "Skill_Tecnico_GAP.pdf",
    "codice": "GAP",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill-tecnico_gau_mc": {
-   "id_mcflash": 1600,
-   "file": "Skill Tecnico_GAU_MC.pdf",
+  "skill_tecnico_gau": {
+   "id_mcflash": 2280,
+   "file": "Skill_Tecnico_GAU.pdf",
    "codice": "GAU",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_gba-_mc": {
-   "id_mcflash": 1768,
-   "file": "Skill_Tecnico_GBA _MC.pdf",
+  "skill_tecnico_gba_mc": {
+   "id_mcflash": 219,
+   "file": "Skill_tecnico_GBA_MC.pdf",
    "codice": "GBA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_-gbe": {
-   "id_mcflash": 1910,
-   "file": "Skill_Tecnico_ GBE.pdf",
+  "skill_tecnico__gbe": {
+   "id_mcflash": 2464,
+   "file": "Skill_Tecnico__GBE.pdf",
    "codice": "GBE",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
   "skill_tecnico_gbi_mc": {
    "id_mcflash": 1841,
    "file": "Skill_Tecnico_GBI_MC.pdf",
    "codice": "GBI",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_gbi": {
+   "id_mcflash": 2542,
+   "file": "Skill_Tecnico_GBI.pdf",
+   "codice": "GBI",
+   "in_indice": true
+  },
+  "skill_tecnico_gci": {
+   "id_mcflash": 2121,
+   "file": "Skill_Tecnico_GCI.pdf",
+   "codice": "GCI",
+   "in_indice": true
   },
   "skill_tecnico_gco": {
    "id_mcflash": 1781,
    "file": "Skill_Tecnico_GCO.pdf",
    "codice": "GCO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_gfa": {
-   "id_mcflash": 1874,
-   "file": "Skill_Tecnico_GFA.pdf",
+  "skill_-tecnico_-gco": {
+   "id_mcflash": 2115,
+   "file": "Skill_ Tecnico_ GCO.pdf",
+   "codice": "GCO",
+   "in_indice": true
+  },
+  "skill_tecnico__gco": {
+   "id_mcflash": 2365,
+   "file": "Skill_Tecnico__GCO.pdf",
+   "codice": "GCO",
+   "in_indice": true
+  },
+  "skill_tecnico_-gfa": {
+   "id_mcflash": 2152,
+   "file": "Skill_Tecnico_ GFA.pdf",
    "codice": "GFA",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_gfr__mc": {
-   "id_mcflash": 1895,
-   "file": "Skill_Tecnico_GFR__MC.pdf",
-   "codice": "GFR",
-   "criterio": "eta' + ruolo"
+  "skill-tecnico_gfa": {
+   "id_mcflash": 2182,
+   "file": "Skill Tecnico_GFA.pdf",
+   "codice": "GFA",
+   "in_indice": true
   },
-  "skill_tecnico_gga_mc": {
-   "id_mcflash": 1921,
-   "file": "Skill_Tecnico_GGA_MC.pdf",
+  "skill_tecnico_gfa_mc": {
+   "id_mcflash": 2293,
+   "file": "Skill_Tecnico_GFA_MC.pdf",
+   "codice": "GFA",
+   "in_indice": true
+  },
+  "skill-tecnico_gfe_mc": {
+   "id_mcflash": 2527,
+   "file": "Skill Tecnico_GFE_MC.pdf",
+   "codice": "GFE",
+   "in_indice": true
+  },
+  "skill_tecnico__gfi": {
+   "id_mcflash": 2470,
+   "file": "Skill_Tecnico__GFI.pdf",
+   "codice": "GFI",
+   "in_indice": true
+  },
+  "skill_tecnico__gga": {
+   "id_mcflash": 2456,
+   "file": "Skill_Tecnico__GGA.pdf",
    "codice": "GGA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_-ggi": {
-   "id_mcflash": 1885,
-   "file": "Skill_Tecnico_ GGI.pdf",
+  "skill_-tecnico_-ggi": {
+   "id_mcflash": 2100,
+   "file": "Skill_ Tecnico_ GGI.pdf",
    "codice": "GGI",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico__ggi": {
+   "id_mcflash": 2541,
+   "file": "Skill_Tecnico__GGI.pdf",
+   "codice": "GGI",
+   "in_indice": true
+  },
+  "skill_tecnico_ggr": {
+   "id_mcflash": 2241,
+   "file": "Skill_Tecnico_GGR.pdf",
+   "codice": "GGR",
+   "in_indice": true
+  },
+  "skill_tecnico__ggr_mc": {
+   "id_mcflash": 2354,
+   "file": "Skill_Tecnico__GGR_MC.pdf",
+   "codice": "GGR",
+   "in_indice": true
+  },
+  "skill_tecnico_ggu": {
+   "id_mcflash": 1947,
+   "file": "Skill_Tecnico_GGU.pdf",
+   "codice": "GGU",
+   "in_indice": true
+  },
+  "skill_tecnico_gia": {
+   "id_mcflash": 2018,
+   "file": "Skill_Tecnico_GIA.pdf",
+   "codice": "GIA",
+   "in_indice": true
+  },
+  "skill_tecnico_gla_mc": {
+   "id_mcflash": 2273,
+   "file": "Skill_Tecnico_GLA_MC .pdf",
+   "codice": "GLA",
+   "in_indice": true
+  },
+  "skill_tecnico_gli": {
+   "id_mcflash": 2439,
+   "file": "Skill_Tecnico_GLI.pdf",
+   "codice": "GLI",
+   "in_indice": true
+  },
+  "skill_tecnico_glo__mc": {
+   "id_mcflash": 2291,
+   "file": "Skill_Tecnico_GLO__MC.pdf",
+   "codice": "GLO",
+   "in_indice": true
+  },
+  "skill_tecnico_glp": {
+   "id_mcflash": 2311,
+   "file": "Skill_Tecnico_GLP.pdf",
+   "codice": "GLP",
+   "in_indice": true
+  },
+  "skill_tecnico__gma": {
+   "id_mcflash": 2548,
+   "file": "Skill_Tecnico__GMA.pdf",
+   "codice": "GMA",
+   "in_indice": true
+  },
+  "skill_tecnico_gme": {
+   "id_mcflash": 2549,
+   "file": "Skill_Tecnico_GME.pdf",
+   "codice": "GME",
+   "in_indice": true
   },
   "skill_tecnico_gmi_mc": {
    "id_mcflash": 1603,
    "file": "Skill_Tecnico_GMI_MC.pdf",
    "codice": "GMI",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill-tecnico_gmo_mc": {
-   "id_mcflash": 1850,
-   "file": "Skill Tecnico_GMO_MC.pdf",
+  "skill_tecnico_gmo": {
+   "id_mcflash": 2145,
+   "file": "Skill_Tecnico_GMO.pdf",
    "codice": "GMO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_gpa": {
-   "id_mcflash": 1640,
-   "file": "Skill_Tecnico_GPA.pdf",
+  "skill_tecnico__gmo": {
+   "id_mcflash": 2453,
+   "file": "Skill_Tecnico__GMO.pdf",
+   "codice": "GMO",
+   "in_indice": true
+  },
+  "skill_tecnico_gmo_mc": {
+   "id_mcflash": 2498,
+   "file": "Skill_Tecnico_GMO_MC.pdf",
+   "codice": "GMO",
+   "in_indice": true
+  },
+  "skill_tecnico_gor": {
+   "id_mcflash": 2509,
+   "file": "Skill_Tecnico_GOR.pdf",
+   "codice": "GOR",
+   "in_indice": true
+  },
+  "skill_tecnico__gpe": {
+   "id_mcflash": 2246,
+   "file": "Skill_Tecnico__GPE.pdf",
    "codice": "GPA",
-   "criterio": "eta' non verificabile + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico-_gpa": {
-   "id_mcflash": 1712,
-   "file": "Skill_Tecnico _GPA.pdf",
+  "skill_tecnico__gpa": {
+   "id_mcflash": 2289,
+   "file": "Skill_Tecnico__GPA.pdf",
    "codice": "GPA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_gpu": {
-   "id_mcflash": 1763,
-   "file": "Skill_Tecnico_GPU.pdf",
-   "codice": "GPU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_gpe": {
+   "id_mcflash": 2005,
+   "file": "Skill_Tecnico_GPE.pdf",
+   "codice": "GPE",
+   "in_indice": true
   },
-  "skill_tecnico_gru_mc_engineering": {
-   "id_mcflash": 200,
-   "file": "Skill_Tecnico_GRU_MC_Engineering.pdf",
-   "codice": "GRU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__gpi": {
+   "id_mcflash": 2233,
+   "file": "Skill_Tecnico__GPI.pdf",
+   "codice": "GPI",
+   "in_indice": true
   },
-  "skill_tecnico_gru__mc": {
-   "id_mcflash": 1900,
-   "file": "Skill_Tecnico_GRU__MC.pdf",
-   "codice": "GRU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_gpr": {
+   "id_mcflash": 2162,
+   "file": "Skill_Tecnico_GPR.pdf",
+   "codice": "GPR",
+   "in_indice": true
   },
-  "skill_tecnico_gsa": {
-   "id_mcflash": 1666,
-   "file": "Skill_Tecnico_GSA.pdf",
+  "skill_tecnico_gsa__mc": {
+   "id_mcflash": 2287,
+   "file": "Skill_tecnico_GSA__MC.pdf",
    "codice": "GSA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_gst": {
-   "id_mcflash": 1707,
-   "file": "Skill_Tecnico_GST.pdf",
-   "codice": "GST",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_gsc_mc": {
+   "id_mcflash": 2130,
+   "file": "Skill_Tecnico_GSC_MC.pdf",
+   "codice": "GSC",
+   "in_indice": true
   },
-  "skill_tecnico_gsu": {
-   "id_mcflash": 1790,
-   "file": "Skill_Tecnico_GSU.pdf",
-   "codice": "GSU",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_-gsi": {
+   "id_mcflash": 2186,
+   "file": "Skill_Tecnico_ GSI.pdf",
+   "codice": "GSI",
+   "in_indice": true
   },
-  "skill_tecnico_gte_mc": {
-   "id_mcflash": 1778,
-   "file": "Skill_Tecnico_GTE_MC.pdf",
-   "codice": "GTE",
-   "criterio": "ruolo + lingua; eta' MCFlash da correggere (confermato manualmente)"
+  "skill_tecnico_gti_mc": {
+   "id_mcflash": 2477,
+   "file": "Skill_Tecnico_GTI_MC.pdf",
+   "codice": "GTI",
+   "in_indice": true
   },
-  "skill_tecnico_ica": {
-   "id_mcflash": 1685,
-   "file": "Skill_Tecnico_ICA.pdf",
-   "codice": "ICA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_gto": {
+   "id_mcflash": 1998,
+   "file": "Skill_Tecnico_GTO.pdf",
+   "codice": "GTO",
+   "in_indice": true
   },
-  "skill_tecnico_jjc_mc": {
-   "id_mcflash": 1830,
-   "file": "Skill_Tecnico_JJC_MC.pdf",
-   "codice": "JCJ",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__gto": {
+   "id_mcflash": 2275,
+   "file": "Skill_Tecnico__GTO.pdf",
+   "codice": "GTO",
+   "in_indice": true
   },
-  "skill_tecnico_jco_mc_engineering": {
-   "id_mcflash": 1832,
-   "file": "Skill_Tecnico_JCO_MC_Engineering.pdf",
-   "codice": "JCO",
-   "criterio": "eta' + mestiere"
+  "skill__tecnico__gto": {
+   "id_mcflash": 2394,
+   "file": "Skill__Tecnico__GTO.pdf",
+   "codice": "GTO",
+   "in_indice": true
+  },
+  "skill_tecnico_gtr": {
+   "id_mcflash": 1999,
+   "file": "Skill_Tecnico_GTR.pdf",
+   "codice": "GTR",
+   "in_indice": true
+  },
+  "skill_tecnico__gtr": {
+   "id_mcflash": 2482,
+   "file": "Skill_Tecnico__GTR.pdf",
+   "codice": "GTR",
+   "in_indice": true
+  },
+  "skill-tecnico_gva_mc": {
+   "id_mcflash": 2483,
+   "file": "Skill tecnico_GVA_MC.pdf",
+   "codice": "GVA",
+   "in_indice": true
+  },
+  "skill_tecnico_gve_mc": {
+   "id_mcflash": 2352,
+   "file": "Skill_Tecnico_GVE_MC.pdf",
+   "codice": "GVE",
+   "in_indice": true
+  },
+  "skill_tecnico_gve_eng_mc": {
+   "id_mcflash": 2415,
+   "file": "Skill_Tecnico_GVE_ENG_MC.pdf",
+   "codice": "GVE",
+   "in_indice": true
+  },
+  "skill_tecnico_gvi_eng_mc": {
+   "id_mcflash": 2460,
+   "file": "Skill_Tecnico_GVI_ENG_MC.pdf",
+   "codice": "GVI",
+   "in_indice": true
+  },
+  "skill_tecnico_hro": {
+   "id_mcflash": 2185,
+   "file": "Skill_Tecnico_HRO.pdf",
+   "codice": "HRO",
+   "in_indice": true
+  },
+  "skill_tecnico_ige_mc": {
+   "id_mcflash": 2545,
+   "file": "Skill_Tecnico_IGE_MC.pdf",
+   "codice": "IGE",
+   "in_indice": true
+  },
+  "skill_tecnico_ima_mc": {
+   "id_mcflash": 2555,
+   "file": "Skill_Tecnico_IMA_MC.pdf",
+   "codice": "IMA",
+   "in_indice": true
+  },
+  "skill_tecnico_imr": {
+   "id_mcflash": 2381,
+   "file": "Skill_Tecnico_IMR.pdf",
+   "codice": "IMR",
+   "in_indice": true
+  },
+  "skill_tecnico_jbo": {
+   "id_mcflash": 2506,
+   "file": "Skill_Tecnico_JBO.pdf",
+   "codice": "JBO",
+   "in_indice": true
   },
   "skill-tecnico_jfi_mc-engineering": {
    "id_mcflash": 215,
    "file": "Skill Tecnico_JFI_MC Engineering.pdf",
    "codice": "JFI",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_jfl": {
+   "id_mcflash": 2443,
+   "file": "Skill_Tecnico_JFL.pdf",
+   "codice": "JFL",
+   "in_indice": true
+  },
+  "skill_tecnico_jgi_mc": {
+   "id_mcflash": 2220,
+   "file": "Skill_Tecnico_JGI_MC.pdf",
+   "codice": "JGI",
+   "in_indice": true
   },
   "skill-tecnico_jka_mc": {
    "id_mcflash": 1678,
    "file": "Skill Tecnico_JKA_MC.pdf",
    "codice": "JKA",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_ksi": {
-   "id_mcflash": 1673,
-   "file": "Skill_Tecnico_KSI.pdf",
-   "codice": "KSI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__jod_mc": {
+   "id_mcflash": 2201,
+   "file": "Skill_Tecnico__JOD_MC.pdf",
+   "codice": "JOD",
+   "in_indice": true
   },
-  "skill_tecnico_kza": {
-   "id_mcflash": 1820,
-   "file": "Skill_Tecnico_KZA.pdf",
-   "codice": "KZA",
-   "criterio": "eta' + ruolo"
+  "skill-tecnico_jpa_mc": {
+   "id_mcflash": 2488,
+   "file": "Skill Tecnico_JPA_MC.pdf",
+   "codice": "JPA",
+   "in_indice": true
   },
-  "skill_tecnico_lac": {
-   "id_mcflash": 1742,
-   "file": "Skill_Tecnico_LAC.pdf",
-   "codice": "LAC",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_jro": {
+   "id_mcflash": 2544,
+   "file": "Skill_Tecnico_JRO.pdf",
+   "codice": "JRO",
+   "in_indice": true
   },
-  "skill_tecnico_lbo_mc": {
-   "id_mcflash": 1719,
-   "file": "Skill_Tecnico_LBO_MC.pdf",
+  "skill_tecnico_jse": {
+   "id_mcflash": 2043,
+   "file": "Skill_Tecnico_JSE.pdf",
+   "codice": "JSE",
+   "in_indice": true
+  },
+  "skill_tecnico_jsi_mc": {
+   "id_mcflash": 2247,
+   "file": "Skill_Tecnico_JSI_MC.pdf",
+   "codice": "JSI",
+   "in_indice": true
+  },
+  "skill_tecnico_kco": {
+   "id_mcflash": 2543,
+   "file": "Skill_Tecnico_KCO.pdf",
+   "codice": "KCO",
+   "in_indice": true
+  },
+  "skill_tecnico_kdr": {
+   "id_mcflash": 2441,
+   "file": "Skill_Tecnico_KDR.pdf",
+   "codice": "KDR",
+   "in_indice": true
+  },
+  "skill-tecnico_kfa_mc": {
+   "id_mcflash": 2522,
+   "file": "Skill Tecnico_KFA_MC.pdf",
+   "codice": "KFA",
+   "in_indice": true
+  },
+  "skill_tecnico_-lba": {
+   "id_mcflash": 2169,
+   "file": "Skill_Tecnico_ LBA.pdf",
+   "codice": "LBA",
+   "in_indice": true
+  },
+  "skill_tecnico__lba": {
+   "id_mcflash": 2395,
+   "file": "Skill_Tecnico__LBA.pdf",
+   "codice": "LBA",
+   "in_indice": true
+  },
+  "skill_tecnico_lbo__mc": {
+   "id_mcflash": 2397,
+   "file": "Skill_Tecnico_LBO__MC.pdf",
    "codice": "LBO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_-lca": {
-   "id_mcflash": 1714,
-   "file": "Skill_Tecnico_ LCA.pdf",
-   "codice": "LCA",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_lcu_mc": {
-   "id_mcflash": 1670,
-   "file": "Skill_Tecnico_LCU_MC.pdf",
-   "codice": "LCU",
-   "criterio": "eta' non verificabile + ruolo"
-  },
-  "skill_tecnico_ldm": {
-   "id_mcflash": 1756,
-   "file": "Skill_Tecnico_LDM.pdf",
-   "codice": "LDM",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_ldr_mc": {
+   "id_mcflash": 2215,
+   "file": "Skill_Tecnico_LDR_MC.pdf",
+   "codice": "LDR",
+   "in_indice": true
   },
   "skill_tecnico_ldv_mc": {
    "id_mcflash": 145,
    "file": "Skill_Tecnico_LDV_MC.pdf",
    "codice": "LDV",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_les_mc": {
-   "id_mcflash": 1815,
-   "file": "Skill_Tecnico_LES_MC.pdf",
-   "codice": "LES",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_len_mc": {
+   "id_mcflash": 34,
+   "file": "Skill_Tecnico_LEN_MC.pdf",
+   "codice": "LEN",
+   "in_indice": true
   },
-  "skill_tecnico_lgo": {
-   "id_mcflash": 1732,
-   "file": "Skill_Tecnico_LGO.pdf",
-   "codice": "LGO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_lfa_mc": {
+   "id_mcflash": 2425,
+   "file": "Skill_Tecnico_LFA_MC.pdf",
+   "codice": "LFA",
+   "in_indice": true
   },
-  "skill-tecnico_lgu-_mc": {
-   "id_mcflash": 1780,
-   "file": "Skill Tecnico_LGU _MC.pdf",
-   "codice": "LGU",
-   "criterio": "eta' + ruolo"
+  "skill-tecnico_lga_mc": {
+   "id_mcflash": 2405,
+   "file": "Skill Tecnico_LGA_MC.pdf",
+   "codice": "LGA",
+   "in_indice": true
   },
-  "skill-tecnico_lil_-mc": {
-   "id_mcflash": 1701,
-   "file": "Skill Tecnico_LIL_ MC.pdf",
-   "codice": "LIL",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_lgi": {
+   "id_mcflash": 2538,
+   "file": "Skill_Tecnico_LGI.pdf",
+   "codice": "LGI",
+   "in_indice": true
   },
-  "skill_tecnico_llu": {
-   "id_mcflash": 1864,
-   "file": "Skill_Tecnico_LLU.pdf",
-   "codice": "LLU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_llo": {
+   "id_mcflash": 2156,
+   "file": "Skill_Tecnico_LLO.pdf",
+   "codice": "LLO",
+   "in_indice": true
   },
-  "skill_tecnico_lpa_-mc": {
-   "id_mcflash": 1858,
-   "file": "Skill_Tecnico_LPA_ MC.pdf",
+  "skill_tecnico_lmo": {
+   "id_mcflash": 2163,
+   "file": "Skill_Tecnico_LMO.pdf",
+   "codice": "LMO",
+   "in_indice": true
+  },
+  "skill_tecnico__lmo": {
+   "id_mcflash": 2239,
+   "file": "Skill_Tecnico__LMO.pdf",
+   "codice": "LMO",
+   "in_indice": true
+  },
+  "skill_tecnico_lmo_mc": {
+   "id_mcflash": 2279,
+   "file": "Skill_Tecnico_LMO_MC.pdf",
+   "codice": "LMO",
+   "in_indice": true
+  },
+  "skill-tecnico_-lmo_mc": {
+   "id_mcflash": 2416,
+   "file": "Skill Tecnico_ LMO_MC.pdf",
+   "codice": "LMO",
+   "in_indice": true
+  },
+  "skill__tecnico_lmo": {
+   "id_mcflash": 2462,
+   "file": "Skill__Tecnico_LMO.pdf",
+   "codice": "LMO",
+   "in_indice": true
+  },
+  "skill_tecnico_lno": {
+   "id_mcflash": 2002,
+   "file": "Skill_Tecnico_LNO.pdf",
+   "codice": "LNO",
+   "in_indice": true
+  },
+  "skill_tecnico_lpa_mce": {
+   "id_mcflash": 2422,
+   "file": "Skill_Tecnico_LPA_MCE.pdf",
    "codice": "LPA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill-tecnico_lpo-_mc": {
-   "id_mcflash": 1772,
-   "file": "Skill Tecnico_LPO _MC.pdf",
-   "codice": "LPO",
-   "criterio": "eta' + ruolo"
+  "skill-tecnico_-lpa_-mc": {
+   "id_mcflash": 2449,
+   "file": "Skill Tecnico_ LPA_ MC.pdf",
+   "codice": "LPA",
+   "in_indice": true
   },
-  "skill_tecnico_lpr_mc_bis": {
-   "id_mcflash": 1879,
-   "file": "Skill_Tecnico_LPR_MC_bis.pdf",
-   "codice": "LPR",
-   "criterio": "eta' + ruolo (verificato sul PDF locale; in attesa di indicizzazione)"
+  "skill_tecnico__lpi": {
+   "id_mcflash": 2442,
+   "file": "Skill_Tecnico__LPI.pdf",
+   "codice": "LPI",
+   "in_indice": true
   },
-  "skill-tecnico_lro_mc": {
-   "id_mcflash": 1696,
-   "file": "Skill Tecnico_LRO_MC.pdf",
+  "skill_tecnico_lri_mc": {
+   "id_mcflash": 2301,
+   "file": "Skill_Tecnico_LRI_MC.pdf",
+   "codice": "LRI",
+   "in_indice": true
+  },
+  "skill_tecnico_lro": {
+   "id_mcflash": 2297,
+   "file": "Skill_Tecnico_LRO.pdf",
    "codice": "LRO",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_lsc_mc": {
-   "id_mcflash": 10,
-   "file": "Skill_tecnico_LSC_MC.pdf",
+  "skill_tecnico__lsa": {
+   "id_mcflash": 2315,
+   "file": "Skill_Tecnico__LSA.pdf",
+   "codice": "LSA",
+   "in_indice": true
+  },
+  "skill_tecnico_lsc": {
+   "id_mcflash": 2211,
+   "file": "Skill_Tecnico_LSC.pdf",
    "codice": "LSC",
-   "criterio": "eta' non verificabile + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_lse_mc": {
-   "id_mcflash": 1652,
-   "file": "Skill_Tecnico_LSE_MC.pdf",
-   "codice": "LSE",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_lsp": {
+   "id_mcflash": 2136,
+   "file": "Skill_Tecnico_LSP.pdf",
+   "codice": "LSP",
+   "in_indice": true
   },
-  "skill-tecnico_lso_mc": {
-   "id_mcflash": 1552,
-   "file": "Skill Tecnico_LSO_MC.pdf",
-   "codice": "LSO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_lte": {
+   "id_mcflash": 2373,
+   "file": "Skill_Tecnico_LTE.pdf",
+   "codice": "LTE",
+   "in_indice": true
   },
-  "skill_tecnico_lva": {
-   "id_mcflash": 1911,
-   "file": "Skill_Tecnico_LVA.pdf",
-   "codice": "LVA",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_lvi_mc": {
-   "id_mcflash": 1925,
-   "file": "Skill_Tecnico_LVI_MC.pdf",
+  "skill_tecnico_lvi": {
+   "id_mcflash": 2071,
+   "file": "Skill_Tecnico_LVI.pdf",
    "codice": "LVI",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_lzi": {
-   "id_mcflash": 1927,
-   "file": "Skill_Tecnico_LZI.pdf",
-   "codice": "LZI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__lvi": {
+   "id_mcflash": 2371,
+   "file": "Skill_Tecnico__LVI.pdf",
+   "codice": "LVI",
+   "in_indice": true
   },
-  "skill_tecnico_mba": {
-   "id_mcflash": 1629,
-   "file": "Skill_Tecnico_MBA.pdf",
+  "skill_tecnico_lza_mc": {
+   "id_mcflash": 2490,
+   "file": "Skill_Tecnico_LZA_MC.pdf",
+   "codice": "LZA",
+   "in_indice": true
+  },
+  "skill-tecnico_lzo_mc": {
+   "id_mcflash": 2491,
+   "file": "Skill Tecnico_LZO_MC.pdf",
+   "codice": "LZO",
+   "in_indice": true
+  },
+  "skill_tecnico_mab": {
+   "id_mcflash": 2319,
+   "file": "Skill_Tecnico_MAB.pdf",
+   "codice": "MAB",
+   "in_indice": true
+  },
+  "skill_tecnico_mad": {
+   "id_mcflash": 2427,
+   "file": "Skill_Tecnico_MAD.pdf",
+   "codice": "MAD",
+   "in_indice": true
+  },
+  "skill-tecnico_mal_mc": {
+   "id_mcflash": 2521,
+   "file": "Skill Tecnico_MAL_MC.pdf",
+   "codice": "MAL",
+   "in_indice": true
+  },
+  "skill_tecnico_man": {
+   "id_mcflash": 2024,
+   "file": "Skill_Tecnico_MAN.pdf",
+   "codice": "MAN",
+   "in_indice": true
+  },
+  "skill_tecnico_mar": {
+   "id_mcflash": 2444,
+   "file": "Skill_Tecnico_MAR.pdf",
+   "codice": "MAR",
+   "in_indice": true
+  },
+  "skill-tecnico_mba__mc": {
+   "id_mcflash": 2513,
+   "file": "Skill Tecnico_MBA__MC.pdf",
    "codice": "MBA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico-_-mba_-mc": {
-   "id_mcflash": 1919,
-   "file": "Skill_Tecnico _ MBA_ MC.pdf",
-   "codice": "MBA",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_mbe": {
+   "id_mcflash": 2196,
+   "file": "Skill_Tecnico_MBE.pdf",
+   "codice": "MBE",
+   "in_indice": true
   },
-  "skill_tecnico_mbo": {
-   "id_mcflash": 1907,
-   "file": "Skill_Tecnico_MBO.pdf",
-   "codice": "MBO",
-   "criterio": "eta' + ruolo"
+  "skill-tecnico_mbe_mc": {
+   "id_mcflash": 2560,
+   "file": "Skill Tecnico_MBE_MC.pdf",
+   "codice": "MBE",
+   "in_indice": true
   },
-  "skill_tecnico_mbr": {
-   "id_mcflash": 1867,
-   "file": "Skill_Tecnico_MBR.pdf",
+  "skill_tecnico__mbi": {
+   "id_mcflash": 2445,
+   "file": "Skill_Tecnico__MBI.pdf",
+   "codice": "MBI",
+   "in_indice": true
+  },
+  "skill_tecnico__mbr": {
+   "id_mcflash": 2321,
+   "file": "Skill_Tecnico__MBR.pdf",
    "codice": "MBR",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_mbu": {
+   "id_mcflash": 2546,
+   "file": "Skill_Tecnico_MBU.pdf",
+   "codice": "MBU",
+   "in_indice": true
   },
   "skill_tecnico_mca_-mc": {
-   "id_mcflash": 1747,
+   "id_mcflash": 2492,
    "file": "Skill_Tecnico_MCA_ MC.pdf",
    "codice": "MCA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_mch_mc": {
-   "id_mcflash": 1669,
-   "file": "Skill_Tecnico_MCH_MC.pdf",
-   "codice": "MCH",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_-mci": {
+   "id_mcflash": 2183,
+   "file": "Skill_Tecnico_ MCI.pdf",
+   "codice": "MCI",
+   "in_indice": true
   },
-  "skill_tecnico_mco_mc": {
-   "id_mcflash": 9,
-   "file": "Skill_Tecnico_MCO_MC.pdf",
+  "skill_tecnico_mci_mc": {
+   "id_mcflash": 2203,
+   "file": "Skill_Tecnico_MCI_MC.pdf",
+   "codice": "MCI",
+   "in_indice": true
+  },
+  "skill_tecnico__mci": {
+   "id_mcflash": 2258,
+   "file": "Skill_Tecnico__MCI.pdf",
+   "codice": "MCI",
+   "in_indice": true
+  },
+  "skill_tecnico_-mco_mc": {
+   "id_mcflash": 2188,
+   "file": "Skill_Tecnico_ MCO_MC.pdf",
    "codice": "MCO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill-tecnico_mco_mc": {
-   "id_mcflash": 149,
-   "file": "Skill Tecnico_MCO_MC.pdf",
-   "codice": "MCO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__mda": {
+   "id_mcflash": 2299,
+   "file": "Skill_Tecnico__MDA.pdf",
+   "codice": "MDA",
+   "in_indice": true
   },
-  "skill_tecnico_mdp_-mc": {
-   "id_mcflash": 1811,
-   "file": "Skill_Tecnico_MDP_ MC.pdf",
-   "codice": "MDP",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_mdc": {
+   "id_mcflash": 2363,
+   "file": "Skill_Tecnico_MDC.pdf",
+   "codice": "MDC",
+   "in_indice": true
   },
-  "skill_tecnico_mfe_mc": {
-   "id_mcflash": 1861,
-   "file": "Skill_Tecnico_MFE_MC.pdf",
-   "codice": "MFE",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_mdu": {
+   "id_mcflash": 2177,
+   "file": "Skill_Tecnico_MDU.pdf",
+   "codice": "MDE",
+   "in_indice": true
+  },
+  "skill_tecnico_mde": {
+   "id_mcflash": 2189,
+   "file": "Skill_Tecnico_MDE.pdf",
+   "codice": "MDE",
+   "in_indice": true
+  },
+  "skill_tecnico_mdm__mc": {
+   "id_mcflash": 2252,
+   "file": "Skill_Tecnico_MDM__MC.pdf",
+   "codice": "MDM",
+   "in_indice": true
+  },
+  "skill_tecnico_mds": {
+   "id_mcflash": 2026,
+   "file": "Skill_Tecnico_MDS.pdf",
+   "codice": "MDS",
+   "in_indice": true
+  },
+  "skill_tecnico_mel__eng_mc": {
+   "id_mcflash": 2348,
+   "file": "Skill_Tecnico_MEL__ENG_MC.pdf",
+   "codice": "MEL",
+   "in_indice": true
   },
   "skill_tecnico_mfr_mc": {
    "id_mcflash": 1831,
    "file": "Skill_Tecnico_MFR_MC.pdf",
    "codice": "MFR",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_mfu": {
-   "id_mcflash": 1611,
-   "file": "Skill_Tecnico_MFU.pdf",
-   "codice": "MFU",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_mge": {
+   "id_mcflash": 2370,
+   "file": "Skill_Tecnico_MGE.pdf",
+   "codice": "MGE",
+   "in_indice": true
   },
-  "skill_tecnico_-mla_mc": {
-   "id_mcflash": 1648,
-   "file": "Skill_Tecnico_ MLA_MC.pdf",
+  "skill_tecnico_mgi": {
+   "id_mcflash": 2007,
+   "file": "Skill_Tecnico_MGI.pdf",
+   "codice": "MGI",
+   "in_indice": true
+  },
+  "skill_tecnico_mgr": {
+   "id_mcflash": 2458,
+   "file": "Skill_Tecnico_MGR.pdf",
+   "codice": "MGR",
+   "in_indice": true
+  },
+  "skill_tecnico_mil": {
+   "id_mcflash": 2374,
+   "file": "Skill_Tecnico_MIL.pdf",
+   "codice": "MIL",
+   "in_indice": true
+  },
+  "skill_tecnico_msi_eng_mc": {
+   "id_mcflash": 2303,
+   "file": "Skill_Tecnico_MSI_ENG_MC.pdf",
+   "codice": "MIQ",
+   "in_indice": true
+  },
+  "skill_tecnico_mla_-mc": {
+   "id_mcflash": 1978,
+   "file": "Skill_Tecnico_MLA_ MC.pdf",
    "codice": "MLA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_mlu": {
-   "id_mcflash": 1683,
-   "file": "Skill_Tecnico_MLU.pdf",
-   "codice": "MLU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_mla": {
+   "id_mcflash": 2107,
+   "file": "Skill_Tecnico_MLA.pdf",
+   "codice": "MLA",
+   "in_indice": true
   },
-  "skill_tecnico_mlu_mc": {
-   "id_mcflash": 1854,
-   "file": "Skill_tecnico_MLU_MC.pdf",
-   "codice": "MLU",
-   "criterio": "eta' + mestiere"
-  },
-  "skill-tecnico_mma_mc": {
-   "id_mcflash": 148,
-   "file": "Skill Tecnico_MMA_MC.pdf",
+  "skill_tecnico__mma": {
+   "id_mcflash": 2248,
+   "file": "Skill_Tecnico__MMA.pdf",
    "codice": "MMA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_-mma_-mc": {
-   "id_mcflash": 1857,
-   "file": "Skill_Tecnico_ MMA_ MC.pdf",
-   "codice": "MMA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_-mme": {
+   "id_mcflash": 2020,
+   "file": "Skill_Tecnico_ MME.pdf",
+   "codice": "MME",
+   "in_indice": true
   },
-  "skill_tecnico_mmu_mc": {
-   "id_mcflash": 217,
-   "file": "Skill_tecnico_MMU_MC.pdf",
-   "codice": "MMU",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico__mmi_mc": {
+   "id_mcflash": 2380,
+   "file": "Skill_Tecnico__MMI_MC.pdf",
+   "codice": "MMI",
+   "in_indice": true
+  },
+  "skill_tecnico_mmo": {
+   "id_mcflash": 2128,
+   "file": "Skill_Tecnico_MMO.pdf",
+   "codice": "MMO",
+   "in_indice": true
   },
   "skill_tecnico_mne_mc": {
    "id_mcflash": 64,
    "file": "Skill_Tecnico_MNE_MC.pdf",
    "codice": "MNE",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_mpa": {
-   "id_mcflash": 1924,
-   "file": "Skill_Tecnico_MPA.pdf",
-   "codice": "MPA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_mod_mc": {
+   "id_mcflash": 2469,
+   "file": "Skill_Tecnico_MOD_MC.pdf",
+   "codice": "MOD",
+   "in_indice": true
   },
-  "skill_tecnico_mpr": {
-   "id_mcflash": 1882,
-   "file": "Skill_Tecnico_MPR.pdf",
-   "codice": "MPR",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_mpi": {
+   "id_mcflash": 2016,
+   "file": "Skill_tecnico_MPI.pdf",
+   "codice": "MPI",
+   "in_indice": true
   },
-  "skill_tecnico_mru": {
-   "id_mcflash": 1837,
-   "file": "Skill_Tecnico_MRU.pdf",
-   "codice": "MRU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_-mpi": {
+   "id_mcflash": 2159,
+   "file": "Skill_Tecnico_ MPI.pdf",
+   "codice": "MPI",
+   "in_indice": true
+  },
+  "skill_tecnico_mpu": {
+   "id_mcflash": 2535,
+   "file": "Skill_Tecnico_MPU.pdf",
+   "codice": "MPU",
+   "in_indice": true
+  },
+  "skill_tecnico_mra": {
+   "id_mcflash": 2197,
+   "file": "Skill_Tecnico_MRA.pdf",
+   "codice": "MRA",
+   "in_indice": true
+  },
+  "skill_tecnico-_mri": {
+   "id_mcflash": 2074,
+   "file": "Skill_Tecnico _MRI.pdf",
+   "codice": "MRI",
+   "in_indice": true
   },
   "skill_tecnico_msa": {
    "id_mcflash": 1810,
    "file": "Skill_Tecnico_MSA.pdf",
    "codice": "MSA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_-msa": {
-   "id_mcflash": 1812,
-   "file": "Skill_Tecnico_ MSA.pdf",
+  "skill_tecnico__msa": {
+   "id_mcflash": 2202,
+   "file": "Skill_Tecnico__MSA.pdf",
    "codice": "MSA",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill-tecnico_mti_mc": {
-   "id_mcflash": 1786,
-   "file": "Skill Tecnico_MTI_MC.pdf",
-   "codice": "MTI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_mso_mc": {
+   "id_mcflash": 1705,
+   "file": "Skill_Tecnico_MSO_MC.pdf",
+   "codice": "MSO",
+   "in_indice": true
   },
-  "skill_tecnico__mva_mc": {
-   "id_mcflash": 1918,
-   "file": "Skill_Tecnico__MVA_MC.pdf",
+  "skill_tecnico_msp": {
+   "id_mcflash": 1988,
+   "file": "Skill_Tecnico_MSP.pdf",
+   "codice": "MSP",
+   "in_indice": true
+  },
+  "skill_tecnico_mtr_eng_mc": {
+   "id_mcflash": 2369,
+   "file": "Skill_Tecnico_MTR_ENG_MC.pdf",
+   "codice": "MTR",
+   "in_indice": true
+  },
+  "skill_tecnico_mva_mc": {
+   "id_mcflash": 2065,
+   "file": "Skill_Tecnico_MVA_MC.pdf",
    "codice": "MVA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_mve_mc": {
-   "id_mcflash": 1922,
-   "file": "Skill_Tecnico_MVE_MC.pdf",
+  "skill_tecnico_mve": {
+   "id_mcflash": 2322,
+   "file": "Skill_Tecnico_MVE.pdf",
    "codice": "MVE",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_mvi_mc": {
-   "id_mcflash": 1828,
-   "file": "Skill_Tecnico_MVI_MC.pdf",
+  "skill_tecnico_mvi_-mc": {
+   "id_mcflash": 2274,
+   "file": "Skill_Tecnico_MVI_ MC.pdf",
    "codice": "MVI",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_mvi": {
-   "id_mcflash": 1886,
-   "file": "Skill_Tecnico_MVI.pdf",
-   "codice": "MVI",
-   "criterio": "eta' non combacia + mestiere"
-  },
-  "skill_tecnico_mzi": {
-   "id_mcflash": 1871,
-   "file": "Skill_Tecnico_MZI.pdf",
+  "skill_tecnico__mzi": {
+   "id_mcflash": 2523,
+   "file": "Skill_Tecnico__MZI.pdf",
    "codice": "MZI",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill-tecnico_nag_mc": {
-   "id_mcflash": 1890,
-   "file": "Skill Tecnico_NAG_MC.pdf",
-   "codice": "NAG",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_nbe_mc": {
-   "id_mcflash": 1814,
-   "file": "Skill_Tecnico_NBE_MC.pdf",
+  "skill_tecnico_nbe": {
+   "id_mcflash": 2463,
+   "file": "Skill_Tecnico_NBE.pdf",
    "codice": "NBE",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_nbi_mc": {
-   "id_mcflash": 1807,
-   "file": "Skill_Tecnico_NBI_MC.pdf",
-   "codice": "NBI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_nca": {
+   "id_mcflash": 2184,
+   "file": "Skill_Tecnico_NCA.pdf",
+   "codice": "NCA",
+   "in_indice": true
   },
-  "skill_tecnico_nci": {
-   "id_mcflash": 1923,
-   "file": "Skill_Tecnico_NCI.pdf",
-   "codice": "NCI",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_ndm_mc": {
+   "id_mcflash": 2178,
+   "file": "Skill_Tecnico_NDM_MC.pdf",
+   "codice": "NDM",
+   "in_indice": true
   },
-  "skill_tecnico_ngh_mc": {
-   "id_mcflash": 26,
-   "file": "Skill_Tecnico_NGH_MC.pdf",
-   "codice": "NGH",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_ndp": {
+   "id_mcflash": 2199,
+   "file": "Skill_Tecnico_NDP.pdf",
+   "codice": "NDP",
+   "in_indice": true
   },
-  "skill-tecnico_npi_mc": {
-   "id_mcflash": 1852,
-   "file": "Skill Tecnico_NPI_MC.pdf",
-   "codice": "NPI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_nfe": {
+   "id_mcflash": 2517,
+   "file": "Skill_Tecnico_NFE.pdf",
+   "codice": "NFE",
+   "in_indice": true
   },
-  "skill-tecnico_nru-_mc": {
-   "id_mcflash": 1833,
-   "file": "Skill Tecnico_NRU _MC.pdf",
-   "codice": "NRU",
-   "criterio": "eta' non combacia + mestiere"
+  "skill_tecnico_nfr": {
+   "id_mcflash": 2327,
+   "file": "Skill_Tecnico_NFR.pdf",
+   "codice": "NFR",
+   "in_indice": true
   },
-  "skill-tecnico_pce_mc": {
-   "id_mcflash": 1891,
-   "file": "Skill Tecnico_PCE_MC.pdf",
-   "codice": "PCE",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_nin_mc": {
+   "id_mcflash": 2540,
+   "file": "Skill_Tecnico_NIN_MC.pdf",
+   "codice": "NIN",
+   "in_indice": true
   },
-  "skill_tecnico_pge": {
-   "id_mcflash": 1735,
-   "file": "Skill_Tecnico_PGE.pdf",
-   "codice": "PGE",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_nma": {
+   "id_mcflash": 1982,
+   "file": "Skill_Tecnico_NMA.pdf",
+   "codice": "NMA",
+   "in_indice": true
   },
-  "skill_tecnico_pgr": {
-   "id_mcflash": 1827,
-   "file": "Skill_Tecnico_PGR.pdf",
-   "codice": "PGR",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_nma_mc": {
+   "id_mcflash": 2048,
+   "file": "Skill_Tecnico_NMA_MC.pdf",
+   "codice": "NMA",
+   "in_indice": true
   },
-  "skill_tecnico_pma_mc": {
-   "id_mcflash": 1787,
-   "file": "Skill_Tecnico_PMA_MC.pdf",
+  "skill_tecnico_nmi": {
+   "id_mcflash": 2554,
+   "file": "Skill_Tecnico_NMI.pdf",
+   "codice": "NMI",
+   "in_indice": true
+  },
+  "skill_tecnico_nro_mc": {
+   "id_mcflash": 2090,
+   "file": "Skill_Tecnico_NRO_MC.pdf",
+   "codice": "NRO",
+   "in_indice": true
+  },
+  "skill_tecnico-_nro": {
+   "id_mcflash": 2123,
+   "file": "Skill_Tecnico _NRO.pdf",
+   "codice": "NRO",
+   "in_indice": true
+  },
+  "skill_tecnico_oca": {
+   "id_mcflash": 2041,
+   "file": "Skill_Tecnico_OCA.pdf",
+   "codice": "OCA",
+   "in_indice": true
+  },
+  "skill_tecnico_oec": {
+   "id_mcflash": 1981,
+   "file": "Skill_Tecnico_OEC.pdf",
+   "codice": "OEC",
+   "in_indice": true
+  },
+  "skill_tecnico_pbe": {
+   "id_mcflash": 2092,
+   "file": "Skill_Tecnico_PBE.pdf",
+   "codice": "PBE",
+   "in_indice": true
+  },
+  "skill_tecnico_pco": {
+   "id_mcflash": 2507,
+   "file": "Skill_Tecnico_PCO.pdf",
+   "codice": "PCO",
+   "in_indice": true
+  },
+  "skill_tecnico_pco_mc": {
+   "id_mcflash": 2515,
+   "file": "Skill_Tecnico_PCO_MC.pdf",
+   "codice": "PCO",
+   "in_indice": true
+  },
+  "skill_tecnico_pcu": {
+   "id_mcflash": 1977,
+   "file": "Skill_Tecnico_PCU.pdf",
+   "codice": "PCU",
+   "in_indice": true
+  },
+  "skill_tecnico-_pcu": {
+   "id_mcflash": 2067,
+   "file": "Skill_Tecnico _PCU.pdf",
+   "codice": "PCU",
+   "in_indice": true
+  },
+  "skill_tecnico_pdm": {
+   "id_mcflash": 2135,
+   "file": "Skill_Tecnico_PDM.pdf",
+   "codice": "PDM",
+   "in_indice": true
+  },
+  "skill_tecnico_pdu": {
+   "id_mcflash": 2501,
+   "file": "Skill_Tecnico_PDU.pdf",
+   "codice": "PDU",
+   "in_indice": true
+  },
+  "skill_tecnico__pma": {
+   "id_mcflash": 2426,
+   "file": "Skill_Tecnico__PMA.pdf",
    "codice": "PMA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_pma__mc": {
-   "id_mcflash": 1896,
-   "file": "Skill_Tecnico_PMA__MC.pdf",
+  "skill__tecnico__pma": {
+   "id_mcflash": 2461,
+   "file": "Skill__Tecnico__PMA.pdf",
    "codice": "PMA",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
+  },
+  "skill_tecnico_pmo_mc": {
+   "id_mcflash": 2030,
+   "file": "Skill_Tecnico_PMO_MC.pdf",
+   "codice": "PMO",
+   "in_indice": true
   },
   "skill_tecnico_pmo": {
-   "id_mcflash": 1736,
+   "id_mcflash": 2324,
    "file": "Skill_Tecnico_PMO.pdf",
    "codice": "PMO",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_ppo_mc": {
-   "id_mcflash": 1880,
-   "file": "Skill_Tecnico_PPO_MC.pdf",
-   "codice": "PPO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_pol": {
+   "id_mcflash": 2360,
+   "file": "Skill_Tecnico_POL.pdf",
+   "codice": "POL",
+   "in_indice": true
   },
-  "skill_tecnico_pro": {
-   "id_mcflash": 1826,
-   "file": "Skill_Tecnico_PRO.pdf",
-   "codice": "PRO",
-   "criterio": "eta' non combacia + ruolo"
+  "skill_tecnico_ppi-(1)": {
+   "id_mcflash": 2550,
+   "file": "Skill_Tecnico_PPI (1).pdf",
+   "codice": "PPI",
+   "in_indice": true
   },
-  "skill_tecnico_psc_mc": {
-   "id_mcflash": 1794,
-   "file": "Skill_Tecnico_PSC_MC.pdf",
-   "codice": "PSC",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_psi": {
+   "id_mcflash": 2251,
+   "file": "Skill_Tecnico_PSI.pdf",
+   "codice": "PSI",
+   "in_indice": true
   },
-  "skill_tecnico_rai_mc": {
-   "id_mcflash": 1702,
-   "file": "Skill_Tecnico_RAI_MC.pdf",
-   "codice": "RAI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_pze_mc": {
+   "id_mcflash": 2193,
+   "file": "Skill_Tecnico_PZE_MC.pdf",
+   "codice": "PZE",
+   "in_indice": true
   },
-  "skill-tecnico_rbi_mc": {
-   "id_mcflash": 1585,
-   "file": "Skill Tecnico_RBI_MC.pdf",
-   "codice": "RBI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_qhu": {
+   "id_mcflash": 2055,
+   "file": "Skill_Tecnico_QHU.pdf",
+   "codice": "QHU",
+   "in_indice": true
   },
-  "skill-tecnico_rca_mc": {
-   "id_mcflash": 1624,
-   "file": "Skill Tecnico_RCA_MC.pdf",
+  "skill_tecnico_rba_mc": {
+   "id_mcflash": 2377,
+   "file": "Skill_Tecnico_RBA_MC.pdf",
+   "codice": "RBA",
+   "in_indice": true
+  },
+  "skill_tecnico_rca__mc": {
+   "id_mcflash": 2435,
+   "file": "Skill_Tecnico_RCA__MC.pdf",
    "codice": "RCA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
   "skill_tecnico-_-rco-_-mc": {
    "id_mcflash": 89,
    "file": "Skill_Tecnico _ RCO _ MC.pdf",
    "codice": "RCO",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_rde": {
-   "id_mcflash": 1843,
-   "file": "Skill_Tecnico_RDE.pdf",
-   "codice": "RDE",
-   "criterio": "eta' non combacia + ruolo"
+  "skill_tecnico_rco": {
+   "id_mcflash": 2019,
+   "file": "Skill_Tecnico_RCO.pdf",
+   "codice": "RCO",
+   "in_indice": true
   },
-  "skill-tecnico_rdi_mc": {
-   "id_mcflash": 1893,
-   "file": "Skill Tecnico_RDI_MC.pdf",
-   "codice": "RDI",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_rfi": {
+   "id_mcflash": 2553,
+   "file": "Skill_Tecnico_RFI.pdf",
+   "codice": "RFI",
+   "in_indice": true
   },
-  "skill_tecnico_rdl_mv": {
-   "id_mcflash": 152,
-   "file": "Skill_Tecnico_RDL_MV.pdf",
-   "codice": "RDL",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_rna": {
+   "id_mcflash": 2294,
+   "file": "Skill_Tecnico_RNA.pdf",
+   "codice": "RNA",
+   "in_indice": true
   },
-  "skill-tecnico_rdo_mc": {
-   "id_mcflash": 1533,
-   "file": "Skill Tecnico_RDO_MC.pdf",
-   "codice": "RDO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_rsa_mc": {
+   "id_mcflash": 2073,
+   "file": "Skill_Tecnico_RSA_MC.pdf",
+   "codice": "RSA",
+   "in_indice": true
   },
-  "skill-tecnico_rfr_mc": {
-   "id_mcflash": 1889,
-   "file": "Skill Tecnico_RFR_MC.pdf",
-   "codice": "RFR",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_rvi": {
+   "id_mcflash": 2134,
+   "file": "Skill_Tecnico_RVI.pdf",
+   "codice": "RVI",
+   "in_indice": true
   },
-  "skill_tecnico_rlu_mc": {
-   "id_mcflash": 1680,
-   "file": "Skill_Tecnico_RLU_MC.pdf",
-   "codice": "RLU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sar": {
+   "id_mcflash": 2402,
+   "file": "Skill_Tecnico_SAR.pdf",
+   "codice": "SAR",
+   "in_indice": true
   },
-  "skill_tecnico_rnz_mc": {
-   "id_mcflash": 1746,
-   "file": "Skill_Tecnico_RNZ_MC.pdf",
-   "codice": "RNZ",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_-rpo": {
-   "id_mcflash": 1904,
-   "file": "Skill_Tecnico_ RPO.pdf",
-   "codice": "RPO",
-   "criterio": "eta'"
-  },
-  "skill_tecnico_rta_mc": {
-   "id_mcflash": 1689,
-   "file": "Skill_Tecnico_RTA_MC.pdf",
-   "codice": "RTA",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_-rta": {
-   "id_mcflash": 1915,
-   "file": "Skill_Tecnico_ RTA.pdf",
-   "codice": "RTA",
-   "criterio": "eta' + ruolo"
-  },
-  "skill_tecnico_sba_mc": {
-   "id_mcflash": 5,
-   "file": "Skill_Tecnico_SBA_MC.pdf",
+  "skill_tecnico__sba": {
+   "id_mcflash": 2335,
+   "file": "Skill_Tecnico__SBA.pdf",
    "codice": "SBA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_sba": {
-   "id_mcflash": 1878,
-   "file": "Skill_Tecnico_SBA.pdf",
-   "codice": "SBA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sbe": {
+   "id_mcflash": 2510,
+   "file": "Skill_Tecnico_SBE.pdf",
+   "codice": "SBE",
+   "in_indice": true
   },
-  "skill_tecnico_sco_-mc": {
-   "id_mcflash": 1688,
-   "file": "Skill_Tecnico_SCO_ MC.pdf",
-   "codice": "SCO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sbo": {
+   "id_mcflash": 2312,
+   "file": "Skill_Tecnico_SBO.pdf",
+   "codice": "SBO",
+   "in_indice": true
   },
-  "skill_tecnico_sco-_mc": {
-   "id_mcflash": 1842,
-   "file": "Skill_Tecnico_SCO _MC.pdf",
-   "codice": "SCO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sbr_mc": {
+   "id_mcflash": 2198,
+   "file": "Skill_Tecnico_SBR_MC.pdf",
+   "codice": "SBR",
+   "in_indice": true
   },
-  "skill_tecnico_scu": {
-   "id_mcflash": 1792,
-   "file": "Skill_Tecnico_SCU .pdf",
-   "codice": "SCU",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_sbu": {
+   "id_mcflash": 2551,
+   "file": "Skill_Tecnico_SBU.pdf",
+   "codice": "SBU",
+   "in_indice": true
   },
-  "skill_tecnico_sdg_mc": {
-   "id_mcflash": 1913,
-   "file": "Skill_Tecnico_SDG_MC.pdf",
-   "codice": "SDG",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sds": {
+   "id_mcflash": 2493,
+   "file": "Skill_Tecnico_SDS.pdf",
+   "codice": "SDS",
+   "in_indice": true
   },
-  "skill_tecnico_sdo_mc": {
-   "id_mcflash": 1757,
-   "file": "Skill_Tecnico_SDO_MC.pdf",
-   "codice": "SDO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sdv": {
+   "id_mcflash": 2421,
+   "file": "Skill_Tecnico_SDV.pdf",
+   "codice": "SDV",
+   "in_indice": true
   },
-  "skill_tecnico_sfo": {
-   "id_mcflash": 1862,
-   "file": "Skill_Tecnico_SFO.pdf",
+  "skill_tecnico_ses": {
+   "id_mcflash": 2480,
+   "file": "Skill_Tecnico_SES.pdf",
+   "codice": "SES",
+   "in_indice": true
+  },
+  "skill_tecnico__sfo": {
+   "id_mcflash": 2476,
+   "file": "Skill_Tecnico__SFO.pdf",
    "codice": "SFO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_sfr": {
+   "id_mcflash": 2468,
+   "file": "Skill_Tecnico_SFR.pdf",
+   "codice": "SFR",
+   "in_indice": true
   },
   "skill_tecnico_sga": {
    "id_mcflash": 1840,
    "file": "Skill_Tecnico_SGA.pdf",
    "codice": "SGA",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill-tecnico_sgr_mc": {
-   "id_mcflash": 1933,
-   "file": "Skill Tecnico_SGR_MC.pdf",
-   "codice": "SGR",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sga_mc": {
+   "id_mcflash": 2094,
+   "file": "Skill_Tecnico_SGA_MC.pdf",
+   "codice": "SGA",
+   "in_indice": true
   },
-  "skill_tecnicov_sku_mc": {
-   "id_mcflash": 1721,
-   "file": "Skill_Tecnicov_SKU_MC.pdf",
-   "codice": "SKU",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sgi": {
+   "id_mcflash": 2455,
+   "file": "Skill_Tecnico_SGI.pdf",
+   "codice": "SGI",
+   "in_indice": true
   },
-  "skill_tecnico_sma": {
-   "id_mcflash": 1912,
-   "file": "Skill_Tecnico_SMA.pdf",
+  "skill_tecnico_sia_mc": {
+   "id_mcflash": 2528,
+   "file": "Skill_Tecnico_SIA_MC.pdf",
+   "codice": "SIA",
+   "in_indice": true
+  },
+  "skill_tecnico_siz": {
+   "id_mcflash": 1986,
+   "file": "Skill_Tecnico_SIZ.pdf",
+   "codice": "SIZ",
+   "in_indice": true
+  },
+  "skill_tecnico_sla": {
+   "id_mcflash": 2181,
+   "file": "Skill_Tecnico_SLA.pdf",
+   "codice": "SLA",
+   "in_indice": true
+  },
+  "skill_tecnico__sma_mc": {
+   "id_mcflash": 2290,
+   "file": "Skill_Tecnico__SMA_MC.pdf",
    "codice": "SMA",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_spa": {
-   "id_mcflash": 1605,
-   "file": "Skill_Tecnico_SPA.pdf",
-   "codice": "SPA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sma_mce": {
+   "id_mcflash": 2452,
+   "file": "Skill_Tecnico_SMA_MCE.pdf",
+   "codice": "SMA",
+   "in_indice": true
   },
-  "skill_tecnico_spe": {
-   "id_mcflash": 1777,
-   "file": "Skill_Tecnico_SPE.pdf",
+  "skill_tecnico_sme": {
+   "id_mcflash": 2164,
+   "file": "Skill_Tecnico_SME.pdf",
+   "codice": "SME",
+   "in_indice": true
+  },
+  "skill_tecnico_sno": {
+   "id_mcflash": 2259,
+   "file": "Skill_Tecnico_SNO.pdf",
+   "codice": "SNO",
+   "in_indice": true
+  },
+  "skill_tecnico_spe_mc": {
+   "id_mcflash": 2025,
+   "file": "Skill_Tecnico_SPE_MC.pdf",
    "codice": "SPE",
-   "criterio": "eta' + mestiere"
+   "in_indice": true
   },
-  "skill_tecnico_ssa": {
-   "id_mcflash": 1641,
-   "file": "Skill_Tecnico_SSA.pdf",
-   "codice": "SSA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico__sri": {
+   "id_mcflash": 2454,
+   "file": "Skill_Tecnico__SRI.pdf",
+   "codice": "SRI",
+   "in_indice": true
   },
-  "skill-tecnico_ssc_mc": {
-   "id_mcflash": 1929,
-   "file": "Skill Tecnico_SSC_MC.pdf",
-   "codice": "SSC",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sru_mc": {
+   "id_mcflash": 2209,
+   "file": "Skill_Tecnico_SRU_MC.pdf",
+   "codice": "SRU",
+   "in_indice": true
   },
-  "skill_tecnico_ste-_mc": {
-   "id_mcflash": 1808,
-   "file": "Skill_Tecnico_STE _MC.pdf",
-   "codice": "STE",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_sru": {
+   "id_mcflash": 2524,
+   "file": "Skill_Tecnico_SRU.pdf",
+   "codice": "SRU",
+   "in_indice": true
   },
-  "skill_tecnico_tla": {
-   "id_mcflash": 1908,
-   "file": "Skill_Tecnico_TLA.pdf",
-   "codice": "TLA",
-   "criterio": "eta' + mestiere"
+  "skill-tecnico_ssh_-mc": {
+   "id_mcflash": 2487,
+   "file": "Skill Tecnico_SSH_ MC.pdf",
+   "codice": "SSH",
+   "in_indice": true
   },
-  "skill-tecnico_tmu_mc": {
-   "id_mcflash": 1582,
-   "file": "Skill Tecnico_TMU_MC.pdf",
+  "skill_tecnico__sst": {
+   "id_mcflash": 2328,
+   "file": "Skill_Tecnico__SST.pdf",
+   "codice": "SST",
+   "in_indice": true
+  },
+  "skill_tecnico_sto": {
+   "id_mcflash": 2049,
+   "file": "Skill_Tecnico_STO.pdf",
+   "codice": "STO",
+   "in_indice": true
+  },
+  "skill_tecnico_tma": {
+   "id_mcflash": 2216,
+   "file": "Skill_Tecnico_TMA.pdf",
+   "codice": "TMA",
+   "in_indice": true
+  },
+  "skill_tecnico__tma": {
+   "id_mcflash": 2417,
+   "file": "Skill_Tecnico__TMA.pdf",
+   "codice": "TMA",
+   "in_indice": true
+  },
+  "skill_tecnico_tmu": {
+   "id_mcflash": 2122,
+   "file": "Skill_Tecnico_TMU.pdf",
    "codice": "TMU",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_tpi": {
+   "id_mcflash": 2117,
+   "file": "Skill_Tecnico_TPI.pdf",
+   "codice": "TPI",
+   "in_indice": true
   },
   "skill_tecnico_ttr": {
    "id_mcflash": 1587,
    "file": "Skill_Tecnico_TTR.pdf",
    "codice": "TTR",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_vba": {
-   "id_mcflash": 1844,
-   "file": "Skill_Tecnico_VBA.pdf",
-   "codice": "VBA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_ufe_mc": {
+   "id_mcflash": 2376,
+   "file": "Skill_Tecnico_UFE_MC.pdf",
+   "codice": "UFE",
+   "in_indice": true
   },
-  "skill_tecnico_vbr_mc": {
-   "id_mcflash": 1901,
-   "file": "Skill_Tecnico_VBR_MC.pdf",
-   "codice": "VBR",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_uor": {
+   "id_mcflash": 2467,
+   "file": "Skill_Tecnico_UOR.pdf",
+   "codice": "UOR",
+   "in_indice": true
+  },
+  "skill_tecnico_vbu": {
+   "id_mcflash": 2129,
+   "file": "Skill_Tecnico_VBU.pdf",
+   "codice": "VBU",
+   "in_indice": true
+  },
+  "skill_tecnico__vce_mc": {
+   "id_mcflash": 2066,
+   "file": "Skill_Tecnico__VCE_MC.pdf",
+   "codice": "VCE",
+   "in_indice": true
   },
   "skill_tecnico_vdt_mc": {
    "id_mcflash": 60,
    "file": "Skill_Tecnico_VDT_MC.pdf",
    "codice": "VDT",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_vga": {
-   "id_mcflash": 1906,
-   "file": "Skill_Tecnico_VGA.pdf",
-   "codice": "VGA",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_vgi": {
+   "id_mcflash": 2481,
+   "file": "Skill_Tecnico_VGI.pdf",
+   "codice": "VGI",
+   "in_indice": true
   },
   "skill_tecnico_vgu": {
    "id_mcflash": 1892,
    "file": "Skill_Tecnico_VGU.pdf",
    "codice": "VGU",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
+  },
+  "skill_tecnico_vin": {
+   "id_mcflash": 2314,
+   "file": "Skill_Tecnico_VIN.pdf",
+   "codice": "VIN",
+   "in_indice": true
   },
   "skill_tecnico_vlo_mc": {
    "id_mcflash": 143,
    "file": "Skill_Tecnico_VLO_MC.pdf",
    "codice": "VLO",
-   "criterio": "eta' + ruolo"
+   "in_indice": true
   },
-  "skill_tecnico_vpa_mc": {
-   "id_mcflash": 1917,
-   "file": "Skill_Tecnico_VPA_MC.pdf",
-   "codice": "VPA",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_vme": {
+   "id_mcflash": 2518,
+   "file": "Skill_Tecnico_VME.pdf",
+   "codice": "VME",
+   "in_indice": true
   },
-  "skill_tecnico_vto_mc": {
-   "id_mcflash": 1770,
-   "file": "Skill_Tecnico_VTO_MC.pdf",
-   "codice": "VTO",
-   "criterio": "eta' + ruolo"
+  "skill_tecnico_vpe": {
+   "id_mcflash": 2471,
+   "file": "Skill_Tecnico_VPE.pdf",
+   "codice": "VPE",
+   "in_indice": true
   },
-  "skill_tecnico_yfr": {
-   "id_mcflash": 1631,
-   "file": "Skill_Tecnico_YFR.pdf",
-   "codice": "YFR",
-   "criterio": "eta' + mestiere"
+  "skill_tecnico_vri": {
+   "id_mcflash": 2271,
+   "file": "Skill_Tecnico_VRI.pdf",
+   "codice": "VRI",
+   "in_indice": true
+  },
+  "skill_tecnico_vsa": {
+   "id_mcflash": 2217,
+   "file": "Skill_Tecnico_VSA.pdf",
+   "codice": "VSA",
+   "in_indice": true
+  },
+  "skill_tecnico_vsc": {
+   "id_mcflash": 1974,
+   "file": "Skill_Tecnico_VSC.pdf",
+   "codice": "VSC",
+   "in_indice": true
+  },
+  "skill_tecnico__vve": {
+   "id_mcflash": 2219,
+   "file": "Skill_Tecnico__VVE.pdf",
+   "codice": "VVE",
+   "in_indice": true
+  },
+  "skill-tecnico_vvi_mc-engineering": {
+   "id_mcflash": 2557,
+   "file": "Skill Tecnico_VVI_MC Engineering.pdf",
+   "codice": "VVI",
+   "in_indice": true
+  },
+  "skill_tecnico_wcu": {
+   "id_mcflash": 2244,
+   "file": "Skill_Tecnico_WCU.pdf",
+   "codice": "WCU",
+   "in_indice": true
+  },
+  "skill_tecnico_wpe_mc": {
+   "id_mcflash": 2194,
+   "file": "Skill_Tecnico_WPE_MC.pdf",
+   "codice": "WPE",
+   "in_indice": true
+  },
+  "skill_tecnico_yan_mc": {
+   "id_mcflash": 2054,
+   "file": "Skill_Tecnico_YAN_MC.pdf",
+   "codice": "YAN",
+   "in_indice": true
+  },
+  "skill_tecnico_ykg_mc": {
+   "id_mcflash": 2465,
+   "file": "Skill_Tecnico_YKG_MC.pdf",
+   "codice": "YKG",
+   "in_indice": true
+  },
+  "skill_tecnico_yla": {
+   "id_mcflash": 2318,
+   "file": "Skill_Tecnico_YLA.pdf",
+   "codice": "YLA",
+   "in_indice": true
+  },
+  "skill_tecnico_yts_mc": {
+   "id_mcflash": 2176,
+   "file": "Skill_tecnico_YTS_MC.pdf",
+   "codice": "YTS",
+   "in_indice": true
   }
  }
 }

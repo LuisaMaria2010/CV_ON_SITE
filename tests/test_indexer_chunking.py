@@ -66,3 +66,11 @@ def test_index_calls_search_upsert(monkeypatch):
     assert docs
     assert fake.upserted, "SearchService.upsert_chunks not called"
     assert len(fake.upserted[0]) == len(docs)
+
+
+def test_chunk_keys_differ_for_document_ids_that_sanitize_alike():
+    indexer = DocumentIndexer.__new__(DocumentIndexer)
+    assert indexer._sanitize_id("skill_tecnico_ffe") == "skill_tecnico_ffe"  # id esistenti invariati
+    a, b = indexer._sanitize_id("skill_tecnico_ffe-.pdf"), indexer._sanitize_id("skill_tecnico_ffe .pdf")
+    assert a != b and a.startswith("skill_tecnico_ffe--pdf-")
+    assert all(ch.isalnum() or ch in "-_" for ch in a + b)

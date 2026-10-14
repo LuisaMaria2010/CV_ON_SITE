@@ -7,12 +7,13 @@ from __future__ import annotations
 import logging
 import os
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable
 
 from azure.core.exceptions import ResourceExistsError, ResourceNotFoundError
 from azure.data.tables import TableClient, TableServiceClient
 
 from core.config import settings
+from domain.normalizer import TextNormalizer
 
 
 logger = logging.getLogger(__name__)
@@ -91,6 +92,42 @@ class DocumentRegistry:
         if not entities:
             return None
         return dict(entities[0])
+
+    def resolve_document_id(
+        self,
+        filename: str,
+        source_path: str,
+        blob_exists: Callable[[str], bool],
+    ) -> str:
+        """document_id del file: quello ripulito dal nome, salvo collisioni.
+
+        TextNormalizer + _normalize_document_id fanno coincidere nomi diversi
+        ("X _MC .pdf" / "X _MC.pdf", "X.pdf" / "X.docx", maiuscole): il secondo
+        file sostituirebbe il primo come sua nuova versione. Se l'id ripulito
+        appartiene a un ALTRO file ancora presente nello storage, si usa il nome
+        file originale (con estensione). Se l'altro file non c'e' piu', e' una
+        sostituzione voluta (es. la dashboard che rimpiazza un CV) e l'id resta
+        quello ripulito. Gli id gia' assegnati non cambiano.
+        """
+        cleaned = TextNormalizer.normalize_document_id(filename)
+        key = self._normalize_document_id(cleaned)
+        if not key:
+            return filename
+        escaped = key.replace("'", "''")
+        rows = list(self.table_client.query_entities(query_filter=f"RowKey eq '{escaped}'"))
+        if not rows:
+            return cleaned
+        owner = max(rows, key=lambda e: e.get("version", 1) or 0)
+        if owner.get("source_path") == source_path:
+            return cleaned
+        others = {e.get("source_path") for e in rows if e.get("source_path") and e.get("source_path") != source_path}
+        if any(blob_exists(path) for path in others):
+            logger.warning(
+                "document_id %s already used by %s: %s keeps its original file name as document_id",
+                key, sorted(others), source_path,
+            )
+            return filename
+        return cleaned
 
     def register(self, document_id: str, source_path: str, content_hash: str) -> dict[str, Any]:
         normalized_document_id = self._normalize_document_id(document_id)

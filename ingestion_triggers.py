@@ -38,6 +38,19 @@ def _download_blob_sync(container_name: str, blob_name: str) -> bytes:
     return blob_client.download_blob().readall()
 
 
+def _blob_exists_sync(source_path: str) -> bool:
+    """True se il blob ("/<container>/<blob>") e' ancora nello storage."""
+    try:
+        container_name, blob_name = _split_blob_path((source_path or "").lstrip("/"))
+    except InvalidInputError:
+        return False
+    conn = settings.storage_account_connection_string or settings.storage_connection_string
+    if not conn:
+        raise InvalidInputError("Missing storage connection string (AzureWebJobsStorage)")
+    client = BlobServiceClient.from_connection_string(conn)
+    return client.get_blob_client(container=container_name, blob=blob_name).exists()
+
+
 def _upload_markdown_sync(container_name: str, blob_name: str, markdown: str, metadata: dict[str, str]) -> None:
     conn = settings.storage_account_connection_string or settings.storage_connection_string
     if not conn:
@@ -126,19 +139,20 @@ def process_incoming_cv(msg: func.QueueMessage):
         )
 
         file_bytes = _download_blob_sync(container_name, blob_name)
+        # Id ripulito dal nome file, o il nome originale se quello ripulito e'
+        # gia' di un altro file (registry.resolve_document_id).
+        document_id = registry.resolve_document_id(filename, source_path, _blob_exists_sync)
         processing_result = document_processor.process(
             file_bytes,
             mime_type=mime_type,
             filename=filename,
             source_path=source_path,
+            document_id=document_id,
         )
         extracted_text = processing_result["extracted_text"]
         markdown = processing_result["markdown"]
         content_hash = processing_result["content_hash"]
         enriched_meta: dict = processing_result.get("metadata") or {}
-
-        # compute normalized document id from filename
-        document_id = TextNormalizer.normalize_document_id(filename)
 
         # LLM enrichment: populate skills, certifications, experience, etc. in front matter
         try:

@@ -1,0 +1,4 @@
+{
+  "_descrizione": "Decisioni manuali applicate da build_cv_mcflash_map.py, per record MCFlash (chiave = id MCFlash). document_id = il CV da collegare a quel record; null = il record resta senza CV. Servono per i casi dubbi che le regole automatiche non risolvono.",
+  "records": {}
+}

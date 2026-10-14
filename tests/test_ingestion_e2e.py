@@ -13,6 +13,9 @@ class FakeRegistry:
         self.mark_status_called = False
         self.last_status = None
 
+    def resolve_document_id(self, filename, source_path, blob_exists):
+        return filename.rsplit(".", 1)[0]
+
     def should_process(self, source_path, content_hash, document_id=None):
         self.should_process_called = True
         return True, None
@@ -58,7 +61,7 @@ def test_process_incoming_cv_flow(monkeypatch):
     triggers = importlib.import_module("ingestion_triggers")
 
     # fake processor returns predictable result
-    monkeypatch.setattr(triggers, "document_processor", SimpleNamespace(process=lambda b, mime_type, filename, source_path: {
+    monkeypatch.setattr(triggers, "document_processor", SimpleNamespace(process=lambda b, mime_type, filename, source_path, document_id: {
         "extracted_text": "Test text",
         "markdown": "# Test",
         "content_hash": "h123",
