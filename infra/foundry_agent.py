@@ -63,6 +63,22 @@ def foundry_project_endpoint() -> str:
     return ""
 
 
+def foundry_timeout_seconds() -> float:
+    """Timeout di ogni tentativo verso Foundry (FOUNDRY_TIMEOUT_SECONDS, default 70)."""
+    try:
+        return max(5.0, float(settings_value("FOUNDRY_TIMEOUT_SECONDS", default="70") or "70"))
+    except ValueError:
+        return 70.0
+
+
+def foundry_sdk_max_retries() -> int:
+    """Nuovi tentativi dell'SDK su timeout/errori di rete (FOUNDRY_SDK_MAX_RETRIES, default 2)."""
+    try:
+        return max(0, int(settings_value("FOUNDRY_SDK_MAX_RETRIES", default="2") or "2"))
+    except ValueError:
+        return 2
+
+
 def get_mc_matcher_client() -> Any:
     """Create and cache Foundry Responses API client for mc-matcher wrapper."""
     global _mc_matcher_client
@@ -91,11 +107,21 @@ def get_mc_matcher_client() -> Any:
         return None
 
     try:
+        # Timeout esplicito: senza, l'SDK aspetta fino a 10 minuti. Capita che una
+        # richiesta a Foundry resti appesa finche' Azure non chiude la connessione
+        # inattiva (~4 min): il retry dell'SDK poi riesce, ma il gateway HTTP della
+        # Function ha gia' risposto 504 (limite 230 s). Con questi valori un
+        # tentativo appeso si abbandona presto e il caso peggiore resta sotto i 230 s.
         _mc_matcher_client = _OpenAI(
             base_url=f"{project_endpoint.rstrip('/')}/openai/v1/",
             api_key=api_key,
+            timeout=foundry_timeout_seconds(),
+            max_retries=foundry_sdk_max_retries(),
         )
-        logger.info("mc-matcher client initialized project_endpoint=%s", project_endpoint)
+        logger.info(
+            "mc-matcher client initialized project_endpoint=%s timeout=%ss max_retries=%s",
+            project_endpoint, foundry_timeout_seconds(), foundry_sdk_max_retries(),
+        )
         return _mc_matcher_client
     except Exception as exc:
         logger.warning("Cannot create mc-matcher client: %s", exc)
@@ -231,9 +257,19 @@ def run_foundry_agent(
 
     for attempt in range(1, retry_max_attempts + 1):
         wait_for_foundry_slot(agent_name)
+        started = time.monotonic()
         try:
-            return openai.responses.create(**kwargs)
+            response = openai.responses.create(**kwargs)
+            logger.info(
+                "METRIC::foundry_agent_ms=%.0f | agent=%s attempt=%s",
+                (time.monotonic() - started) * 1000, agent_name, attempt,
+            )
+            return response
         except Exception as exc:
+            logger.warning(
+                "foundry_agent_failed agent=%s attempt=%s after=%.0fms error=%s",
+                agent_name, attempt, (time.monotonic() - started) * 1000, str(exc)[:200],
+            )
             if not is_rate_limit_error(exc) or attempt >= retry_max_attempts:
                 raise
 
