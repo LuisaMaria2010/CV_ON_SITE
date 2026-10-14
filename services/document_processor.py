@@ -33,6 +33,7 @@ class DocumentProcessor:
         filename: str | None = None,
         source_path: str | None = None,
         version: int | None = None,
+        document_id: str | None = None,
     ) -> Dict[str, Any]:
         elements = self.parser.parse(file_bytes, mime_type=mime_type)
 
@@ -40,7 +41,7 @@ class DocumentProcessor:
         language = self._infer_document_language(elements)
 
         # Enrich images: upload to blob storage and keep descriptions if present
-        document_id = TextNormalizer.normalize_document_id(filename or "")
+        document_id = document_id or TextNormalizer.normalize_document_id(filename or "")
         try:
             self._enrich_images(document_id, filename or "", elements, language)
         except Exception:
@@ -55,7 +56,7 @@ class DocumentProcessor:
         markdown_body = self.render_markdown(elements)
 
         # Build structured NormalizedCVMetadata using light heuristics
-        doc_id = TextNormalizer.normalize_document_id(filename or "") if filename else ""
+        doc_id = document_id if filename else ""
         srcs = [source_path] if source_path else []
         # candidate heuristics: first heading as name, find first email/phone in text
         first_heading = None

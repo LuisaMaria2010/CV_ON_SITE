@@ -1,0 +1,152 @@
+{
+ "_nota": "Decisioni manuali per il MCFlash di produzione (mcflashcandidati), per id MCFlash, con il CV indicato per nome file originale. Non usare con mcflashtest: gli id sono diversi.",
+ "records": {
+  "1963": {
+   "file": "Skill_Tecnico_DDP_MC.pdf",
+   "nota": "Ruolo in intestazione CloudeNative/DevOps, nascita 1992 compatibile; nell'indice il document_id ha il testo del gemello 'DDP_MC .pdf'"
+  },
+  "2203": {
+   "file": "Skill_Tecnico_MCI_MC.pdf",
+   "nota": "Flutter Developer, Roma, Junior, nato 07/2001"
+  },
+  "2258": {
+   "file": "Skill_Tecnico__MCI.pdf",
+   "nota": "Confermato dal collega il 14/10/2026: unico CV Front End/Full Stack libero; nascita 11/2001 non torna con eta' MCFlash 26"
+  },
+  "2376": {
+   "file": "Skill_Tecnico_UFE_MC.pdf",
+   "nota": "Stessa persona dei due CV UFE (Roma, Automation Tester, 1998); tenuto il piu' recente"
+  },
+  "2503": {
+   "file": "Skill_Tecnico__DCO.pdf",
+   "nota": "Confermato dal collega il 14/10/2026: Java Developer Milano, studi in Calabria; nascita 1999 non torna con eta' MCFlash 33"
+  },
+  "1750": {
+   "file": "Skill_Tecnico_FDC.pdf",
+   "nota": "Confermato dal collega il 14/10/2026: unico CV Full Stack libero (gli altri FDC sono di Felice Del Core); nascita 1995 non torna con eta' MCFlash 36"
+  },
+  "2093": {
+   "file": "Skill_Tecnico_AAL _MC.pdf",
+   "nota": "Sistemista Windows/Linux, Genova, nato 23/06/1995 (codice ALE in intestazione): indicato dall'utente"
+  },
+  "2423": {
+   "file": "Skill_Tecnico_AJD.pdf",
+   "nota": "Network Specialist, Pavia, nato 1990 (AJD = iniziali Allan Jay Duran)"
+  },
+  "2065": {
+   "document_id": "skill_tecnico_mva_mc",
+   "nota": "IT PM/PMO Torino nato 1996, gia' indicizzato da aprile come Skill_Tecnico_MVA_MC.pdf (lo zip ha un altro CV con lo stesso nome); il file del collega e' identico"
+  },
+  "2158": {
+   "file": "Skill_Tecnico_CCA.pdf",
+   "nota": "Data Engineer & Data Analyst, nata 1998 (27), 'coinvolta': era stata data a un CV Software Developer di Torino"
+  },
+  "2306": {
+   "file": "Skill_Tecnico__ASA_MC.pdf",
+   "nota": "Ruolo identico 'AI Engineer /Python - Data Scientist', Catania (cognome siciliano); scambiato con Sacchi"
+  },
+  "2378": {
+   "file": "Skill_Tecnico__ASA.pdf",
+   "nota": "AI Engineer, Pavia (vicino a Milano), 24 anni; scambiato con Salemi"
+  },
+  "1731": {
+   "nota": "Record doppio di Alessandro Facchini (vedi 2432): nessun CV. Skill_Tecnico_AFA_MC.pdf nell'indice e' un Help Desk nato 1974, non lui"
+  },
+  "2151": {
+   "file": "Skill_Tecnico_DFO_MC.pdf",
+   "nota": "Stessa persona dei due CV DFO di Cosenza: tenuto quello con ruolo identico a MCFlash"
+  },
+  "2504": {
+   "file": "Skill_Tecnico_ESA.pdf",
+   "nota": "Full Stack Napoli nato 2004 (22 anni come MCFlash); l'altro ESA e' un Java developer nato 2001"
+  },
+  "2016": {
+   "file": "Skill_tecnico_MPI.pdf",
+   "nota": "Analista Programmatore SAS, nato 1974 (52): era stato dato a Matteo Piazzi"
+  },
+  "2159": {
+   "file": "Skill_Tecnico_ MPI.pdf",
+   "nota": "Software Developer, Verona, 34 anni (codice MBI in intestazione)"
+  },
+  "2131": {
+   "file": "Skill_Tecnico_FJC.pdf",
+   "nota": "SAP Team Leader, Torino, 45 anni (codice FJC: secondo cognome)"
+  },
+  "2003": {
+   "file": "Skill_Tecnico_FDB.pdf",
+   "nota": "AI & ML Engineer, 30 anni (codice FDE in intestazione)"
+  },
+  "2246": {
+   "file": "Skill_Tecnico__GPE.pdf",
+   "nota": "Java Developer, Torino, 28 anni (trittico MCFlash GPA, cognome Peperna -> GPE)"
+  },
+  "2247": {
+   "file": "Skill_Tecnico_JSI_MC.pdf",
+   "nota": "Flutter Developer/Front-End, 33 anni (codice SCA in intestazione)"
+  },
+  "34": {
+   "file": "Skill_Tecnico_LEN_MC.pdf",
+   "nota": "Ruolo identico 'Scrum Master/Scala & Python Developer', 33 anni (codice LAE in intestazione)"
+  },
+  "2303": {
+   "file": "Skill_Tecnico_MSI_ENG_MC.pdf",
+   "nota": "QA/Automation Tester, Milano, 38 anni (MSI = Muhammad Saqib Iqbal)"
+  },
+  "2216": {
+   "file": "Skill_Tecnico_TMA.pdf",
+   "nota": "Ruolo identico PL/SQL Developer & Data Scientist, Roma, 27 anni (codice TMZ in intestazione)"
+  },
+  "2318": {
+   "file": "Skill_Tecnico_YLA.pdf",
+   "nota": "Mulesoft Developer, 28 anni (codice AAM in intestazione)"
+  },
+  "2525": {
+   "file": "Skill Tecnico_ TNZ _MC.pdf",
+   "nota": "Confermato dal collega il 14/10/2026: Data Scientist & Engineer, Torino, 31 anni (NZ = Nzeumi)"
+  },
+  "2471": {
+   "file": "Skill_Tecnico_VPE.pdf",
+   "nota": "Confermato dal collega il 14/10/2026: unico CV VPE, Full Stack Roma, ma nato 1987 (38) contro 24 anni su MCFlash"
+  },
+  "2329": {
+   "file": "Skill_Tecnico_ADP.pdf",
+   "nota": "Data Engineer Napoli, nato 2001 (codice ABI in intestazione)"
+  },
+  "2145": {
+   "file": "Skill_Tecnico_GMO.pdf",
+   "nota": "Confermato dal collega il 14/10/2026 (Moisa e' di Verona): Full Stack Verona, nato 1997 (codice TMO in intestazione)"
+  },
+  "2513": {
+   "file": "Skill Tecnico_MBA__MC.pdf",
+   "nota": "Confermato dal collega il 14/10/2026 (Bagheri e' di Bologna): Data Scientist Bologna, nato 1994 (codice MMA in intestazione)"
+  },
+  "2047": {
+   "file": "Skill_Tecnico_DFI_MC.pdf",
+   "nota": "Confermato dal collega il 14/10/2026: unico CV DFI, ruolo identico Scrum Master/PM Milano, ma nato 1994 (32) contro 39 anni su MCFlash"
+  },
+  "1723": {
+   "file": "Skill Tecnico_AMU_MC.pdf",
+   "nota": "CV fornito dal collega il 13/10/2026, rinominato (era Skill_tecnico_AMU_MC.pdf, nome gia' usato da un altro CV): Android Developer Torino, nato 1998"
+  },
+  "2006": {
+   "file": "Skill Tecnico_DRU.pdf",
+   "nota": "CV fornito dal collega il 13/10/2026, rinominato (era Skill_Tecnico_DRU.pdf, nome del CV di Donato Ruberto): SW Engineer & Functional Tester Bologna, nato 1994"
+  },
+  "2182": {
+   "file": "Skill Tecnico_GFA.pdf",
+   "nota": "CV fornito dal collega il 13/10/2026, rinominato (era Skill_Tecnico_GFA.pdf, nome gia' usato da un altro CV): Mobile Developer Venezia, nata 1993"
+  },
+  "1681": {
+   "file": "Skill Tecnico_FGU_MC.pdf",
+   "nota": "CV fornito dal collega il 13/10/2026: AM Specialist & Full Stack Developer Perugia, nato 1987"
+  },
+  "1705": {
+   "file": "Skill_Tecnico_MSO_MC.pdf",
+   "nota": "CV fornito dal collega il 13/10/2026: Software Developer Brindisi, nato 1990"
+  },
+  "2177": {
+   "file": "Skill_Tecnico_MDU.pdf",
+   "nota": "Gia' nello zip (codice MDU), confermato dal collega: SW Developer & ML Engineer Genova, nato 1998"
+  }
+ }
+}

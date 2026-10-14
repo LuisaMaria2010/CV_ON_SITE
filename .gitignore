@@ -105,3 +105,7 @@ local.settings.json
 
 # Deploy artifacts
 deploy.zipeval_e2e_runs/
+
+# Abbinamento CV <-> MCFlash: contengono nomi e dati dei candidati, restano in locale
+scripts/cv_mcflash_map_*report*.json
+confronto_cv_mcflash_prod_*.xlsx

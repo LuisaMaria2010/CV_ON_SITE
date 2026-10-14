@@ -185,3 +185,48 @@ def test_short_text_same_document_is_still_a_no_op(patch_table_classes):
     proc, _ = reg.should_process("/incoming-cv/skill-tecnico_aaa_mc.docx", "h-template",
                                  document_id="skill-tecnico_aaa_mc", text_chars=71)
     assert proc is False
+
+
+def _row(doc_id, source_path, version=1):
+    return {"PartitionKey": source_path.lower().replace("/", "_"), "RowKey": doc_id, "document_id": doc_id,
+            "source_path": source_path, "version": version, "hash": f"h-{source_path}"}
+
+
+def test_resolve_document_id_new_file_keeps_cleaned_id(patch_table_classes):
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    assert reg.resolve_document_id("Skill_Tecnico_FFE.pdf", "/incoming-cv/Skill_Tecnico_FFE.pdf",
+                                   lambda p: True) == "Skill_Tecnico_FFE"
+
+
+def test_resolve_document_id_same_file_keeps_its_id(patch_table_classes):
+    patch_table_classes.entities.append(_row("skill_tecnico_ffe", "/incoming-cv/Skill_Tecnico_FFE.pdf", 2))
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    assert reg.resolve_document_id("Skill_Tecnico_FFE.pdf", "/incoming-cv/Skill_Tecnico_FFE.pdf",
+                                   lambda p: True) == "Skill_Tecnico_FFE"
+
+
+def test_resolve_document_id_collision_uses_original_file_name(patch_table_classes):
+    # "FFE .pdf" e "FFE.pdf" sono due persone: ripulito sarebbe lo stesso id.
+    patch_table_classes.entities.append(_row("skill_tecnico_ffe", "/incoming-cv/Skill_Tecnico_FFE.pdf"))
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    assert reg.resolve_document_id("Skill_Tecnico_FFE .pdf", "/incoming-cv/Skill_Tecnico_FFE .pdf",
+                                   lambda p: True) == "Skill_Tecnico_FFE .pdf"
+
+
+def test_resolve_document_id_file_overwritten_before_gets_original_name(patch_table_classes):
+    # Caso di aprile: il gemello ha sovrascritto questo file (versione piu' alta).
+    patch_table_classes.entities += [_row("skill_tecnico_dca_mc", "/incoming-cv/Skill_tecnico_DCA_MC.pdf", 1),
+                                      _row("skill_tecnico_dca_mc", "/incoming-cv/Skill_Tecnico_DCA_MC_.pdf", 2)]
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    assert reg.resolve_document_id("Skill_tecnico_DCA_MC.pdf", "/incoming-cv/Skill_tecnico_DCA_MC.pdf",
+                                   lambda p: True) == "Skill_tecnico_DCA_MC.pdf"
+    assert reg.resolve_document_id("Skill_Tecnico_DCA_MC_.pdf", "/incoming-cv/Skill_Tecnico_DCA_MC_.pdf",
+                                   lambda p: True) == "Skill_Tecnico_DCA_MC"  # id che ha gia'
+
+
+def test_resolve_document_id_replacement_keeps_cleaned_id(patch_table_classes):
+    # X.pdf sostituito da X.docx (il vecchio file non c'e' piu'): nuova versione dello stesso documento.
+    patch_table_classes.entities.append(_row("skill_tecnico_fpa", "/incoming-cv/Skill_Tecnico_FPA.pdf"))
+    reg = registry_mod.DocumentRegistry(connection_string="x", table_name="t")
+    assert reg.resolve_document_id("Skill_Tecnico_FPA.docx", "/incoming-cv/Skill_Tecnico_FPA.docx",
+                                   lambda p: False) == "Skill_Tecnico_FPA"

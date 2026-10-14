@@ -239,12 +239,20 @@ async def _step_indice(op: dict, draft: dict, deps: CommitDeps) -> str:
 
 
 async def _step_mappa(op: dict, draft: dict, deps: CommitDeps) -> str:
-    doc = deps.registry_docs().get(op["document_id"]) or {}
     expected_source = f"/{settings.storage_container_incoming}/{op['incoming_blob']}"
-    previous = int(op.get("previous_version") or 0)
+    # Il document_id lo decide l'ingestione (DocumentRegistry.resolve_document_id):
+    # di norma quello previsto, ma se il nome ripulito e' gia' di un altro CV e'
+    # il nome file originale. Si cerca quindi la riga del file caricato.
+    docs = deps.registry_docs()
+    document_id, doc = op["document_id"], docs.get(op["document_id"]) or {}
+    if doc.get("source_path") != expected_source:
+        document_id, doc = next(((k, d) for k, d in docs.items() if d.get("source_path") == expected_source),
+                                (document_id, {}))
+    previous = int(op.get("previous_version") or 0) if document_id == op["document_id"] else 0
     if (doc.get("source_path") != expected_source or doc.get("status") != "processed"
             or int(doc.get("version") or 0) <= previous):
         return WAITING  # l'ingestione non ha ancora indicizzato il nuovo file
+    op["document_id"] = document_id
     for entry in deps.map_entries():
         other = deps.normalize_doc_id(entry.get("document_id") or "")
         if entry.get("id_mcflash") == str(op["id_mcflash"]) and other != op["document_id"]:
