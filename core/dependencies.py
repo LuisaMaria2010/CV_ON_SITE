@@ -30,10 +30,12 @@ def get_mcflash_candidates_client() -> MCFlashCandidatesClient:
         "MCFLASH_CANDIDATES_URL",
         default="https://mcflashcandidati.mcengineering.eu/api/Candidati",
     )
+    # Solo dalle impostazioni (app settings / local.settings.json): senza chiave
+    # il client fallisce con "Missing MCFlash API key".
     api_key = settings_value(
         "MCFLASH_CANDIDATI_API_KEY",
         "MCFLASH_CANDIDATES_API_KEY",
-        default="MCFlash-Candidati-2026!",
+        default="",
     )
 
     _mcflash_candidates_client = MCFlashCandidatesClient(
