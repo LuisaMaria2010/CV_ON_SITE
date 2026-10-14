@@ -256,3 +256,14 @@ def test_steps_are_logged_with_operation_id(caplog):
     assert len(events) == 4  # blob, mcflash, indice ok; mappa in attesa
     assert all("'operation_id': '" + "o" * 32 + "'" in e and "req-123" in e for e in events)
     assert op["last_request_id"] == "req-123"
+
+
+def test_mappa_follows_the_document_id_chosen_by_ingestion():
+    # Il nome ripulito e' gia' di un altro CV: l'ingestione indicizza con il nome file originale.
+    world, draft = _World(), _draft()
+    op = _run(cv_commit.new_operation("o" * 32, draft, None), draft, world)
+    world.docs["skill tecnico_mro_mc engineering.docx"] = {
+        "version": 1, "status": "processed", "source_path": f"/incoming-cv/{op['incoming_blob']}"}
+    op = _run(op, draft, world)
+    assert op["status"] == "completata" and op["document_id"] == "skill tecnico_mro_mc engineering.docx"
+    assert list(world.map) == ["skill tecnico_mro_mc engineering.docx"]
