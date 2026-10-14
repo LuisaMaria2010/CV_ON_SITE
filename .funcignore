@@ -9,3 +9,7 @@ test_docs_md/
 *.sln
 *.md
 local.settings.json
+.venv_agents
+tests/
+eval_e2e_runs/
+deploy.zip
