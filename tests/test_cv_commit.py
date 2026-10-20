@@ -267,3 +267,39 @@ def test_mappa_follows_the_document_id_chosen_by_ingestion():
     op = _run(op, draft, world)
     assert op["status"] == "completata" and op["document_id"] == "skill tecnico_mro_mc engineering.docx"
     assert list(world.map) == ["skill tecnico_mro_mc engineering.docx"]
+
+
+def test_fake_writer_hide_hides_the_record():
+    writer = FakeMCFlashWriter(_Table())
+    created = writer.create({"nome": "ABC", "nomi": "Anna Bianchi"})
+    writer.update("42", {"sede": "Roma"})
+    writer.hide("42", user="tester")
+    writer.hide(created)
+    records = [{"id": 42, "nome": "DCA", "nomi": "Davide Carli"}, {"id": 7, "nome": "MRO", "nomi": "Mario Rossi"}]
+    assert [str(r["id"]) for r in overlay_records(records, writer.rows())] == ["7"]
+    row = writer.table.get_entity("candidati", "42")
+    assert row["op"] == "nascondi" and row["user"] == "tester" and json.loads(row["record_json"])["sede"] == "Roma"
+
+
+def test_http_writer_hide_uses_the_configured_command(monkeypatch):
+    from infra import mcflash_writer
+    sent = []
+
+    class _Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+        def read(self):
+            return b""
+
+    monkeypatch.setattr(mcflash_writer, "urlopen", lambda req, timeout=None: sent.append(req) or _Resp())
+    writer = mcflash_writer.HttpMCFlashWriter("https://mcflash/api/Candidati/", "k",
+                                              hide_url="https://mcflash/api/Candidati/{id}/nascondi")
+    writer.hide("1884")
+    assert sent[0].get_method() == "POST" and sent[0].full_url == "https://mcflash/api/Candidati/1884/nascondi"
+    assert sent[0].data is None and sent[0].headers["X-api-key"] == "k"
+    with pytest.raises(mcflash_writer.MCFlashWriteError, match="non configurato"):
+        mcflash_writer.HttpMCFlashWriter("https://mcflash/api/Candidati", "k").hide("1884")

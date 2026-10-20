@@ -96,6 +96,21 @@ def trittico_from_full_name(full_name: str | None) -> str | None:
     return trittico(*split_full_name(full_name))
 
 
+def possible_tritticos(full_name: str | None) -> list[str]:
+    """Tutti i trittici possibili di un nome completo: ogni divisione tra nome e
+    cognome, anche con il cognome davanti. "Luisa Maria Serrano" -> LSE (nome
+    "Luisa Maria"), LMA (cognome "Maria Serrano"), SLU e SLM...: con i nomi
+    composti non si sa dove finisce il nome."""
+    words = (full_name or "").split()
+    out: list[str] = []
+    for i in range(1, len(words)):
+        first, last = " ".join(words[:i]), " ".join(words[i:])
+        for tri in (trittico(first, last), trittico(last, first)):
+            if tri and tri not in out:
+                out.append(tri)
+    return out
+
+
 def _stem_key(filename: str) -> str:
     """Chiave di confronto: solo il nome (no cartelle, no estensione), NFC, casefold."""
     name = PurePosixPath((filename or "").replace("\\", "/")).name

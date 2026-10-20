@@ -11,7 +11,9 @@ le sue righe ai record letti dall'API (i candidati creati compaiono nella lista,
 gli aggiornamenti si vedono subito). La ricerca non lo usa: lavora solo su MCFlash.
 
 Righe della tabella finta: PartitionKey "candidati", RowKey = Id MCFlash;
-campi: op ("crea" | "aggiorna"), record_json, created_at, updated_at, user.
+campi: op ("crea" | "aggiorna" | "nascondi"), record_json, created_at, updated_at, user.
+Un candidato "nascondi" non compare piu' (overlay_records), come quelli che
+MCFlash nasconde: la dashboard legge MCFlash e non li vede.
 Gli Id creati partono da FAKE_ID_START, cosi' non si confondono con quelli veri.
 """
 from __future__ import annotations
@@ -49,6 +51,8 @@ class MCFlashWriter(Protocol):
     def create(self, record: dict[str, Any], *, user: str | None = None) -> str: ...
 
     def update(self, id_mcflash: str, record: dict[str, Any], *, user: str | None = None) -> None: ...
+
+    def hide(self, id_mcflash: str, *, user: str | None = None) -> None: ...
 
 
 def _now() -> str:
@@ -116,7 +120,23 @@ class FakeMCFlashWriter:
         })
         logger.info("MCFlash finto: aggiornato candidato id=%s", id_mcflash)
 
+    def hide(self, id_mcflash: str, *, user: str | None = None) -> None:
+        """Nasconde il candidato: la riga resta, segnata "nascondi", e la lista non lo mostra piu'."""
+        existing = None
+        try:
+            existing = self.table.get_entity(PARTITION_KEY, str(id_mcflash))
+        except Exception:
+            existing = None
+        now = _now()
+        self.table.upsert_entity({
+            "PartitionKey": PARTITION_KEY, "RowKey": str(id_mcflash), "op": "nascondi",
+            "record_json": (existing or {}).get("record_json") or "{}",
+            "created_at": (existing or {}).get("created_at") or now, "updated_at": now, "user": user or "",
+        })
+        logger.info("MCFlash finto: nascosto candidato id=%s", id_mcflash)
+
     def delete(self, id_mcflash: str) -> None:
+        """Toglie la riga dalla tabella finta (pulizia): un candidato nascosto ricompare."""
         self.table.delete_entity(PARTITION_KEY, str(id_mcflash))
 
 
@@ -124,8 +144,11 @@ def overlay_records(records: list[dict[str, Any]], fake_rows: list[dict[str, Any
     """Record MCFlash con sopra le scritture del finto: aggiornamenti fusi, creati aggiunti."""
     by_id = {str(r.get("id") or r.get("Id")): r for r in records}
     out = list(records)
+    removed = {str(row.get("RowKey")) for row in fake_rows if row.get("op") == "nascondi"}
     for row in fake_rows:
         rid = str(row.get("RowKey"))
+        if rid in removed:
+            continue
         data = json.loads(row.get("record_json") or "{}")
         data.pop("email", None)
         data.pop("telefono", None)
@@ -136,7 +159,7 @@ def overlay_records(records: list[dict[str, Any]], fake_rows: list[dict[str, Any
         elif row.get("op") == "crea":
             out.append({"id": int(rid) if rid.isdigit() else rid, **data,
                         "abilitato": True, "isTalentUp": False, "finto": True})
-    return out
+    return [r for r in out if str(r.get("id") or r.get("Id")) not in removed]
 
 
 # ---------------------------------------------------------------- reale
@@ -144,15 +167,23 @@ def overlay_records(records: list[dict[str, Any]], fake_rows: list[dict[str, Any
 class HttpMCFlashWriter:
     """Endpoint di scrittura MCFlash. Payload e risposta sono un'ipotesi da
     verificare quando arriva la specifica: POST <url> crea e restituisce
-    {"id": ...}; PUT <url>/<id> aggiorna. Stessa autenticazione della lettura."""
+    {"id": ...}; PUT <url>/<id> aggiorna. Stessa autenticazione della lettura.
+
+    Nascondere un candidato e' un comando di MCFlash: l'indirizzo e' in
+    MCFLASH_CANDIDATI_HIDE_URL, con {id} al posto dell'Id MCFlash (metodo in
+    MCFLASH_CANDIDATI_HIDE_METHOD, default POST). Finche' manca, nascondere da'
+    errore invece di tirare a indovinare."""
 
     mode = "reale"
 
-    def __init__(self, url: str, api_key: str, timeout_seconds: int = 30):
+    def __init__(self, url: str, api_key: str, timeout_seconds: int = 30, hide_url: str = "",
+                 hide_method: str = "POST"):
         self.url, self.api_key, self.timeout = url.rstrip("/"), api_key, timeout_seconds
+        self.hide_url, self.hide_method = hide_url, (hide_method or "POST").upper()
 
-    def _send(self, method: str, url: str, record: dict[str, Any]) -> Any:
-        req = Request(url, method=method, data=json.dumps(_compact(record)).encode("utf-8"),
+    def _send(self, method: str, url: str, record: dict[str, Any] | None) -> Any:
+        data = json.dumps(_compact(record)).encode("utf-8") if record is not None else None
+        req = Request(url, method=method, data=data,
                       headers={"X-Api-Key": self.api_key, "Content-Type": "application/json",
                                "Accept": "application/json"})
         try:
@@ -175,9 +206,17 @@ class HttpMCFlashWriter:
     def update(self, id_mcflash: str, record: dict[str, Any], *, user: str | None = None) -> None:
         self._send("PUT", f"{self.url}/{id_mcflash}", record)
 
+    def hide(self, id_mcflash: str, *, user: str | None = None) -> None:
+        if not self.hide_url:
+            raise MCFlashWriteError("comando MCFlash per nascondere un candidato non configurato "
+                                    "(MCFLASH_CANDIDATI_HIDE_URL)")
+        self._send(self.hide_method, self.hide_url.replace("{id}", str(id_mcflash)), None)
+
 
 def get_writer() -> MCFlashWriter:
     url = settings_value("MCFLASH_CANDIDATI_WRITE_URL", default="")
     if url:
-        return HttpMCFlashWriter(url, settings_value("MCFLASH_CANDIDATI_WRITE_API_KEY", default=""))
+        return HttpMCFlashWriter(url, settings_value("MCFLASH_CANDIDATI_WRITE_API_KEY", default=""),
+                                 hide_url=settings_value("MCFLASH_CANDIDATI_HIDE_URL", default=""),
+                                 hide_method=settings_value("MCFLASH_CANDIDATI_HIDE_METHOD", default="POST"))
     return FakeMCFlashWriter()

@@ -113,7 +113,7 @@ def get_cv_mcflash_map() -> dict[str, str]:
 
 
 def read_file_entries() -> list[dict[str, str]]:
-    """Righe della tabella con il nome file: [{document_id, id_mcflash, file}].
+    """Righe della tabella con il nome file: [{document_id, id_mcflash, file, codice}].
 
     Lettura diretta, senza cache: serve alla dashboard per proporre il nome
     del CV e trovare il file attuale di un candidato, non alla ricerca.
@@ -121,12 +121,13 @@ def read_file_entries() -> list[dict[str, str]]:
     client = get_table_client()
     rows: list[dict[str, str]] = []
     for entity in client.query_entities(
-        f"PartitionKey eq '{PARTITION_KEY}'", select=["RowKey", "id_mcflash", "file"]
+        f"PartitionKey eq '{PARTITION_KEY}'", select=["RowKey", "id_mcflash", "file", "codice"]
     ):
         rows.append({
             "document_id": str(entity.get("RowKey") or ""),
             "id_mcflash": str(entity.get("id_mcflash") or ""),
             "file": str(entity.get("file") or ""),
+            "codice": str(entity.get("codice") or ""),
         })
     return rows
 

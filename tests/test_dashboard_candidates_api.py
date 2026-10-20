@@ -1,4 +1,4 @@
-"""Tests per GET /api/candidates, GET /api/candidates/{id} e POST /api/candidates/match.
+"""Tests per GET /api/candidates, GET /api/candidates/{id}, GET /api/candidates/{id}/cv e POST /api/candidates/match.
 
 MCFlash, CvMcflashMap e DocumentRegistry sono sostituiti da finti in memoria.
 """
@@ -35,7 +35,8 @@ class _FakeRegistry:
         return document_id.lower()
 
     def list_documents(self):
-        return {"skill_tecnico_dca_mc": {"version": 3, "status": "processed"}}
+        return {"skill_tecnico_dca_mc": {"version": 3, "status": "processed",
+                                         "source_path": "/incoming-cv/Skill_Tecnico_DCA_MC.docx"}}
 
 
 @pytest.fixture
@@ -76,7 +77,8 @@ def test_list_only_eligible_with_cv_info(fakes):
     assert [r["id"] for r in data["items"]] == ["2", "1", "3"]  # ordine per nome
     davide = next(r for r in data["items"] if r["id"] == "1")
     assert davide["cv"] == {"document_id": "Skill_Tecnico_DCA_MC", "file": "Skill_Tecnico_DCA_MC.pdf",
-                            "version": 3, "status": "processed"}
+                            "version": 3, "status": "processed",
+                            "source_path": "/incoming-cv/Skill_Tecnico_DCA_MC.docx"}
     assert data["warnings"] == []
 
 
@@ -151,3 +153,68 @@ def test_mcflash_down_is_502(fakes, monkeypatch):
     status, env = _call(api.candidates, _get("/api/candidates"))
     assert status == 502
     assert env["error"].startswith("MCFlash non raggiungibile")
+
+
+class _FakeStorage:
+    def __init__(self, blobs):
+        self.blobs, self.calls = blobs, []
+
+    async def download_bytes(self, blob_name, container=None):
+        self.calls.append((container, blob_name))
+        if (container, blob_name) not in self.blobs:
+            from azure.core.exceptions import ResourceNotFoundError
+            raise ResourceNotFoundError("missing")
+        return self.blobs[(container, blob_name)]
+
+
+def test_candidate_cv_file(fakes, monkeypatch):
+    store = _FakeStorage({("incoming-cv", "Skill_Tecnico_DCA_MC.docx"): b"DOCX"})
+    monkeypatch.setattr(api, "storage", store)
+    resp = asyncio.run(api.candidate_cv(_get("/api/candidates/1/cv", route_params={"id": "1"})))
+    assert resp.status_code == 200 and resp.get_body() == b"DOCX"
+    assert resp.mimetype.endswith("wordprocessingml.document")
+    assert 'filename="Skill_Tecnico_DCA_MC.docx"' in resp.headers["Content-Disposition"]
+
+
+def test_candidate_cv_not_found(fakes, monkeypatch):
+    monkeypatch.setattr(api, "storage", _FakeStorage({}))
+    assert _call(api.candidate_cv, _get("/api/candidates/3/cv", route_params={"id": "3"}))[0] == 404  # senza CV
+    assert _call(api.candidate_cv, _get("/api/candidates/1/cv", route_params={"id": "1"}))[0] == 404  # blob assente
+    assert _call(api.candidate_cv, _get("/api/candidates/99/cv", route_params={"id": "99"}))[0] == 404
+
+
+def test_blob_location_falls_back_to_map_file():
+    assert api._blob_location({"source_path": "/incoming-cv/a/b.pdf"}) == ("incoming-cv", "a/b.pdf")
+    assert api._blob_location({"source_path": None, "file": "x.pdf"}) == (api.settings.storage_container_incoming, "x.pdf")
+
+
+class _FakeWriter:
+    def __init__(self, fail=False):
+        self.removed, self.fail = [], fail
+
+    def hide(self, id_mcflash, *, user=None):
+        if self.fail:
+            from infra.mcflash_writer import MCFlashWriteError
+            raise MCFlashWriteError("HTTP 405")
+        self.removed.append((id_mcflash, user))
+
+
+def _hide(id_, user=None):
+    return func.HttpRequest(method="POST", url=f"/api/candidates/{id_}/nascondi", body=b"",
+                            params={"user": user} if user else {}, route_params={"id": str(id_)})
+
+
+def test_hide_candidate_on_mcflash(fakes, monkeypatch):
+    writer = _FakeWriter()
+    monkeypatch.setattr(api, "get_writer", lambda: writer)
+    status, env = _call(api.candidate_hide, _hide(1, user="tester"))
+    assert status == 200 and env["data"] == {"id": "1", "nascosto": True, "modalita": "reale"}
+    assert writer.removed == [("1", "tester")]
+    assert api._records_cache is None  # la prossima lista rilegge MCFlash
+    assert _call(api.candidate_hide, _hide(999))[0] == 404
+
+
+def test_hide_candidate_mcflash_error(fakes, monkeypatch):
+    monkeypatch.setattr(api, "get_writer", lambda: _FakeWriter(fail=True))
+    status, env = _call(api.candidate_hide, _hide(1))
+    assert status == 502 and "MCFlash non ha nascosto il candidato" in env["error"]

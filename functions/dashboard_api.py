@@ -27,6 +27,32 @@ GET /api/candidates
 GET /api/candidates/{id}
     Riga di un candidato (anche non idoneo), per pre-impostare la pagina Aggiorna.
 
+POST /api/candidates/{id}/nascondi
+    Nasconde il candidato su MCFlash (comando di MCFlash, vedi infra/mcflash_writer.py):
+    MCFlash non lo restituisce piu', quindi sparisce anche dalla dashboard. Con il
+    MCFlash finto il candidato e' segnato nella tabella e non compare piu'. CV,
+    indice e tabella CV -> MCFlash restano come sono.
+    Query/body: user (opzionale). Output: {id, nascosto, modalita}
+
+GET /api/candidates/{id}/cv
+    Il file del CV indicizzato del candidato (PDF/DOCX, come byte), per l'anteprima
+    nella home. 404 se il candidato non ha un CV o il file non e' nello storage.
+
+POST /api/cv-finder
+    Body: {id_mcflash} oppure {nome, cognome, trittico?, ruolo?, eta?, sede?, seniority?},
+    modo (codice|esteso), escludi (document_id gia' mostrati). CV dell'archivio
+    della persona con le regole della ricostruzione della tabella CV -> MCFlash
+    (services/cv_finder.py, domain/cv_matching.py).
+    Output: {persona, modo, esito: {decisione, motivo, document_id, file} | null,
+             risultati: [...], warnings}
+
+GET /api/cv/file?document_id=
+    Il file di un CV dell'indice (byte), per l'anteprima dei risultati.
+
+POST /api/cv-finder/link
+    Body: {id_mcflash, document_id, user?}. Collega un CV gia' indicizzato a un
+    candidato senza CV; rifiuta se il CV e' di un altro candidato.
+
 POST /api/candidates/match
     Body: {nome, cognome, trittico?} (oppure nome_completo). Il trittico, se manca,
     si calcola da nome e cognome. Regola in domain/candidate_match.py.
@@ -36,16 +62,19 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import time
 from pathlib import PurePosixPath
 from typing import Any
 
 import azure.functions as func
+from azure.core.exceptions import ResourceNotFoundError
 
 from core.config import settings
 from core.dependencies import get_mcflash_candidates_client, storage
 from core.errors import InvalidInputError, NotFoundError, UpstreamServiceError
 from domain.candidate_identity import (
+    possible_tritticos,
     propose_cv_filename,
     split_full_name,
     trittico as compute_trittico,
@@ -54,9 +83,10 @@ from domain.candidate_match import candidate_row, filter_rows, match_candidate, 
 from domain.mc_levels import LANGUAGE_LEVELS, SKILL_LEVELS
 from domain.role_catalog import display_role, load_catalog
 from infra import cv_mcflash_map
+from services import cv_finder
 from infra.document_registry import DocumentRegistry
 from infra.mcflash_candidates import MCFlashApiError, MCFlashCandidatesClient
-from infra.mcflash_writer import FakeMCFlashWriter, get_writer, overlay_records
+from infra.mcflash_writer import FakeMCFlashWriter, MCFlashWriteError, get_writer, overlay_records
 from utils.app_settings import settings_value
 from utils.http_errors import http_error_handler
 from utils.http_params import body_params, parse_bool
@@ -74,6 +104,12 @@ _records_cache: list[dict[str, Any]] | None = None
 _records_loaded_at = 0.0
 
 _registry: DocumentRegistry | None = None
+
+_CV_CONTENT_TYPES = {
+    ".pdf": "application/pdf",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ".doc": "application/msword",
+}
 
 
 def _records_ttl_seconds() -> float:
@@ -159,6 +195,7 @@ def _cv_by_mcflash_id(warnings: list[str]) -> dict[str, dict[str, Any]]:
             "file": entry["file"],
             "version": doc.get("version"),
             "status": doc.get("status"),
+            "source_path": doc.get("source_path"),
         }
     return out
 
@@ -290,6 +327,151 @@ async def candidate_detail(req: func.HttpRequest):
     if row is None:
         raise NotFoundError(f"Candidato MCFlash {wanted} non trovato")
     return {**row, "warnings": warnings}
+
+
+@bp.route(route="candidates/{id:int}/nascondi", methods=["POST"])
+@http_error_handler
+async def candidate_hide(req: func.HttpRequest):
+    wanted = str(req.route_params.get("id") or "").strip()
+    rows, _ = await _candidate_rows(refresh=True)
+    row = next((r for r in rows if r["id"] == wanted), None)
+    if row is None:
+        raise NotFoundError(f"Candidato MCFlash {wanted} non trovato")
+    user = req.params.get("user") or body_params(req).get("user")
+    writer = get_writer()
+    try:
+        await asyncio.to_thread(writer.hide, wanted, user=user)
+    except MCFlashWriteError as exc:
+        raise UpstreamServiceError(f"MCFlash non ha nascosto il candidato: {exc}") from exc
+    invalidate_candidates_cache()
+    mode = "finto" if isinstance(writer, FakeMCFlashWriter) else "reale"
+    logger.info("Dashboard: candidate hidden id=%s mode=%s user=%s cv=%s", wanted, mode, user,
+                (row.get("cv") or {}).get("document_id"))
+    return {"id": wanted, "nascosto": True, "modalita": mode}
+
+
+def _blob_location(cv: dict[str, Any]) -> tuple[str, str]:
+    """(container, blob) del CV: dal source_path del registro ("/incoming-cv/<blob>"),
+    altrimenti il nome file della mappa nel container dei CV in ingresso."""
+    source = str(cv.get("source_path") or "").strip("/")
+    container, sep, blob = source.partition("/")
+    if sep and blob:
+        return container, blob
+    return settings.storage_container_incoming, str(cv.get("file") or "")
+
+
+@bp.route(route="candidates/{id:int}/cv", methods=["GET"])
+@http_error_handler
+async def candidate_cv(req: func.HttpRequest):
+    wanted = str(req.route_params.get("id") or "").strip()
+    rows, _ = await _candidate_rows()
+    row = next((r for r in rows if r["id"] == wanted), None)
+    if row is None:
+        raise NotFoundError(f"Candidato MCFlash {wanted} non trovato")
+    if not row.get("cv"):
+        raise NotFoundError(f"Il candidato {wanted} non ha un CV indicizzato")
+    return await _cv_file_response(*_blob_location(row["cv"]))
+
+
+async def _cv_file_response(container: str, blob: str) -> func.HttpResponse:
+    """Il file del CV come byte, con il nome nell'intestazione Content-Disposition."""
+    if not blob:
+        raise NotFoundError("File del CV sconosciuto")
+    try:
+        data = await storage.download_bytes(blob, container=container)
+    except ResourceNotFoundError as exc:
+        raise NotFoundError(f"CV «{blob}» non trovato nello storage") from exc
+    filename = PurePosixPath(blob).name
+    content_type = _CV_CONTENT_TYPES.get(PurePosixPath(filename).suffix.lower(), "application/octet-stream")
+    safe = re.sub(r'[^A-Za-z0-9._ -]', "_", filename)
+    return func.HttpResponse(body=data, status_code=200, mimetype=content_type,
+                             headers={"Content-Disposition": f'inline; filename="{safe}"'})
+
+
+# ---------------------------------------------------------------- ricerca dei CV nell'archivio
+
+def _person_from_body(body: dict[str, Any]) -> dict[str, Any]:
+    first = str(body.get("nome") or "").strip()
+    last = str(body.get("cognome") or "").strip()
+    full = " ".join(p for p in (first, last) if p) or str(body.get("nome_completo") or "").strip()
+    if not (first or last) and full:
+        first, last = (part or "" for part in split_full_name(full))
+    tri = str(body.get("trittico") or "").strip().upper() or compute_trittico(first, last) or ""
+    if not (tri or body.get("ruolo")):
+        raise InvalidInputError("Servono almeno nome e cognome (per il codice) oppure il ruolo")
+    # Prima il codice di nome + cognome come scritti, poi le altre divisioni del nome completo.
+    codici = [c for c in [tri, *possible_tritticos(full)] if c]
+    return {"id_mcflash": None, "nome": full or None, "trittico": tri, "codici": list(dict.fromkeys(codici)),
+            "ruolo": body.get("ruolo"), "eta": body.get("eta"), "sede": body.get("sede"),
+            "seniority": body.get("seniority")}
+
+
+@bp.route(route="cv-finder", methods=["POST"])
+@http_error_handler
+async def cv_finder_search(req: func.HttpRequest):
+    body = body_params(req)
+    mode = str(body.get("modo") or "codice").strip().lower()
+    if mode not in cv_finder.MODES:
+        raise InvalidInputError(f"'modo' deve essere uno di: {', '.join(cv_finder.MODES)}")
+    rows, warnings = await _candidate_rows()
+    names = {r["id"]: r["nome_completo"] for r in rows}
+    if body.get("id_mcflash") not in (None, ""):
+        wanted = str(body["id_mcflash"]).strip()
+        row = next((r for r in rows if r["id"] == wanted), None)
+        if row is None:
+            raise NotFoundError(f"Candidato MCFlash {wanted} non trovato")
+        person = cv_finder.person_from_row(row)
+    else:
+        person = _person_from_body(body)
+    entries = await asyncio.to_thread(cv_mcflash_map.read_file_entries)
+    linked = cv_finder.linked_owners(entries, names.get)
+    exclude = {str(d) for d in body.get("escludi") or []}
+    docs = await cv_finder.documents(entries)
+    found = await cv_finder.find(person, mode=mode, exclude=exclude, linked=linked, docs=docs)
+    return {"persona": person, "modo": mode, **found, "warnings": warnings}
+
+
+@bp.route(route="cv/file", methods=["GET"])
+@http_error_handler
+async def cv_file(req: func.HttpRequest):
+    wanted = str(req.params.get("document_id") or "").strip().lower()
+    if not wanted:
+        raise InvalidInputError("Serve 'document_id'")
+    entries = await asyncio.to_thread(cv_mcflash_map.read_file_entries)
+    doc = next((d for d in await cv_finder.documents(entries)
+                if cv_finder._key(d["document_id"]) == cv_finder._key(wanted)), None)
+    if doc is None:
+        raise NotFoundError(f"CV {wanted} non trovato nell'archivio")
+    return await _cv_file_response(*_blob_location(doc))
+
+
+@bp.route(route="cv-finder/link", methods=["POST"])
+@http_error_handler
+async def cv_finder_link(req: func.HttpRequest):
+    """Collega un CV gia' indicizzato a un candidato che non ne ha uno (riga in CvMcflashMap)."""
+    body = body_params(req)
+    wanted = str(body.get("id_mcflash") or "").strip()
+    doc_id = str(body.get("document_id") or "").strip().lower()
+    if not wanted or not doc_id:
+        raise InvalidInputError("Servono 'id_mcflash' e 'document_id'")
+    rows, _ = await _candidate_rows()
+    row = next((r for r in rows if r["id"] == wanted), None)
+    if row is None:
+        raise NotFoundError(f"Candidato MCFlash {wanted} non trovato")
+    if row.get("cv"):
+        raise InvalidInputError("Il candidato ha gia' un CV: per sostituirlo usa la pagina Aggiorna")
+    entries = await asyncio.to_thread(cv_mcflash_map.read_file_entries)
+    doc = next((d for d in await cv_finder.documents(entries)
+                if cv_finder._key(d["document_id"]) == cv_finder._key(doc_id)), None)
+    if doc is None:
+        raise NotFoundError(f"CV {doc_id} non trovato nell'archivio")
+    owner = next((e["id_mcflash"] for e in entries if cv_finder._key(e["document_id"]) == cv_finder._key(doc_id)), None)
+    if owner and owner != wanted:
+        raise InvalidInputError(f"Il CV e' gia' collegato al candidato {owner}")
+    entity = await asyncio.to_thread(cv_mcflash_map.upsert_entry, doc["document_id"], wanted, file=doc["file"],
+                                     codice=str(row.get("trittico") or ""), criterio="dashboard-ricerca")
+    logger.info("CV finder: linked document_id=%s id_mcflash=%s user=%s", doc["document_id"], wanted, body.get("user"))
+    return {"id_mcflash": wanted, "document_id": entity["RowKey"], "file": entity["file"]}
 
 
 @bp.route(route="candidates/match", methods=["POST"])

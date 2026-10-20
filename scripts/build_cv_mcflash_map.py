@@ -32,6 +32,11 @@ Uso:
     python scripts/build_cv_mcflash_map.py --dry-run --report out.json
     python scripts/build_cv_mcflash_map.py --reuse-report out.json   # stessi giudizi LLM del dry-run
     python scripts/build_cv_mcflash_map.py --cv-dir "<cartella CV>"  # intestazione dai file originali
+    python scripts/build_cv_mcflash_map.py --tutti ...   # anche record disabilitati e TalentUp
+
+Con --tutti si collegano anche i record fuori dal perimetro dell'agente: la
+ricerca resta comunque limitata ai record idonei (filter_candidates), quindi i
+loro CV non compaiono nelle risposte, ma la dashboard li mostra.
 """
 from __future__ import annotations
 
@@ -67,46 +72,19 @@ from core.dependencies import get_mcflash_candidates_client  # noqa: E402
 from infra.mcflash_candidates import MCFlashCandidatesClient  # noqa: E402
 from services.search_pipeline import _normalise_person_key  # noqa: E402
 from domain.normalizer import TextNormalizer  # noqa: E402
+from domain import cv_matching as cm  # noqa: E402
 from utils.site import site_key  # noqa: E402
 
 MAP_PATH = root / "scripts" / "cv_mcflash_map.json"
-OVERRIDES_PATH = root / "scripts" / "cv_mcflash_map_overrides.json"
+OVERRIDES_PATH = cm.OVERRIDES_PATH
 
-AGE_MIN_DELTA, AGE_MAX_DELTA = -1, 3
-MAX_DELTA_SINGLE_PERSON = 12
-JUDGE_EXCERPT_CHARS = 2500
-
-JUDGE_SYSTEM = """\
-Valuti se un CV puo' appartenere a una persona che, nell'anagrafica aziendale,
-ha un certo ruolo professionale. Del CV conosci il ruolo che vi e' indicato, le
-competenze tecniche estratte e, quando disponibile, un estratto del testo
-(esperienze, formazione): usalo per capire il mestiere reale.
-
-coerente = true se il CV descrive lo stesso mestiere del ruolo in anagrafica:
-- le competenze sono tipiche di chi svolge quel ruolo, oppure
-- il ruolo indicato nel CV e' lo stesso mestiere (sinonimi, traduzioni, varianti
-  come "PM" / "Project Manager", "Frontend" / "Front End") e le competenze non lo
-  contraddicono. Per ruoli non tecnici (project manager, business analyst,
-  analista funzionale, help desk) e' normale che le competenze elencate siano
-  strumenti tecnici: conta soprattutto il ruolo indicato nel CV.
-
-coerente = false se il CV descrive un altro mestiere: non basta che le
-competenze siano genericamente informatiche. Un ruolo di sviluppo generico (es.
-"Software Developer", "Analista Programmatore") non e' coerente con un CV di
-sicurezza, reti/sistemi, data science, mobile nativo, design o gestione progetti.
-
-Rispondi SOLO con JSON: {"coerente": true|false, "motivo": "<max 20 parole>"}
-"""
-
-_DATE = r"(\d{1,2}\s*[/.\-]\s*\d{1,2}\s*[/.\-]\s*\d{2,4})"
-_DOB_RES = [
-    re.compile(r"(?:data\s+di\s+nascita|date\s+of\s+birth)\W{0,12}" + _DATE, re.I),
-    re.compile(r"\|\s*(?:nome|name)\s*\|\s*[A-Za-z]{3}\s+" + _DATE, re.I),
-]
-_CITY_RE = re.compile(r"\|\s*(?:citt[aà]|city)\s*\|\s*([^|\n]+?)\s*\|", re.I)
-_CITY_NOISE = {"remoto", "remote", "ibrido", "hybrid", "italia", "italy", "provincia"}
-_CITY_ALIASES = {"turin": "torino", "milan": "milano", "rome": "roma", "florence": "firenze",
-                 "naples": "napoli", "venice": "venezia", "genoa": "genova"}
+# Regole e soglie comuni con la ricerca dei CV della dashboard: domain/cv_matching.py.
+AGE_MIN_DELTA, AGE_MAX_DELTA = cm.AGE_MIN_DELTA, cm.AGE_MAX_DELTA
+MAX_DELTA_SINGLE_PERSON = cm.MAX_DELTA_SINGLE_PERSON
+JUDGE_SYSTEM = cm.JUDGE_SYSTEM
+_DATE, _DOB_RES, _CITY_RE, _CODE_RE = cm.DATE, cm.DOB_RES, cm.CITY_RE, cm.CODE_RE
+_parse_date, _norm_filename, _file_code, _codes = cm.parse_date, cm.norm_filename, cm.file_code, cm.codes
+_age_on, _norm_role, _strict_role, _cities = cm.age_on, cm.norm_role, cm.strict_role, cm.cities
 
 
 # ------------------------------------------------------------------ lettura dati
@@ -128,36 +106,8 @@ def _search_request_raw(body: dict[str, Any]) -> dict[str, Any]:
         return json.load(resp)
 
 
-def _parse_date(text: str) -> dt.date | None:
-    parts = [int(p) for p in re.split(r"\s*[/.\-]\s*", text.strip())]
-    if len(parts) != 3:
-        return None
-    d, m, y = parts
-    if y < 100:
-        y += 1900 if y > 30 else 2000
-    try:
-        day = dt.date(y, m, d)
-    except ValueError:
-        return None
-    return day if 1940 <= day.year <= 2010 else None
-
-
-_HEADER_LABELS = {"città", "citta", "city", "ruolo", "role", "data di nascita", "date of birth", "overview"}
-_FILE_NOISE_RE = re.compile(r"(?i)skill[\s_]*tecnico|(?<![a-z])mc(?![a-z])")
-_FILE_CODE_RE = re.compile(r"(?<![A-Za-z])([A-Za-z]{3})(?![A-Za-z])")
-_CODE_RE = re.compile(r"\|\s*(?:nome|name)\s*\|\s*([A-Za-z]{3})\b", re.I)
-
-
-def _norm_filename(name: str) -> str:
-    return unicodedata.normalize("NFC", name).strip().lower()
-
-
 def _local_headers(cv_dir: str) -> dict[str, dict[str, Any]]:
-    """Intestazione dei CV originali (modello MC): nome file -> codice, nascita, citta', ruolo.
-
-    L'intestazione e' la fonte piu' affidabile: nell'indice il campo full_name e'
-    a volte sbagliato ("CANDIDATE PROFILE", "ORK", ...).
-    """
+    """Intestazione dei CV originali (modello MC): nome file -> codice, nascita, citta', ruolo."""
     import docx
     import fitz
 
@@ -174,60 +124,9 @@ def _local_headers(cv_dir: str) -> dict[str, dict[str, Any]]:
         except Exception as exc:  # file danneggiato: resta il dato dell'indice
             print(f"ATTENZIONE: {path.name} non leggibile ({exc})")
             continue
-        all_lines = [l.strip() for l in text.splitlines() if l.strip()]
-        lines = all_lines[:40]
-        head: dict[str, Any] = {"file": path.name, "text": "\n".join(all_lines)}
-        for i, line in enumerate(lines):
-            low = line.lower().rstrip(":")
-            nxt = lines[i + 1] if i + 1 < len(lines) else ""
-            if ("data di nascita" in low or "date of birth" in low) and "dob" not in head:
-                for cand in [line, nxt] + lines[i + 2:i + 3]:
-                    m = re.search(_DATE, cand)
-                    if m and (day := _parse_date(m.group(1))):
-                        head["dob"] = day
-                        break
-            if low in ("nome", "name") and "code" not in head and nxt.lower().rstrip(":") not in _HEADER_LABELS:
-                head["code"] = nxt[:3].upper()
-            elif low.startswith(("nome ", "name ")) and "code" not in head:
-                parts = line.split()
-                if len(parts) > 1 and len(parts[1]) >= 3:
-                    head["code"] = parts[1][:3].upper()
-                m = re.search(_DATE, line)
-                if m and "dob" not in head and (day := _parse_date(m.group(1))):
-                    head["dob"] = day
-            if low in ("città", "citta", "city") and "city" not in head:
-                head["city"] = nxt
-            if low in ("ruolo", "role") and "role" not in head:
-                head["role"] = next((l for l in lines[i + 1:i + 3]
-                                     if l.lower() not in ("overview", "education", "experience", "esperienze")), None)
-        if "dob" not in head:
-            # Data di nascita fuori dall'intestazione: la si cerca in tutto il testo.
-            for rx in _DOB_RES:
-                m = rx.search(head["text"])
-                if m and (day := _parse_date(m.group(1))):
-                    head["dob"] = day
-                    break
-        if "code" not in head and (file_code := _file_code(path.name)):
-            # Nome vuoto nell'intestazione: il codice resta quello nel nome del file.
-            head["code"] = file_code
-        out[_norm_filename(path.name)] = head
+        out[_norm_filename(path.name)] = cm.header_from_text(text, path.name)
     return out
 
-
-def _file_code(filename: str) -> str | None:
-    """Codice di 3 lettere nel nome del file ("Skill_Tecnico_ABC_MC.pdf" -> "ABC")."""
-    m = _FILE_CODE_RE.search(_FILE_NOISE_RE.sub(" ", PurePath(filename).stem))
-    return m.group(1).upper() if m else None
-
-
-def _codes(header_code: str | None, filename: str) -> set[str]:
-    """Codici con cui cercare il CV: quello dell'intestazione e quello del nome file.
-
-    Non sempre coincidono (es. "Skill_Tecnico_FDB.pdf" con "FDE" nell'intestazione,
-    "Skill_Tecnico_FJC.pdf" per un trittico MCFlash "FCU"): basta che uno dei due
-    sia il codice del record.
-    """
-    return {_normalise_person_key(c) for c in (header_code, _file_code(filename)) if c} - {""}
 
 
 def _all_cv_documents(local: dict[str, dict[str, Any]], include_unindexed: bool = False) -> list[dict[str, Any]]:
@@ -337,68 +236,40 @@ def _registry_key(document_id: str) -> str:
 
 
 def _judge(llm: AzureOpenAI, model: str, doc: dict[str, Any], role: str) -> dict[str, Any]:
-    excerpt = re.sub(r"\s+", " ", doc.get("text") or "")[:JUDGE_EXCERPT_CHARS]
-    if not doc["skills"] and not doc.get("role") and not excerpt:
-        return {"coerente": False, "motivo": "CV senza ruolo ne' skill estratti"}
-    for attempt in range(4):
-        try:
-            resp = llm.chat.completions.create(
-                model=model,
-                temperature=0,
-                response_format={"type": "json_object"},
-                messages=[
-                    {"role": "system", "content": JUDGE_SYSTEM},
-                    {"role": "user", "content": (
-                        f"Ruolo in anagrafica: {role}\n"
-                        f"Ruolo indicato nel CV: {doc.get('role') or '(non indicato)'}\n"
-                        f"Competenze del CV: {', '.join(doc['skills'][:60]) or '(nessuna)'}\n"
-                        f"Estratto del CV: {excerpt or '(non disponibile)'}"
-                    )},
-                ],
-            )
-            break
-        except Exception:  # servizio sovraccarico o rete: riprova con attesa crescente
-            if attempt == 3:
-                raise
-            time.sleep(5 * (attempt + 1))
-    out = json.loads(resp.choices[0].message.content)
-    return {"coerente": bool(out.get("coerente")), "motivo": str(out.get("motivo") or "")}
+    return cm.judge(llm, model, doc, role)
+
 
 
 # ------------------------------------------------------------------ confronti
 
-def _age_on(dob: dt.date, day: dt.date) -> int:
-    return day.year - dob.year - ((day.month, day.day) < (dob.month, dob.day))
-
-
-def _norm_role(value: Any) -> str:
-    text = MCFlashCandidatesClient._normalize_role_text(str(value or "").replace("-", " "))
-    return f" {text} "
-
-
-def _strict_role(cv_role: Any, mc_role: Any) -> bool:
-    a, b = _norm_role(cv_role), _norm_role(mc_role)
-    return bool(a.strip() and b.strip()) and (a in b or b in a)
-
-
-def _cities(value: Any) -> set[str]:
-    words = re.split(r"[\s/,()\-]+", str(value or "").lower())
-    return {_CITY_ALIASES.get(w, w) for w in words if len(w) > 2 and w not in _CITY_NOISE}
-
-
 def _record_id(record: dict[str, Any]) -> int:
     return int(record.get("id") or record.get("Id"))
+
+
+async def _all_records(page_size: int = 1000, max_records: int = 20000) -> list[dict[str, Any]]:
+    """Tutti i record MCFlash, anche disabilitati e TalentUp (pagine grezze dell'API)."""
+    client = get_mcflash_candidates_client()
+    records: list[dict[str, Any]] = []
+    while len(records) < max_records:
+        page = await client.fetch_page(limit=page_size, offset=len(records))
+        records += page
+        if len(page) < page_size:
+            break
+    return records
 
 
 # ------------------------------------------------------------------ build
 
 def build(report_path: str | None, dry_run: bool, reuse_report: str | None = None, cv_dir: str | None = None,
           no_llm: bool = False, out_path: Path = MAP_PATH, overrides_path: Path | None = OVERRIDES_PATH,
-          include_unindexed: bool = False) -> None:
+          include_unindexed: bool = False, include_ineligible: bool = False) -> None:
     today = dt.date.today()
-    records = asyncio.run(get_mcflash_candidates_client().filter_candidates(
-        limit=5000, offset=0, max_scan_records=20000, return_all_matches=True,
-    ))
+    if include_ineligible:
+        records = asyncio.run(_all_records())
+    else:
+        records = asyncio.run(get_mcflash_candidates_client().filter_candidates(
+            limit=5000, offset=0, max_scan_records=20000, return_all_matches=True,
+        ))
     records_by_code: dict[str, list[dict[str, Any]]] = collections.defaultdict(list)
     for record in records:
         code = _normalise_person_key(record.get("nome") or record.get("Nome"))
@@ -485,23 +356,8 @@ def build(report_path: str | None, dry_run: bool, reuse_report: str | None = Non
             people[f"dob:{doc['dob']}" if doc["dob"] else f"doc:{doc['document_id']}"].append(doc)
 
         def evaluate(rec: dict[str, Any], key: str) -> dict[str, Any]:
-            group = people[key]
-            rid, eta = _record_id(rec), rec.get("eta") or 0
-            dob = group[0]["dob"]
-            delta = _age_on(dob, today) - eta if dob and eta else None
-            role_ok = any(judged[(d["document_id"], rid)]["coerente"] or _strict_role(d["role"], rec.get("ruolo"))
-                          for d in group)
-            if delta is None:
-                tier = 2 if role_ok else 9
-            elif AGE_MIN_DELTA <= delta <= AGE_MAX_DELTA:
-                tier = 1 if role_ok else 3
-            else:
-                tier = 4 if role_ok else 9
-            return {
-                "key": key, "tier": tier, "delta": delta, "role_ok": role_ok,
-                "strict": any(_strict_role(d["role"], rec.get("ruolo")) for d in group),
-                "city_ok": any(_cities(d["city"]) & _cities(rec.get("sede")) for d in group),
-            }
+            rid = _record_id(rec)
+            return cm.evaluate(rec, key, people[key], lambda d: judged[(d["document_id"], rid)]["coerente"], today)
 
         options = {_record_id(r): [evaluate(r, k) for k in people] for r in recs}
         taken: set[str] = set()
@@ -512,43 +368,12 @@ def build(report_path: str | None, dry_run: bool, reuse_report: str | None = Non
             rid = _record_id(rec)
             free = [o for o in options[rid] if o["key"] not in taken and o["tier"] < 9
                     and not any(d["document_id"] in assigned_docs for d in people[o["key"]])]
-            decision, chosen, why = "nessun CV", None, "nessun CV con questo codice e mestiere o eta' compatibili"
-            if free:
-                best_tier = min(o["tier"] for o in free)
-                cands = sorted(
-                    [o for o in free if o["tier"] == best_tier],
-                    key=lambda o: (not o["city_ok"], not o["strict"], abs(o["delta"] or 0)),
-                )
-                distinct = len(cands) == 1 or (
-                    (cands[0]["city_ok"], cands[0]["strict"], abs(cands[0]["delta"] or 0))
-                    != (cands[1]["city_ok"], cands[1]["strict"], abs(cands[1]["delta"] or 0))
-                )
-                if best_tier == 1 and distinct:
-                    decision, chosen, why = "assegnato", cands[0], "eta' e mestiere compatibili"
-                elif best_tier == 2 and distinct:
-                    decision, chosen, why = "assegnato", cands[0], "mestiere compatibile, eta' non verificabile"
-                elif best_tier == 4 and len(cands) == 1 and (
-                    len(people) == 1 or abs(cands[0]["delta"]) <= MAX_DELTA_SINGLE_PERSON
-                ):
-                    decision, chosen, why = "assegnato", cands[0], (
-                        f"unica persona con il mestiere giusto; eta' MCFlash non combacia ({cands[0]['delta']:+d})")
-                else:
-                    decision, chosen = "dubbio", None
-                    why = {1: "piu' persone con eta' e mestiere compatibili",
-                           2: "piu' persone con mestiere compatibile, eta' non verificabile",
-                           3: "eta' compatibile ma mestiere diverso",
-                           4: "eta' non combacia e piu' persone o differenza troppo grande"}[best_tier]
+            decision, chosen, why = cm.choose(free, len(people))
 
             chosen_doc = None
             if chosen:
                 taken.add(chosen["key"])
-                # Un file per persona: ruolo piu' vicino, poi citta', poi il piu' recente.
-                newest_first = sorted(people[chosen["key"]], key=lambda d: d["processed_at"] or "", reverse=True)
-                chosen_doc = min(newest_first, key=lambda d: (
-                    not _strict_role(d["role"], rec.get("ruolo")),
-                    not MCFlashCandidatesClient._role_matches(str(d["role"] or ""), rec.get("ruolo")),
-                    not (_cities(d["city"]) & _cities(rec.get("sede"))),
-                ))
+                chosen_doc = cm.pick_file(people[chosen["key"]], rec)
 
             if rid in manual:
                 chosen_doc = manual_doc[rid]
@@ -611,8 +436,10 @@ if __name__ == "__main__":
                         help="decisioni manuali per id MCFlash; stringa vuota = nessuna (es. altro MCFlash, id diversi)")
     parser.add_argument("--include-unindexed", action="store_true",
                         help="considera anche i CV di --cv-dir non ancora nell'indice (document_id dal nome file)")
+    parser.add_argument("--tutti", action="store_true",
+                        help="anche i record disabilitati e TalentUp (fuori dal perimetro dell'agente)")
     parser.add_argument("--no-llm", action="store_true",
                         help="non chiama l'LLM: le coppie non gia' giudicate usano il confronto dei ruoli")
     args = parser.parse_args()
     build(args.report, args.dry_run, args.reuse_report, args.cv_dir, args.no_llm,
-          Path(args.out), Path(args.overrides) if args.overrides else None, args.include_unindexed)
+          Path(args.out), Path(args.overrides) if args.overrides else None, args.include_unindexed, args.tutti)
