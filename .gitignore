@@ -104,8 +104,21 @@ local.settings.json
 .foundry-agent-venv/
 
 # Deploy artifacts
-deploy.zipeval_e2e_runs/
+deploy.zip
 
 # Abbinamento CV <-> MCFlash: contengono nomi e dati dei candidati, restano in locale
-scripts/cv_mcflash_map_*report*.json
-confronto_cv_mcflash_prod_*.xlsx
+scripts/cv_mcflash_map*.json
+infra/cv_mcflash_map*.json
+confronto_cv_mcflash_*.xlsx
+
+# Output di eval e risposte delle API: contengono candidati, restano in locale
+eval_e2e_runs/
+eval_classifier_*
+eval_smoke_*
+eval_test2*
+eval_user_type_*
+eval_baseline_*
+rerun_nohits_*
+search_*.json
+*_resp.json
+tmp_*
