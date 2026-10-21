@@ -136,8 +136,10 @@ async def extract_sheet(req: func.HttpRequest):
 
     Body JSON: {testo, base?}. `testo` e' la scheda colloquio del recruiter
     (domain/interview_sheet.py); `base` i dati gia' estratti dal CV, se c'e'.
-    Senza `base` (o se il CV non ha esperienze ne' formazione) la scheda passa
-    anche dall'LLM del profilo mcflash, per esperienze e formazione.
+    La scheda passa anche dall'LLM del profilo mcflash quando manca il CV,
+    quando il CV non ha esperienze ne' formazione, o quando la scheda descrive
+    esperienze o titoli di studio: il form e' un misto delle due fonti
+    (domain/interview_sheet.merge_sheet), qualunque sia la piu' ricca.
     Nulla viene salvato: ne' file nello storage, ne' indice.
 
     Output: i dati del form (come /api/extract?profile=mcflash) con in piu'
@@ -152,7 +154,8 @@ async def extract_sheet(req: func.HttpRequest):
     base = body.get("base") if isinstance(body.get("base"), dict) else None
     sheet = parse_sheet(text)
     from_text = None
-    if base is None or not (base.get("experiences") or base.get("education")):
+    narrative = any((sheet.get("colloquio") or {}).get(k) for k in ("esperienza", "titolo_studio"))
+    if base is None or narrative or not (base.get("experiences") or base.get("education")):
         extraction = await pipeline.process(text.encode("utf-8"), mime="text/plain", profile=PROFILE_MCFLASH)
         from_text = extraction.model_dump()
     return merge_sheet(base, sheet, from_text)
