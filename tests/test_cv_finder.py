@@ -202,7 +202,6 @@ def endpoint_fakes(monkeypatch):
     monkeypatch.setattr(api, "_candidate_rows", rows)
     monkeypatch.setattr(cv_finder, "documents", documents)
     monkeypatch.setattr(cv_finder, "file_header", _no_header)
-    monkeypatch.setattr(cm, "load_overrides", lambda path=None: {})
     monkeypatch.setattr(api.cv_mcflash_map, "read_file_entries",
                         lambda: [{"document_id": "lca_net", "id_mcflash": "99", "file": "lca_net.pdf", "codice": "LCA"}])
     monkeypatch.setattr(api.cv_mcflash_map, "upsert_entry",

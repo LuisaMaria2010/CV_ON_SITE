@@ -93,6 +93,25 @@ def _markdown_blob_name(document_id: str, version: int) -> str:
     return f"{document_id}/v{version}.md"
 
 
+def _complete_dashboard_commits(source_path: str) -> None:
+    """Conferme della dashboard in attesa di questo file: aggiornano CvMcflashMap ora.
+
+    Un errore qui non deve far fallire l'ingestione (il file e' gia' indicizzato):
+    l'operazione resta "in attesa" e la si puo' far ripartire dal monitor.
+    """
+    try:
+        container_name, blob_name = _split_blob_path(source_path.lstrip("/"))
+        if container_name != settings.storage_container_incoming:
+            return
+        from functions import operations_api
+
+        for op in asyncio.run(operations_api.advance_waiting_for(blob_name)):
+            logger.info("Dashboard commit advanced after indexing op=%s status=%s step_mappa=%s",
+                        op.get("id"), op.get("status"), op.get("step_mappa"))
+    except Exception:
+        logger.exception("Dashboard commits not advanced after indexing source_path=%s", source_path)
+
+
 @bp.queue_trigger(
     arg_name="msg",
     queue_name="%DOCUMENT_PROCESSING_QUEUE_NAME%",
@@ -271,6 +290,7 @@ def process_incoming_cv(msg: func.QueueMessage):
             registry_record.get("version"),
             correlation_id,
         )
+        _complete_dashboard_commits(source_path)
     except Exception:
         registry = _get_document_registry()
         registry.mark_status(

@@ -6,14 +6,16 @@ backup) e la versione modificata dall'utente, cosi' si vede cosa e' stato corret
 
 PUT    /api/drafts/{draft_id}
     Body: {kind: crea|aggiorna, id_mcflash?, original_blob?, original_filename?,
-           extracted?, edited, filename?, user?}
-    Crea o aggiorna la bozza. `extracted` si registra solo la prima volta.
+           extracted?, edited, filename?, user?, origin?}
+    Crea o aggiorna la bozza. `extracted` e `origin` (admin|recruiter) si
+    registrano solo la prima volta.
     Output: la bozza salvata.
 GET    /api/drafts/{draft_id}
     La bozza completa; 404 se non esiste.
-GET    /api/drafts?kind=&id_mcflash=&tutte=
+GET    /api/drafts?kind=&id_mcflash=&origin=&tutte=
     Bozze piu' recenti (riassunto), per riprenderle dalla dashboard. Quelle gia'
-    confermate (operation_id) si escludono, salvo tutte=true.
+    confermate (operation_id) o proposte come candidato probabile
+    (submitted_at, vedi probabili_api) si escludono, salvo tutte=true.
     Una bozza confermata non si modifica piu': il PUT risponde 400.
 DELETE /api/drafts/{draft_id}
     Scarta la bozza (il CV originale resta in incoming-cv-originals).
@@ -45,6 +47,9 @@ logger = logging.getLogger(__name__)
 bp = func.Blueprint()
 
 KINDS = ("crea", "aggiorna")
+# Chi ha aperto la bozza: l'amministrazione (anche le bozze di prima, senza
+# origine) o un recruiter, che la propone come candidato probabile.
+ORIGIN_ADMIN, ORIGIN_RECRUITER = "admin", "recruiter"
 _DRAFT_ID = re.compile(r"^[0-9a-f]{32}$")
 # Una bozza e' testo strutturato: oltre questa soglia c'e' qualcosa che non va.
 _MAX_DRAFT_BYTES = 2 * 1024 * 1024
@@ -93,6 +98,8 @@ def summarize(draft: dict[str, Any]) -> dict[str, Any]:
         "trittico": compute_trittico(first, last) or edited.get("trittico") or "",
         "original_filename": draft.get("original_filename"),
         "operation_id": draft.get("operation_id"),
+        "origin": draft.get("origin") or ORIGIN_ADMIN,
+        "submitted_at": draft.get("submitted_at"),
         "created_at": draft.get("created_at"),
         "updated_at": draft.get("updated_at"),
     }
@@ -131,6 +138,8 @@ def merge_draft(existing: dict[str, Any] | None, body: dict[str, Any], draft_id:
         "updated_at": now,
         "operation_id": (existing or {}).get("operation_id"),
         "committed_at": (existing or {}).get("committed_at"),
+        "origin": keep("origin"),
+        "submitted_at": (existing or {}).get("submitted_at"),
     }
 
 
@@ -189,6 +198,7 @@ async def delete_draft(req: func.HttpRequest):
 async def list_drafts(req: func.HttpRequest):
     kind = (req.params.get("kind") or "").strip()
     id_mcflash = (req.params.get("id_mcflash") or "").strip()
+    origin = (req.params.get("origin") or "").strip()
     include_committed = (req.params.get("tutte") or "").strip().lower() in ("1", "true", "si", "sì")
     out = []
     for name in await storage.list_names(container=drafts_container()):
@@ -201,7 +211,9 @@ async def list_drafts(req: func.HttpRequest):
             continue
         if not draft or (kind and draft.get("kind") != kind) or (id_mcflash and draft.get("id_mcflash") != id_mcflash):
             continue
-        if draft.get("operation_id") and not include_committed:
+        if origin and (draft.get("origin") or ORIGIN_ADMIN) != origin:
+            continue
+        if (draft.get("operation_id") or draft.get("submitted_at")) and not include_committed:
             continue
         out.append(summarize(draft))
     out.sort(key=lambda d: d.get("updated_at") or "", reverse=True)

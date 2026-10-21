@@ -24,8 +24,10 @@ Per ogni record MCFlash si guardano i CV dell'indice con lo stesso codice:
      differenze enormi)                                          -> caso dubbio
 4. della persona scelta si tiene un solo file: ruolo piu' vicino, citta' giusta,
    a parita' il piu' recente.
-Infine si applicano le decisioni manuali di cv_mcflash_map_overrides.json
-(per record MCFlash). I casi dubbi senza decisione restano senza CV.
+Infine si applicano le decisioni manuali per record MCFlash: quelle di
+infra/cv_mcflash_map_overrides.json (solo in locale) e i collegamenti fatti
+dalla dashboard, letti da CvMcflashMap, che vincono (sono i piu' recenti). I
+casi dubbi senza decisione restano senza CV.
 
 Uso:
     python scripts/build_cv_mcflash_map.py --report out.json   # scrive scripts/cv_mcflash_map.json (poi: upload_cv_mcflash_map.py)
@@ -73,10 +75,11 @@ from infra.mcflash_candidates import MCFlashCandidatesClient  # noqa: E402
 from services.search_pipeline import _normalise_person_key  # noqa: E402
 from domain.normalizer import TextNormalizer  # noqa: E402
 from domain import cv_matching as cm  # noqa: E402
+from infra import cv_mcflash_map  # noqa: E402
 from utils.site import site_key  # noqa: E402
 
 MAP_PATH = root / "scripts" / "cv_mcflash_map.json"
-OVERRIDES_PATH = cm.OVERRIDES_PATH
+OVERRIDES_PATH = root / "infra" / "cv_mcflash_map_overrides.json"
 
 # Regole e soglie comuni con la ricerca dei CV della dashboard: domain/cv_matching.py.
 AGE_MIN_DELTA, AGE_MAX_DELTA = cm.AGE_MIN_DELTA, cm.AGE_MAX_DELTA
@@ -258,6 +261,25 @@ async def _all_records(page_size: int = 1000, max_records: int = 20000) -> list[
     return records
 
 
+def _manual_decisions(overrides_path: Path | None) -> dict[int, dict[str, Any]]:
+    """Decisioni manuali per id MCFlash: il file (se c'e') piu' i collegamenti
+    fatti dalla dashboard su CvMcflashMap, che vincono (sono i piu' recenti).
+
+    overrides_path None = nessun file (es. un altro MCFlash, con id diversi).
+    """
+    manual: dict[int, dict[str, Any]] = {}
+    if overrides_path and overrides_path.exists():
+        data = json.loads(overrides_path.read_text(encoding="utf-8"))
+        manual = {int(k): v for k, v in (data.get("records") or {}).items()}
+    dashboard = [e for e in cv_mcflash_map.read_file_entries()
+                 if cv_mcflash_map.is_dashboard_row(e) and str(e.get("id_mcflash") or "").isdigit()]
+    for e in dashboard:
+        manual[int(e["id_mcflash"])] = {"document_id": e["document_id"], "file": e.get("file") or None,
+                                        "nota": f"collegato dalla dashboard ({e['criterio']})"}
+    print(f"Decisioni manuali: {len(manual)} (collegamenti della dashboard: {len(dashboard)})")
+    return manual
+
+
 # ------------------------------------------------------------------ build
 
 def build(report_path: str | None, dry_run: bool, reuse_report: str | None = None, cv_dir: str | None = None,
@@ -327,9 +349,7 @@ def build(report_path: str | None, dry_run: bool, reuse_report: str | None = Non
     judged.update({(doc["document_id"], _record_id(rec)): v for (doc, rec), v in zip(todo, verdicts)})
     print(f"Coppie CV-record: {len(pairs)} | giudizi nuovi: {len(todo)} | riusati: {len(pairs) - len(todo)}")
 
-    overrides = (json.loads(overrides_path.read_text(encoding="utf-8"))
-                 if overrides_path and overrides_path.exists() else {})
-    manual = {int(k): v for k, v in (overrides.get("records") or {}).items()}
+    manual = _manual_decisions(overrides_path)
     # CV indicato a mano: per document_id o per nome file, anche se il suo codice
     # non e' quello del record. Non puo' finire in automatico a un altro record.
     docs_by_id = {d["document_id"]: d for d in all_docs}

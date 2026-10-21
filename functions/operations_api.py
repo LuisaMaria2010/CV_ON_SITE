@@ -19,7 +19,7 @@ from typing import Any
 import azure.functions as func
 
 from core.errors import InvalidInputError, NotFoundError
-from functions import dashboard_api, drafts_api
+from functions import dashboard_api, drafts_api, probabili_api
 from services import cv_commit
 from utils.http_errors import http_error_handler
 from utils.http_params import body_params
@@ -57,7 +57,17 @@ async def _advance(op: dict[str, Any]) -> dict[str, Any]:
         dashboard_api.invalidate_candidates_cache()  # il candidato creato/aggiornato si vede subito
     if op["status"] == cv_commit.DONE and not draft.get("committed_at"):
         await drafts_api.mark_committed(draft, op["id"], committed_at=op.get("completed_at"))
+        await probabili_api.on_commit_done(draft, op)  # proposta di un recruiter -> approvata
     return op
+
+
+async def advance_waiting_for(incoming_blob: str) -> list[dict[str, Any]]:
+    """Fa avanzare le conferme in attesa dell'indicizzazione di questo file (passo "mappa").
+
+    La chiama l'ingestione appena il file e' indicizzato: CvMcflashMap si
+    aggiorna anche se nessuno ha la pagina della dashboard aperta.
+    """
+    return [await _advance(op) for op in _get_store().waiting_for_index(incoming_blob)]
 
 
 def _op_id(req: func.HttpRequest) -> str:

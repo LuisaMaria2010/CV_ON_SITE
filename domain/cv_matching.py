@@ -30,15 +30,12 @@ import json
 import re
 import time
 import unicodedata
-from pathlib import Path, PurePath
+from pathlib import PurePath
 from typing import Any, Callable, Iterable
 
 AGE_MIN_DELTA, AGE_MAX_DELTA = -1, 3
 MAX_DELTA_SINGLE_PERSON = 12
 JUDGE_EXCERPT_CHARS = 2500
-
-# Decisioni manuali per record MCFlash (id -> {file | document_id, nota}).
-OVERRIDES_PATH = Path(__file__).resolve().parent.parent / "infra" / "cv_mcflash_map_overrides.json"
 
 JUDGE_SYSTEM = """\
 Valuti se un CV puo' appartenere a una persona che, nell'anagrafica aziendale,
@@ -313,11 +310,3 @@ def pick_file(group: list[dict[str, Any]], rec: dict[str, Any]) -> dict[str, Any
         not role_matches(d.get("role"), rec.get("ruolo")),
         not (cities(d.get("city")) & cities(rec.get("sede"))),
     ))
-
-
-def load_overrides(path: Path | None = OVERRIDES_PATH) -> dict[int, dict[str, Any]]:
-    """Decisioni manuali per id MCFlash ({} se il file non c'e')."""
-    if not path or not Path(path).exists():
-        return {}
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
-    return {int(k): v for k, v in (data.get("records") or {}).items()}

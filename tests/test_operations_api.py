@@ -87,3 +87,42 @@ def test_retry_after_failure(env):
 def test_unknown_operation(env):
     assert _call(api.get_operation, _req("GET", route={"op_id": "a" * 32}))[0] == 404
     assert _call(api.get_operation, _req("GET", route={"op_id": "../x"}))[0] == 400
+
+
+def test_ingestion_completes_waiting_commit_without_polling(env, monkeypatch):
+    """Il passo "mappa" si chiude appena il file e' indicizzato, anche a dashboard chiusa."""
+    import ingestion_triggers
+
+    world, store = env
+    _, envl = _call(api.cv_commit_route, _req("POST", {"draft_id": DRAFT_ID}))
+    op = envl["data"]
+    assert op["step_mappa"] == "in_attesa"
+    world.index(store.get(op["id"]))
+    ingestion_triggers._complete_dashboard_commits(f"/incoming-cv/{op['incoming_blob']}")
+    done = store.get(op["id"])
+    assert done["status"] == "completata" and done["step_mappa"] == "ok"
+    assert asyncio.run(drafts_api.load_draft(DRAFT_ID))["committed_at"]
+
+
+def test_ingestion_ignores_other_files_and_errors(env, monkeypatch):
+    import ingestion_triggers
+
+    world, store = env
+    _, envl = _call(api.cv_commit_route, _req("POST", {"draft_id": DRAFT_ID}))
+    op = envl["data"]
+    ingestion_triggers._complete_dashboard_commits("/incoming-cv/un_altro_file.docx")
+    ingestion_triggers._complete_dashboard_commits(f"/altro-container/{op['incoming_blob']}")
+    assert store.get(op["id"])["step_mappa"] == "in_attesa"
+
+    async def boom(blob):
+        raise ConnectionError("storage giu'")
+    monkeypatch.setattr(api, "advance_waiting_for", boom)
+    ingestion_triggers._complete_dashboard_commits(f"/incoming-cv/{op['incoming_blob']}")  # non solleva
+
+
+def test_queue_trigger_stays_on_process_incoming_cv():
+    """Gli helper dell'ingestione non devono finire sotto il decoratore del trigger."""
+    import ingestion_triggers
+
+    names = [fb._function.get_function_name() for fb in ingestion_triggers.bp._function_builders]
+    assert names == ["process_incoming_cv"]

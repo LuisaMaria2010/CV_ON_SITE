@@ -9,6 +9,8 @@ Stesso metodo e stesse regole della ricostruzione della tabella CV -> MCFlash
   nascita, livello di ciascuna e scelta con le stesse soglie;
 - un CV gia' collegato a un altro candidato, o riservato a un altro da una
   decisione manuale, non si propone; la decisione manuale della persona vince.
+  A runtime conta solo CvMcflashMap: le decisioni manuali della ricostruzione
+  sono gia' li' come collegamenti, quindi di norma overrides e' vuoto.
 
 Quali CV esistono lo dice la tabella DocumentRegistry dello storage; il codice
 viene dal nome del file, dall'intestazione e, per i CV gia' collegati, dalla
@@ -256,7 +258,7 @@ async def find(person: dict[str, Any], *, mode: str = "codice", exclude: set[str
         from infra import cv_mcflash_map
         docs = await documents(await asyncio.to_thread(cv_mcflash_map.read_file_entries))
     headers = headers or file_header
-    overrides = cm.load_overrides() if overrides is None else overrides
+    overrides = overrides or {}
     own_id = str(person.get("id_mcflash") or "")
     # Per un candidato MCFlash vale il suo trittico; per un nome scritto a mano
     # (pagina Crea) anche gli altri codici possibili del nome completo.

@@ -17,7 +17,9 @@ li' ("Riprova"), senza ripetere i passi gia' fatti:
              gia' copiato nello storico, si toglie da incoming-cv.
 4. mappa   - quando DocumentRegistry segna il nuovo file come indicizzato,
              aggiorna CvMcflashMap (document_id -> Id MCFlash). Fino ad allora
-             il passo resta "in_attesa" e l'operazione "in_corso". "Nuovo" vuol
+             il passo resta "in_attesa" e l'operazione "in_corso"; a indicizzazione
+             finita lo fa avanzare l'ingestione stessa (ingestion_triggers), senza
+             aspettare che la dashboard ricontrolli l'operazione. "Nuovo" vuol
              dire versione piu' alta di quella registrata prima del caricamento:
              con lo stesso nome file la riga della versione vecchia ha lo stesso
              percorso ed e' gia' "processed", e non va scambiata per la nuova.
@@ -132,6 +134,13 @@ class OperationStore:
 
     def list(self) -> list[dict[str, Any]]:
         return [_from_entity(e) for e in self.table.query_entities(f"PartitionKey eq '{PARTITION_KEY}'")]
+
+    def waiting_for_index(self, incoming_blob: str) -> list[dict[str, Any]]:
+        """Operazioni ferme al passo "mappa" in attesa dell'indicizzazione di questo file."""
+        query = f"PartitionKey eq '{PARTITION_KEY}' and status eq '{RUNNING}' and step_mappa eq '{WAITING}'"
+        return [op for op in (_from_entity(e) for e in self.table.query_entities(query))
+                if op.get("status") == RUNNING and op.get("step_mappa") == WAITING
+                and op.get("incoming_blob") == incoming_blob]
 
 
 def _from_entity(entity: dict[str, Any]) -> dict[str, Any]:

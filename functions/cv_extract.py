@@ -15,7 +15,9 @@ from core.config import settings
 from core.dependencies import pipeline, storage
 from core.errors import FileTooLargeError, InvalidInputError
 from db_data.pipeline import PROFILE_DEFAULT, PROFILE_MCFLASH, PROFILES
+from domain.interview_sheet import merge_sheet, parse_sheet
 from utils.http_errors import http_error_handler
+from utils.http_params import body_params
 
 logger = logging.getLogger(__name__)
 
@@ -121,3 +123,36 @@ async def extract(req: func.HttpRequest):
 
     # Ritorniamo dict puro (decoratore gestisce envelope)
     return response_payload
+
+
+_MAX_SHEET_CHARS = 60_000
+
+
+@bp.route(route="extract/scheda", methods=["POST"])
+@http_error_handler
+async def extract_sheet(req: func.HttpRequest):
+    """
+    POST /api/extract/scheda
+
+    Body JSON: {testo, base?}. `testo` e' la scheda colloquio del recruiter
+    (domain/interview_sheet.py); `base` i dati gia' estratti dal CV, se c'e'.
+    Senza `base` (o se il CV non ha esperienze ne' formazione) la scheda passa
+    anche dall'LLM del profilo mcflash, per esperienze e formazione.
+    Nulla viene salvato: ne' file nello storage, ne' indice.
+
+    Output: i dati del form (come /api/extract?profile=mcflash) con in piu'
+    mcflash (tariffa, seniority, disponibilita') e colloquio (note del colloquio).
+    """
+    body = body_params(req)
+    text = str(body.get("testo") or "").strip()
+    if not text:
+        raise InvalidInputError("'testo' (la scheda colloquio) e' obbligatorio")
+    if len(text) > _MAX_SHEET_CHARS:
+        raise InvalidInputError(f"Scheda troppo lunga: massimo {_MAX_SHEET_CHARS} caratteri")
+    base = body.get("base") if isinstance(body.get("base"), dict) else None
+    sheet = parse_sheet(text)
+    from_text = None
+    if base is None or not (base.get("experiences") or base.get("education")):
+        extraction = await pipeline.process(text.encode("utf-8"), mime="text/plain", profile=PROFILE_MCFLASH)
+        from_text = extraction.model_dump()
+    return merge_sheet(base, sheet, from_text)

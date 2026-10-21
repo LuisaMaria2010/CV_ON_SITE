@@ -9,9 +9,11 @@ La tabella vive su Azure Table storage (stesso account della Function):
 - PartitionKey "cv", RowKey = document_id
 - campi: id_mcflash, file, codice, criterio, updated_at
 
-Si popola con scripts/upload_cv_mcflash_map.py. Viene letta per intero e
-tenuta in memoria per CV_MCFLASH_MAP_TTL_SECONDS (default 300): una modifica
-alla tabella ha effetto entro quel tempo, senza deploy.
+Si popola con scripts/upload_cv_mcflash_map.py e con le conferme della
+dashboard (criterio "dashboard" / "dashboard-ricerca"), che lo script non
+tocca. Viene letta per intero e tenuta in memoria per
+CV_MCFLASH_MAP_TTL_SECONDS (default 300): una modifica alla tabella ha effetto
+entro quel tempo, senza deploy.
 """
 from __future__ import annotations
 
@@ -31,6 +33,8 @@ except ImportError:  # pragma: no cover - dipende dall'ambiente di deploy
 logger = logging.getLogger(__name__)
 
 PARTITION_KEY = "cv"
+# Righe scritte dalla dashboard: valgono piu' della ricostruzione.
+DASHBOARD_CRITERIA = ("dashboard", "dashboard-ricerca")
 
 _lock = threading.Lock()
 _cache: dict[str, str] | None = None
@@ -113,7 +117,7 @@ def get_cv_mcflash_map() -> dict[str, str]:
 
 
 def read_file_entries() -> list[dict[str, str]]:
-    """Righe della tabella con il nome file: [{document_id, id_mcflash, file, codice}].
+    """Righe della tabella con il nome file: [{document_id, id_mcflash, file, codice, criterio}].
 
     Lettura diretta, senza cache: serve alla dashboard per proporre il nome
     del CV e trovare il file attuale di un candidato, non alla ricerca.
@@ -121,13 +125,14 @@ def read_file_entries() -> list[dict[str, str]]:
     client = get_table_client()
     rows: list[dict[str, str]] = []
     for entity in client.query_entities(
-        f"PartitionKey eq '{PARTITION_KEY}'", select=["RowKey", "id_mcflash", "file", "codice"]
+        f"PartitionKey eq '{PARTITION_KEY}'", select=["RowKey", "id_mcflash", "file", "codice", "criterio"]
     ):
         rows.append({
             "document_id": str(entity.get("RowKey") or ""),
             "id_mcflash": str(entity.get("id_mcflash") or ""),
             "file": str(entity.get("file") or ""),
             "codice": str(entity.get("codice") or ""),
+            "criterio": str(entity.get("criterio") or ""),
         })
     return rows
 
@@ -160,3 +165,8 @@ def upsert_entry(document_id: str, id_mcflash: str, *, file: str, codice: str = 
 def delete_entry(document_id: str) -> None:
     get_table_client().delete_entity(PARTITION_KEY, document_id)
     clear_cache()
+
+
+def is_dashboard_row(entity: dict[str, Any]) -> bool:
+    return str(entity.get("criterio") or "") in DASHBOARD_CRITERIA
+

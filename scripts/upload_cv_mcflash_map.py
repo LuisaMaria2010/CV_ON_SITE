@@ -1,10 +1,13 @@
 """
-Allinea la tabella CV -> MCFlash su Azure Table storage al file JSON.
+Carica su Azure Table storage la tabella CV -> MCFlash ricostruita in locale.
 
-La tabella (vedi infra/cv_mcflash_map.py) e' quella letta dal pipeline di
-ricerca. Il JSON (scripts/cv_mcflash_map.json) e' la sorgente versionata:
-questo script inserisce/aggiorna ogni voce e cancella le righe che nel JSON
-non ci sono piu', cosi' la tabella e' sempre una copia esatta del file.
+La tabella (vedi infra/cv_mcflash_map.py) e' la sorgente: la leggono la ricerca
+e la dashboard, e la dashboard ci scrive i CV confermati o collegati
+(criterio "dashboard" / "dashboard-ricerca"). Il JSON (scripts/cv_mcflash_map.json,
+da build_cv_mcflash_map.py, solo in locale) porta le righe ricostruite: questo
+script le inserisce/aggiorna e cancella le righe ricostruite che nel JSON non
+ci sono piu'. Le righe della dashboard non si toccano mai: una voce del JSON
+che le contraddice (stesso CV, o stesso candidato con un altro CV) si salta.
 
 Uso:
     python scripts/upload_cv_mcflash_map.py --dry-run   # mostra cosa cambierebbe
@@ -33,7 +36,9 @@ if settings_file.exists():
 
 from azure.data.tables import TableServiceClient, UpdateMode  # noqa: E402
 
-from infra.cv_mcflash_map import PARTITION_KEY, _connection_string, cv_mcflash_map_table_name  # noqa: E402
+from infra.cv_mcflash_map import (  # noqa: E402
+    PARTITION_KEY, _connection_string, cv_mcflash_map_table_name, is_dashboard_row,
+)
 
 DEFAULT_FILE = root / "scripts" / "cv_mcflash_map.json"
 _FORBIDDEN_KEY_CHARS = set("/\\#?")
@@ -59,6 +64,27 @@ def _entities(path: Path) -> dict[str, dict]:
     return out
 
 
+def plan_map(wanted: dict[str, dict], current: dict[str, dict]) -> tuple[list[str], list[str], list[str]]:
+    """(da scrivere, da cancellare, saltate) per la partizione "cv".
+
+    Le righe della dashboard restano: non si cancellano, non si sovrascrivono, e
+    un candidato collegato dalla dashboard non riceve un altro CV dal JSON.
+    """
+    dashboard = {d: e for d, e in current.items() if is_dashboard_row(e)}
+    dashboard_ids = {str(e.get("id_mcflash")) for e in dashboard.values()}
+    skipped = [d for d, e in wanted.items() if d in dashboard or str(e["id_mcflash"]) in dashboard_ids]
+    keep = {d: e for d, e in wanted.items() if d not in skipped}
+
+    def differs(doc_id: str) -> bool:
+        cur = current.get(doc_id)
+        new = keep[doc_id]
+        return cur is None or any(str(cur.get(k)) != str(new[k]) for k in ("id_mcflash", "file", "codice", "criterio"))
+
+    to_upsert = [d for d in keep if differs(d)]
+    to_delete = [d for d in current if d not in keep and d not in dashboard]
+    return to_upsert, to_delete, skipped
+
+
 def main(path: Path, dry_run: bool) -> None:
     wanted = _entities(path)
     service = TableServiceClient.from_connection_string(_connection_string())
@@ -74,15 +100,12 @@ def main(path: Path, dry_run: bool) -> None:
             raise
         current = {}  # tabella non ancora creata
 
-    def differs(doc_id: str) -> bool:
-        cur = current.get(doc_id)
-        new = wanted[doc_id]
-        return cur is None or any(str(cur.get(k)) != str(new[k]) for k in ("id_mcflash", "file", "codice", "criterio"))
-
-    to_upsert = [d for d in wanted if differs(d)]
-    to_delete = [d for d in current if d not in wanted]
-    print(f"Tabella {table_name}: {len(current)} righe | JSON: {len(wanted)} voci | "
-          f"da scrivere: {len(to_upsert)} | da cancellare: {len(to_delete)}")
+    to_upsert, to_delete, skipped = plan_map(wanted, current)
+    n_dashboard = sum(1 for e in current.values() if is_dashboard_row(e))
+    print(f"Tabella {table_name}: {len(current)} righe (dalla dashboard: {n_dashboard}) | JSON: {len(wanted)} voci | "
+          f"da scrivere: {len(to_upsert)} | da cancellare: {len(to_delete)} | saltate: {len(skipped)}")
+    for d in skipped:
+        print(f"  salta {d} (id {wanted[d]['id_mcflash']}): in conflitto con un collegamento della dashboard")
     for d in to_delete:
         print(f"  cancella {d} (id {current[d].get('id_mcflash')})")
     if dry_run:

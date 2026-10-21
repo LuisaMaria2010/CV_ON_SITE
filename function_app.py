@@ -24,6 +24,8 @@ Route esposte:
 - POST /api/cv/commit                    -> functions.operations_api
 - GET  /api/operations[/{id}]            -> functions.operations_api
 - POST /api/operations/{id}/retry        -> functions.operations_api
+- GET/POST /api/candidati-probabili      -> functions.probabili_api
+- POST /api/candidati-probabili/{id}/scarta -> functions.probabili_api
 """
 from __future__ import annotations
 
@@ -37,6 +39,7 @@ from functions.dashboard_api import bp as dashboard_bp
 from functions.drafts_api import bp as drafts_bp
 from functions.matcher_api import bp as matcher_bp
 from functions.operations_api import bp as operations_bp
+from functions.probabili_api import bp as probabili_bp
 from functions.search_api import bp as search_bp
 from ingestion_triggers import bp as ingestion_bp
 
@@ -53,5 +56,6 @@ for _bp in (
     drafts_bp,
     cv_render_bp,
     operations_bp,
+    probabili_bp,
 ):
     app.register_functions(_bp)
